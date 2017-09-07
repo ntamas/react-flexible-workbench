@@ -1,6 +1,6 @@
 import * as GoldenLayout from "golden-layout";
 
-import { ComponentConstructor } from "./types";
+import { ComponentConstructor, ItemConfigType } from "./types";
 import { Workbench } from "./workbench";
 
 export class Builder {
@@ -19,7 +19,7 @@ export class Builder {
   /**
    * The stack of content objects being manipulated by the builder.
    */
-  private _contentStack: GoldenLayout.ItemConfigType[];
+  private _contentStack: ItemConfigType[];
 
   /**
    * Constructor.
@@ -34,7 +34,7 @@ export class Builder {
     this._workbench = factory ? factory() : new Workbench();
     this._contentStack = [];
     this._config = {
-      content: [] as GoldenLayout.ItemConfigType[]
+      content: [] as ItemConfigType[]
     };
   }
 
@@ -47,40 +47,30 @@ export class Builder {
       props?: TProps,
       state?: any,
       title?: string
-    } = {}
+    } = {},
+    id?: string
   ): this {
-    let name: string | undefined;
     const workbench = this._assertHasWorkbench();
+    const name = workbench.ensureComponentIsRegistered(nameOrComponent);
+    const newItem = workbench.createItemConfigurationFor(nameOrComponent);
 
-    if (typeof nameOrComponent === "string") {
-      name = nameOrComponent;
-    } else {
-      name = workbench.findRegisteredNameFor(nameOrComponent);
+    newItem.title = title;
+    if (newItem.type === "react-component" && props !== undefined) {
+      (newItem as GoldenLayout.ReactComponentConfig).props = props;
     }
-
-    if (name === undefined) {
-      if (typeof nameOrComponent === "string") {
-        throw new Error("component is not registered in workbench yet");
-      } else {
-        name = workbench.registerComponent(nameOrComponent);
-      }
+    if (newItem.type === "component" && state !== undefined) {
+      (newItem as GoldenLayout.ComponentConfig).componentState = state;
     }
 
     const panel = this._currentPanelContent;
-    const newItem: GoldenLayout.ItemConfigType = workbench.isRegisteredAsReact(name) ? {
-      component: name,
-      props,
-      type: "react-component"
-    } : {
-      componentName: name,
-      componentState: state,
-      type: "component"
-    };
-    newItem.title = title;
     if (panel === undefined) {
       this._contentStack.push(newItem);
     } else {
       panel.push(newItem);
+    }
+
+    if (id !== undefined) {
+      this.setId(id);
     }
 
     return this;
@@ -110,7 +100,7 @@ export class Builder {
       throw new Error("no panel is currently being built");
     }
 
-    const poppedItem = this._contentStack.pop() as GoldenLayout.ItemConfigType;
+    const poppedItem = this._contentStack.pop() as ItemConfigType;
     if (this._contentStack.length === 0) {
       this._config.content!.push(poppedItem);
     }
@@ -146,6 +136,16 @@ export class Builder {
   }
 
   /**
+   * Sets the identifier of the component that was added to the workbench
+   * most recently.
+   */
+  public setId(value: string | string[]): this {
+    return this.setProperties({
+      id: typeof value === "string" ? value : value.concat()
+    });
+  }
+
+  /**
    * Sets whether the component that was added to the workbench most recently
    * is closable or not.
    */
@@ -167,6 +167,14 @@ export class Builder {
    */
   public setRelativeWidth(value: number): this {
     return this.setProperties({ width: value });
+  }
+
+  /**
+   * Sets the title of the component that was added to the workbench
+   * most recently.
+   */
+  public setTitle(value: string): this {
+    return this.setProperties({ title: value });
   }
 
   /**
@@ -207,17 +215,17 @@ export class Builder {
     return this._workbench;
   }
 
-  private get _currentPanel(): GoldenLayout.ItemConfigType | undefined {
+  private get _currentPanel(): ItemConfigType | undefined {
     return this._contentStack.length > 0 ?
       this._contentStack[this._contentStack.length - 1] : undefined;
   }
 
-  private get _currentPanelContent(): GoldenLayout.ItemConfigType[] | undefined {
+  private get _currentPanelContent(): ItemConfigType[] | undefined {
     const panel = this._currentPanel;
     return panel ? panel.content : undefined;
   }
 
-  private get _lastAddedComponent(): GoldenLayout.ItemConfigType {
+  private get _lastAddedComponent(): ItemConfigType {
     const panel = this._currentPanel;
     const content = panel && panel.content && panel.content.length > 0 ?
       panel.content : undefined;

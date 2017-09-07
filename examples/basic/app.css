@@ -65,6 +65,9 @@ body {
 .wb-module-drawer-contents li:hover {
   background: linear-gradient(to bottom, #06c 0%, #25a 100%);
 }
+.wb-module-drawer-contents li.wb-module-disabled:hover {
+  background: none;
+}
 
 #footer {
   background: #06c;
@@ -117,6 +120,7 @@ body {
   max-width: 400px;
   border-radius: 4px;
   padding: 4px 0;
+  user-select: none;
 }
 .wb-module-drawer-contents ul {
   list-style-type: none;
@@ -127,4 +131,7 @@ body {
 .wb-module-drawer-contents li {
   padding: 0.5em 1em;
   cursor: default;
+}
+.wb-module-disabled {
+  opacity: 0.5;
 }

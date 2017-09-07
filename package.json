@@ -44,8 +44,7 @@
     "golden-layout": "^1.5.9",
     "javascript-detect-element-resize": "^0.5.3",
     "lodash": "^4.17.4",
-    "prop-types": "^15.5.10",
-    "raf": "^3.3.2"
+    "prop-types": "^15.5.10"
   },
   "peerDependencies": {
     "jquery": "^3.2.1",

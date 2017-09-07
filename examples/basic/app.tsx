@@ -3,7 +3,7 @@
 import * as React from "react";
 import * as ReactDOM from "react-dom";
 
-import { Container, Module, ModuleDrawer, ModuleTray,
+import { Container, ItemConfigType, Module, ModuleDrawer, ModuleTray,
          Workbench } from "../../src/index";
 
 // Note that React stateless components are currently not allowed in
@@ -59,10 +59,10 @@ const Footer = ({ workbench }: IFooterProps) => (
   <div style={{ textAlign: "center" }}>
     <ModuleTray workbench={workbench}>
       <ModuleDrawer label="Generic">
-        <Module label="Panel A" />
-        <Module label="Panel B" />
-        <Module label="Panel C" />
-        <Module label="Panel D" />
+        <Module id="panel-a" label="Panel A" component={MyComponent} props={{ label: "A" }} />
+        <Module id="panel-b" label="Panel B" component={MyComponent} props={{ label: "B" }} />
+        <Module disabled id="panel-c" label="Panel C" component={MyComponent} props={{ label: "C" }} />
+        <Module id="panel-d" label="Panel D" component={MyComponent} props={{ label: "D" }} />
       </ModuleDrawer>
       <ModuleDrawer label="Forecast">
       </ModuleDrawer>
@@ -84,23 +84,23 @@ const workbench = new Workbench.Builder()
     .add(MyComponent, {
       props: { label: "A" },
       title: "Panel A",
-    })
+    }, "panel-a")
     .setRelativeHeight(66)
     .makeColumns()
       .makeStack()
         .add(MyComponent, {
           props: { label: "B" },
           title: "Panel B",
-        })
+        }, "panel-b")
         .add("plain", {
           state: { label: "C" },
           title: "Panel C",
-        })
+        }, "panel-c")
       .finish()
       .add(MyComponent, {
         props: { label: "D" },
         title: "Panel D",
-      })
+      }, "panel-d")
   .build();
 
 // =============================================================================

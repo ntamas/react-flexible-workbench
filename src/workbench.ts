@@ -4,7 +4,7 @@ import { pick } from "lodash";
 import * as React from "react";
 
 import { Builder } from "./builder";
-import { ComponentConstructor, DragSource } from "./types";
+import { ComponentConstructor, DragSource, ItemConfigType } from "./types";
 import { getDisplayName } from "./utils";
 
 // Require golden-layout CSS and theme files so they get included in the bundle
@@ -49,6 +49,57 @@ export class Workbench {
    */
   public configure(config: GoldenLayout.Config): void {
     this._config = config;
+  }
+
+  /**
+   * Creates a new item configuration object for the given registered component
+   * constructor name or React component.
+   *
+   * @param  nameOrComponent  the name of the component constructor or the
+   *                          React component
+   */
+  public createItemConfigurationFor(nameOrComponent: string | React.ComponentType<any>): ItemConfigType {
+    const name = this.ensureComponentIsRegistered(nameOrComponent);
+    return this.isRegisteredAsReact(name) ? {
+      component: name,
+      type: "react-component"
+    } : {
+      componentName: name,
+      type: "component"
+    };
+  }
+
+  /**
+   * Ensures that the given component name or React component is registered
+   * in the workbench.
+   *
+   * When the input argument is a React component and it was not registered yet
+   * in the workbench, registers it under the display name of the component.
+   *
+   * @param  nameOrComponent  the name of the component constructor or the React
+   *                          component to check
+   * @return the name corresponding to the input argument
+   * @throws Error  if the input argument is a component constructor name and
+   *                it has not been registered yet
+   */
+  public ensureComponentIsRegistered(nameOrComponent: string | React.ComponentType<any>): string {
+    let name;
+
+    if (typeof nameOrComponent === "string") {
+      name = nameOrComponent;
+    } else {
+      name = this.findRegisteredNameFor(nameOrComponent);
+    }
+
+    if (name === undefined) {
+      if (typeof nameOrComponent === "string") {
+        throw new Error("component is not registered in workbench yet");
+      } else {
+        name = this.registerComponent(nameOrComponent);
+      }
+    }
+
+    return name;
   }
 
   /**

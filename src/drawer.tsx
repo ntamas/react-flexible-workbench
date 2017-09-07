@@ -2,8 +2,6 @@ import * as React from "react";
 
 import { Workbench } from "./workbench";
 
-const raf = require("raf");
-
 /**
  * Props of a module drawer component.
  */
@@ -47,7 +45,7 @@ export class ModuleDrawer extends React.Component<IModuleDrawerProps, {}> {
     const items = React.Children.map(children, child => {
       if (child && child.hasOwnProperty("props")) {
         return React.cloneElement(child as any, {
-          onStartDrag: () => raf(onClose)
+          onStartDrag: onClose
         });
       }
     });
