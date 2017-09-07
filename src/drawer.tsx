@@ -44,15 +44,15 @@ export class ModuleDrawer extends React.Component<IModuleDrawerProps, {}> {
     const classes = ["wb-module-drawer"];
     classes.push(isOpen ? "wb-module-drawer-open" : "wb-module-drawer-closed");
 
-    const items = isOpen ? React.Children.map(children, child => {
+    const items = React.Children.map(children, child => {
       if (child && child.hasOwnProperty("props")) {
         return React.cloneElement(child as any, {
           onStartDrag: () => raf(onClose)
         });
       }
-    }) : [];
-    const contents = isOpen && items.length > 0 ? (
-      <div className="wb-module-drawer-anchor">
+    });
+    const contents = items && items.length > 0 ? (
+      <div className="wb-module-drawer-anchor" style={{ display: isOpen ? "block" : "none" }}>
         <div className="wb-module-drawer-contents">
           <ul>{items}</ul>
         </div>
