@@ -52,6 +52,21 @@ export class Workbench {
   }
 
   /**
+   * Registers a new item to be used as a drag source in the workbench. The
+   * item can then be dragged to the workbench to create a new panel.
+   *
+   * @param  element  the element to register in the workbench as a drag source
+   * @param  config   the item that will be created when the item is dragged to
+   *                  the workbench
+   * @return an opaque object that identifies the drag source and that can be
+   *         passed to <code>removeDragSource()</code> later on to remove it
+   */
+  public createDragSource(element: HTMLElement | JQuery,
+                          itemConfiguration: GoldenLayout.ItemConfigType): DragSource {
+    return this._getLayout().createDragSource(element, itemConfiguration);
+  }
+
+  /**
    * Creates a new item configuration object for the given registered component
    * constructor name or React component.
    *
@@ -266,21 +281,6 @@ export class Workbench {
   }
 
   /**
-   * Registers a new item to be used as a drag source in the workbench. The
-   * item can then be dragged to the workbench to create a new panel.
-   *
-   * @param  element  the element to register in the workbench as a drag source
-   * @param  config   the item that will be created when the item is dragged to
-   *                  the workbench
-   * @return an opaque object that identifies the drag source and that can be
-   *         passed to <code>removeDragSource()</code> later on to remove it
-   */
-  public createDragSource(element: HTMLElement | JQuery,
-                          itemConfiguration: GoldenLayout.ItemConfigType): DragSource {
-    return this._getLayout().createDragSource(element, itemConfiguration);
-  }
-
-  /**
    * Removes the given drag source from the workbench so it cannot be used to
    * drag new items into the workbench any more.
    */
@@ -316,6 +316,10 @@ export class Workbench {
       throw new Error("Workbench is not configured yet");
     }
 
+    if (this._layout !== undefined) {
+      throw new Error("Workbench has already been rendered");
+    }
+
     // Create the final configuration object by merging the user-defined
     // config over our defaults
     const config: GoldenLayout.Config = Object.assign(
@@ -341,7 +345,7 @@ export class Workbench {
     }
 
     // Store the created layout object
-    this._layout = layout;
+    this._setLayout(layout);
   }
 
   /**
@@ -351,9 +355,46 @@ export class Workbench {
    */
   private _getLayout(): GoldenLayout {
     if (!this._layout) {
-      throw new Error("workbench has not been rendered yet");
+      throw new Error("Workbench has not been rendered yet");
     }
     return this._layout;
+  }
+
+  /**
+   * Event handler that is called when a new item is created in the workbench.
+   */
+  private _onItemCreated(item: GoldenLayout.ContentItem): void {
+    console.log(item.type);
+  }
+
+  /**
+   * Event handler that is called when a new item is created in the workbench.
+   */
+  private _onItemDestroyed(item: GoldenLayout.ContentItem): void {
+    console.log(item.type);
+  }
+
+  /**
+   * Sets the <code>golden-layout</code> object associated to the workbench.
+   * Also takes care of registering or deregistering all the event handlers
+   * that the Workbench instance might be interested in.
+   */
+  private _setLayout(value: GoldenLayout): void {
+    if (this._layout === value) {
+      return;
+    }
+
+    if (this._layout !== undefined) {
+      this._layout.off("itemCreated", this._onItemCreated, this);
+      this._layout.off("itemDestroyed", this._onItemDestroyed, this);
+    }
+
+    this._layout = value;
+
+    if (this._layout !== undefined) {
+      this._layout.on("itemCreated", this._onItemCreated, this);
+      this._layout.on("itemDestroyed", this._onItemDestroyed, this);
+    }
   }
 
   private _resolve(node: Element | HTMLElement | JQuery | string): Element | HTMLElement | JQuery {
