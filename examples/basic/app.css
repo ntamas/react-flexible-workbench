@@ -1,0 +1,130 @@
+html {
+  height: 100%;
+}
+
+body {
+  font-family: Arial, sans-serif;
+  font-size: 16px;
+  margin: 0;
+  padding: 0;
+  display: flex;
+  flex-flow: column;
+  height: 100%;
+}
+
+#header {
+  background: #06c;
+  color: #fff;
+  flex-flow: row;
+
+  padding: 0.5em 1em;
+  flex-shrink: 0;
+  flex-grow: 0;
+}
+
+.title {
+  flex-grow: 1;
+}
+
+.button-bar {
+  float: right;
+}
+.button-bar button,
+.wb-module-drawer button {
+  background: #49d;
+  color: #fff;
+  font-size: 16px;
+  padding: 5px;
+  border: none;
+  border-radius: 4px;
+  outline: none;
+  box-shadow: 0px 1px 2px rgba(0, 0, 0, 0.65);
+  transition: background 0.3s, transform 0.3s;
+  text-shadow: 0px 1px 2px rgba(0, 0, 0, 0.65);
+}
+.button-bar button:hover,
+.wb-module-drawer button:hover {
+  background: #8cf;
+}
+.button-bar button:active,
+.wb-module-drawer button:active {
+  transform: translateY(2px);
+}
+
+.wb-module-drawer.wb-module-drawer-open button {
+  background: #25a;
+  box-shadow: inset 0 1px 2px rgba(0, 0, 0, 0.65);
+}
+.wb-module-drawer-contents {
+  background: rgba(0, 0, 0, 0.8);
+}
+.wb-module-drawer-contents li {
+  color: white;
+  text-shadow: 0px 1px 2px rgba(0, 0, 0, 0.65);
+}
+.wb-module-drawer-contents li:hover {
+  background: linear-gradient(to bottom, #06c 0%, #25a 100%);
+}
+
+#footer {
+  background: #06c;
+  color: #fff;
+
+  padding: 1em;
+  flex-shrink: 0;
+  flex-grow: 0;
+}
+
+#root {
+  background: #f4f4f4;
+  flex-grow: 1;
+  flex-shrink: 1;
+  padding: 5px;
+}
+
+.big-letter {
+  font-size: 800%;
+  font-weight: bold;
+  color: #aaa;
+  height: 100%;
+  width: 100%;
+
+  display: flex;
+  justify-content: center; /* align horizontal */
+  align-items: center;
+  text-align: center;
+}
+
+/* Workbench-specific styling */
+.wb-module-tray {
+  display: flex;
+  flex-flow: row nowrap;
+  justify-content: center;
+}
+.wb-module-tray .wb-module-drawer {
+  padding: 0 2px;
+}
+.wb-module-tray .wb-module-drawer button {
+  min-width: 32px;
+}
+.wb-module-drawer-anchor {
+  position: relative;
+}
+.wb-module-drawer-contents {
+  position: absolute;
+  bottom: 5px;
+  min-width: 200px;
+  max-width: 400px;
+  border-radius: 4px;
+  padding: 4px 0;
+}
+.wb-module-drawer-contents ul {
+  list-style-type: none;
+  margin: 0;
+  padding: 0;
+  text-align: left;
+}
+.wb-module-drawer-contents li {
+  padding: 0.5em 1em;
+  cursor: default;
+}

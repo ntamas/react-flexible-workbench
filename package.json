@@ -1,0 +1,51 @@
+{
+  "name": "workspace",
+  "version": "1.0.0",
+  "description": "Provides a flexible workspace UI for single-page web apps based on GoldenLayout",
+  "main": "index.js",
+  "scripts": {
+    "build": "npm run clean && npm run build:lib && npm run build:file && npm run build:minify",
+    "build:lib": "tsc",
+    "build:file": "webpack --config webpack.build.js",
+    "build:minify": "MINIFY=1 npm run build:file",
+    "clean": "rimraf lib dist",
+    "lint": "tslint --project tsconfig.json --type-check --format stylish",
+    "preversion": "npm test",
+    "start": "webpack-dev-server --inline --config webpack.config.js --content-base examples/",
+    "version": "npm run build",
+    "postversion": "git push && git push --tags",
+    "test": "npm run build && NODE_PATH=lib/src jasmine"
+  },
+  "author": "Tamás Nepusz <ntamas@gmail.com>",
+  "license": "ISC",
+  "devDependencies": {
+    "@types/jasmine": "^2.5.54",
+    "@types/jquery": "^3.2.12",
+    "@types/lodash": "^4.14.74",
+    "@types/node": "^8.0.26",
+    "@types/prop-types": "^15.5.1",
+    "@types/react": "^16.0.5",
+    "@types/react-dom": "^15.5.4",
+    "awesome-typescript-loader": "^3.2.3",
+    "css-loader": "^0.28.7",
+    "jasmine": "^2.8.0",
+    "rimraf": "^2.6.1",
+    "source-map-loader": "^0.2.1",
+    "style-loader": "^0.18.2",
+    "typescript": "^2.4.2",
+    "webpack": "^3.5.5",
+    "webpack-dev-server": "^2.7.1"
+  },
+  "dependencies": {
+    "golden-layout": "^1.5.9",
+    "javascript-detect-element-resize": "^0.5.3",
+    "lodash": "^4.17.4",
+    "prop-types": "^15.5.10",
+    "raf": "^3.3.2"
+  },
+  "peerDependencies": {
+    "jquery": "^3.2.1",
+    "react": "^15.6.1",
+    "react-dom": "^15.6.1"
+  }
+}
