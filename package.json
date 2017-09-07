@@ -17,7 +17,11 @@
     "test": "npm run build && NODE_PATH=lib/src jasmine"
   },
   "author": "Tamás Nepusz <ntamas@gmail.com>",
-  "license": "ISC",
+  "license": "MIT",
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/ntamas/react-flexible-workbench.git"
+  },
   "devDependencies": {
     "@types/jasmine": "^2.5.54",
     "@types/jquery": "^3.2.12",
