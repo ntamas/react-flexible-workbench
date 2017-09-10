@@ -1,11 +1,19 @@
 import * as React from "react";
 
+import { IModuleProps, Module } from "./module";
+import { isElementClassEqualTo } from "./utils";
 import { Workbench } from "./workbench";
 
 /**
  * Props of a module drawer component.
  */
 export interface IModuleDrawerProps {
+  /**
+   * Function that decides whether a given module is enabled or not, based
+   * on the props of the module.
+   */
+  isModuleEnabled?: (props: IModuleProps) => boolean;
+
   /**
    * Whether the drawer is open or not.
    */
@@ -43,16 +51,21 @@ export interface IModuleDrawerProps {
 export class ModuleDrawer extends React.Component<IModuleDrawerProps, {}> {
 
   public render() {
-    const { children, isOpen, label, onClose, onOpen, workbench } = this.props;
+    const { children, isModuleEnabled, isOpen, label, onClose, onOpen,
+            workbench } = this.props;
     const classes = ["wb-module-drawer"];
     classes.push(isOpen ? "wb-module-drawer-open" : "wb-module-drawer-closed");
 
     const items = React.Children.map(children, child => {
-      if (child && child.hasOwnProperty("props")) {
-        return React.cloneElement(child as any, {
+      if (isElementClassEqualTo(Module, child)) {
+        const newProps: Partial<IModuleProps> = {
           onStartDrag: onClose,
           workbench
-        });
+        };
+        if (isModuleEnabled !== undefined) {
+          newProps.disabled = isModuleEnabled(child.props);
+        }
+        return React.cloneElement(child as any, newProps);
       }
     });
     const contents = items && items.length > 0 ? (
