@@ -1,14 +1,9 @@
+import * as GoldenLayout from "golden-layout";
+import { isArray, pullAll } from "lodash";
 import * as PropTypes from "prop-types";
 import * as React from "react";
 
 import { Workbench } from "./workbench";
-
-/**
- * Child context that is passed down from a module tray to its descendents.
- */
-export interface IModuleTrayChildContext {
-  workbench: Workbench;
-}
 
 /**
  * Props of a module tray component.
@@ -22,6 +17,7 @@ export interface IModuleTrayProps {
  */
 export interface IModuleTrayState {
   indexOfOpenDrawer: number;
+  visibleIds: string[];
 }
 
 /**
@@ -31,24 +27,28 @@ export interface IModuleTrayState {
  */
 export class ModuleTray extends React.Component<IModuleTrayProps, IModuleTrayState> {
 
-  public static childContextTypes = {
-    workbench: PropTypes.instanceOf(Workbench)
-  };
+  private _visibleIds: string[];
+  private _workbench: Workbench;
 
   public constructor(props: IModuleTrayProps) {
     super(props);
+    this._visibleIds = [];
     this.state = {
-      indexOfOpenDrawer: NaN
+      indexOfOpenDrawer: NaN,
+      visibleIds: []
     };
   }
 
-  public getChildContext(): IModuleTrayChildContext {
-    const { workbench } = this.props;
-    return { workbench };
+  public componentDidMount() {
+    this._setWorkbench(this.props.workbench);
+  }
+
+  public componentWillReceiveProps(newProps: IModuleTrayProps) {
+    this._setWorkbench(newProps.workbench);
   }
 
   public render() {
-    const { children } = this.props;
+    const { children, workbench } = this.props;
     const { indexOfOpenDrawer } = this.state;
     const drawers = React.Children.map(this.props.children,
       (child: React.ReactNode, index: number) => {
@@ -57,6 +57,7 @@ export class ModuleTray extends React.Component<IModuleTrayProps, IModuleTraySta
             isOpen: index === indexOfOpenDrawer,
             onClose: this._onTrayClosed.bind(this, index),
             onOpen: this._onTrayOpened.bind(this, index),
+            workbench
           });
         }
         return child;
@@ -64,6 +65,62 @@ export class ModuleTray extends React.Component<IModuleTrayProps, IModuleTraySta
     return (
       <div className="wb-module-tray">{drawers}</div>
     );
+  }
+
+  /**
+   * Extracts the component IDs from the given content item if it represents
+   * a component in the layout.
+   */
+  private _extractIdsFromContentItem(item: GoldenLayout.ContentItem): string[] {
+    const maybeIds = item.type === "component" && item.config ? item.config.id : [];
+    if (maybeIds !== undefined) {
+      return isArray(maybeIds) ? maybeIds : [maybeIds];
+    } else {
+      return [];
+    }
+  }
+
+  /**
+   * Sets the Workbench object associated to the module drawer.
+   *
+   * Also takes care of registering or deregistering all the event handlers
+   * that the ModuleTray instance might be interested in.
+   */
+  private _setWorkbench(value: Workbench): void {
+    if (this._workbench === value) {
+      return;
+    }
+
+    if (this._workbench !== undefined) {
+      this._workbench.off("itemCreated", this._onItemCreated);
+      this._workbench.off("itemDestroyed", this._onItemDestroyed);
+    }
+
+    this._workbench = value;
+
+    if (this._workbench !== undefined) {
+      this._workbench.on("itemCreated", this._onItemCreated);
+      this._workbench.on("itemDestroyed", this._onItemDestroyed);
+
+      // TODO: iterate over all currently visible panels and fill the
+      // _visibleIds array
+    }
+  }
+
+  private _onItemCreated = (item: GoldenLayout.ContentItem): void => {
+    const ids = this._extractIdsFromContentItem(item);
+    if (ids.length > 0) {
+      Array.prototype.push.apply(this._visibleIds, ids);
+      this._updateVisibleIds();
+    }
+  }
+
+  private _onItemDestroyed = (item: GoldenLayout.ContentItem): void => {
+    const ids = this._extractIdsFromContentItem(item);
+    if (ids.length > 0) {
+      pullAll(this._visibleIds, ids);
+      this._updateVisibleIds();
+    }
   }
 
   private _onTrayOpened(index: number): void {
@@ -78,4 +135,9 @@ export class ModuleTray extends React.Component<IModuleTrayProps, IModuleTraySta
     });
   }
 
+  private _updateVisibleIds(): void {
+    this.setState({
+      visibleIds: this._visibleIds.concat()
+    });
+  }
 }

@@ -29,6 +29,11 @@ export interface IModuleDrawerProps {
    * drawer can be opened.
    */
   onOpen?: (event?: React.SyntheticEvent<any>) => void;
+
+  /**
+   * The workbench that the items in the drawer can be dragged into.
+   */
+  workbench?: Workbench;
 }
 
 /**
@@ -38,14 +43,15 @@ export interface IModuleDrawerProps {
 export class ModuleDrawer extends React.Component<IModuleDrawerProps, {}> {
 
   public render() {
-    const { children, isOpen, label, onClose, onOpen } = this.props;
+    const { children, isOpen, label, onClose, onOpen, workbench } = this.props;
     const classes = ["wb-module-drawer"];
     classes.push(isOpen ? "wb-module-drawer-open" : "wb-module-drawer-closed");
 
     const items = React.Children.map(children, child => {
       if (child && child.hasOwnProperty("props")) {
         return React.cloneElement(child as any, {
-          onStartDrag: onClose
+          onStartDrag: onClose,
+          workbench
         });
       }
     });

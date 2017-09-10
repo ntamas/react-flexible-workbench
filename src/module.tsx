@@ -7,13 +7,6 @@ import { DragSource, ItemConfigType } from "./types";
 import { Workbench } from "./workbench";
 
 /**
- * Context of a single module component in a module drawer.
- */
-export interface IModuleContext {
-  workbench: Workbench;
-}
-
-/**
  * Props of a single module component in a module drawer.
  */
 export interface IModuleProps {
@@ -68,21 +61,20 @@ export interface IModuleProps {
    * to the label of the module when the label is a string.
    */
   title?: string | (() => string);
+
+  /**
+   * The workbench that the module can be dragged into.
+   */
+  workbench?: Workbench;
 }
 
 export class Module extends React.Component<IModuleProps, {}> {
 
-  public context: IModuleContext;
-
-  public static contextTypes = {
-    workbench: PropTypes.instanceOf(Workbench)
-  };
-
   private _dragSource?: DragSource;
   private _rootNode: HTMLElement | null;
 
-  public constructor(props: IModuleProps, context: IModuleContext) {
-    super(props, context);
+  public constructor(props: IModuleProps) {
+    super(props);
     this._rootNode = null;
   }
 
@@ -112,8 +104,10 @@ export class Module extends React.Component<IModuleProps, {}> {
           isFunction(itemConfiguration) ? itemConfiguration() : itemConfiguration
         );
       } else if (component !== undefined) {
-        const { label, title } = effectiveProps;
-        const { workbench } = this.context;
+        const { label, title, workbench } = effectiveProps;
+        if (workbench === undefined) {
+          throw new Error("Workbench is undefined; this should not have happened");
+        }
         const config = workbench.createItemConfigurationFor(component) as GoldenLayout.ReactComponentConfig;
         config.title = title
           ? (isFunction(title) ? title() : title)
@@ -141,20 +135,22 @@ export class Module extends React.Component<IModuleProps, {}> {
     props?: IModuleProps
   ) => {
     props = (props !== undefined) ? props : this.props;
-    const { disabled } = props;
-    const { workbench } = this.context;
+    const { disabled, workbench } = props;
     const node = this._rootNode;
-    const needsDragSource = (node !== null && node !== undefined && !disabled);
+    const needsDragSource = (node !== null && node !== undefined &&
+                             workbench !== undefined && !disabled);
 
     if (needsDragSource) {
       if (this._dragSource === undefined || rootNodeChanged) {
-        this._dragSource = workbench.createDragSource(
+        this._dragSource = workbench!.createDragSource(
           node!, this._createItemConfigurationFromProps(props) as any
         );
       }
     } else {
       if (this._dragSource !== undefined) {
-        workbench.removeDragSource(this._dragSource);
+        if (workbench !== undefined) {
+          workbench.removeDragSource(this._dragSource);
+        }
         this._dragSource = undefined;
       }
     }

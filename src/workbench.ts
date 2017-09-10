@@ -2,6 +2,7 @@ import * as GoldenLayout from "golden-layout";
 import * as JQuery from "jquery";
 import { pick } from "lodash";
 import * as React from "react";
+import EventEmitter = require("wolfy87-eventemitter");
 
 import { Builder } from "./builder";
 import { ComponentConstructor, DragSource, ItemConfigType } from "./types";
@@ -14,7 +15,7 @@ require("golden-layout/src/css/goldenlayout-light-theme.css");
 // Require javascript-detect-element-resize so it gets included in the bundle
 const foo = require("javascript-detect-element-resize");
 
-export class Workbench {
+export class Workbench extends EventEmitter {
 
   public static Builder = Builder;
 
@@ -32,6 +33,7 @@ export class Workbench {
    * Constructor. Creates an empty workbench.
    */
   constructor() {
+    super();
     this._registry = {};
     this._configDefaults = {
       // Popouts are not nice so we take an opinionated override here
@@ -361,20 +363,6 @@ export class Workbench {
   }
 
   /**
-   * Event handler that is called when a new item is created in the workbench.
-   */
-  private _onItemCreated(item: GoldenLayout.ContentItem): void {
-    console.log(item.type);
-  }
-
-  /**
-   * Event handler that is called when a new item is created in the workbench.
-   */
-  private _onItemDestroyed(item: GoldenLayout.ContentItem): void {
-    console.log(item.type);
-  }
-
-  /**
    * Sets the <code>golden-layout</code> object associated to the workbench.
    * Also takes care of registering or deregistering all the event handlers
    * that the Workbench instance might be interested in.
@@ -385,16 +373,16 @@ export class Workbench {
     }
 
     if (this._layout !== undefined) {
-      this._layout.off("itemCreated", this._onItemCreated, this);
-      this._layout.off("itemDestroyed", this._onItemDestroyed, this);
+      this._layout.off("__all", this.emit.bind(this));
     }
 
     this._layout = value;
 
     if (this._layout !== undefined) {
-      this._layout.on("itemCreated", this._onItemCreated, this);
-      this._layout.on("itemDestroyed", this._onItemDestroyed, this);
+      this._layout.on("__all", this.emit.bind(this));
     }
+
+    this.emit("layoutChanged", this._layout);
   }
 
   private _resolve(node: Element | HTMLElement | JQuery | string): Element | HTMLElement | JQuery {
