@@ -93,14 +93,17 @@ export class Module extends React.Component<IModuleProps, {}> {
 
   private _createItemConfigurationFromProps = (props?: IModuleProps): (() => ItemConfigType) => {
     const effectiveProps = (props === undefined) ? this.props : props;
+
     return () => {
-      const { component, itemConfiguration, onStartDrag } = effectiveProps;
+      const { component, id, itemConfiguration, onStartDrag } = effectiveProps;
+      let result;
+
       if (onStartDrag) {
         onStartDrag();
       }
 
       if (itemConfiguration !== undefined) {
-        return Object.assign({},
+        result = Object.assign({},
           isFunction(itemConfiguration) ? itemConfiguration() : itemConfiguration
         );
       } else if (component !== undefined) {
@@ -113,11 +116,17 @@ export class Module extends React.Component<IModuleProps, {}> {
           ? (isFunction(title) ? title() : title)
           : (typeof label === "string" ? label : "Untitled");
         config.props = Object.assign({}, effectiveProps.props);
-        return config;
+        result = config;
       } else {
         throw new Error("At least one of 'component' and 'itemConfiguration' " +
                         "must be defined");
       }
+
+      if (id !== undefined) {
+        result.id = id;
+      }
+
+      return result;
     };
   }
 

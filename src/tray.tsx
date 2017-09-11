@@ -3,6 +3,9 @@ import { isArray, pullAll } from "lodash";
 import * as PropTypes from "prop-types";
 import * as React from "react";
 
+import { IModuleDrawerProps, ModuleDrawer } from "./drawer";
+import { IModuleProps } from "./module";
+import { isElementClassEqualTo } from "./utils";
 import { Workbench } from "./workbench";
 
 /**
@@ -51,14 +54,18 @@ export class ModuleTray extends React.Component<IModuleTrayProps, IModuleTraySta
     const { children, workbench } = this.props;
     const { indexOfOpenDrawer } = this.state;
     const drawers = React.Children.map(this.props.children,
-      (child: React.ReactNode, index: number) => {
-        if (child && child.hasOwnProperty("props")) {
-          child = React.cloneElement(child as any, {
+      (child: React.ReactChild, index: number) => {
+        if (isElementClassEqualTo(ModuleDrawer, child)) {
+          const newProps: Partial<IModuleDrawerProps> = {
             isOpen: index === indexOfOpenDrawer,
             onClose: this._onTrayClosed.bind(this, index),
             onOpen: this._onTrayOpened.bind(this, index),
             workbench
-          });
+          };
+          if (child.props.isModuleEnabled === undefined) {
+            newProps.isModuleEnabled = this._isModuleVisible;
+          }
+          child = React.cloneElement(child as any, newProps);
         }
         return child;
       });
@@ -78,6 +85,15 @@ export class ModuleTray extends React.Component<IModuleTrayProps, IModuleTraySta
     } else {
       return [];
     }
+  }
+
+  /**
+   * Returns whether the module with the given props is already visible in
+   * the workbench corresponding to the tray.
+   */
+  private _isModuleVisible = (props: IModuleProps): boolean => {
+    const { id } = props;
+    return (id !== undefined && this._visibleIds.indexOf(id) >= 0);
   }
 
   /**
