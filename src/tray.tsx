@@ -135,10 +135,11 @@ export class ModuleTray extends React.Component<IModuleTrayProps, IModuleTraySta
   private _onItemDestroyed = (item: GoldenLayout.ContentItem): void => {
     const ids = this._extractIdsFromContentItem(item);
     if (ids.length > 0) {
-      // There is a bug in golden-layout, which results in itemDestroyed
-      // events being fired multiple times when the layout is destroyed,
-      // so we need to use pullAll() here to ensure that all copies are
-      // removed correctly
+      // There is an issue in golden-layout, which results in itemDestroyed
+      // events being fired multiple times. This is probably due to event
+      // bubbling within golden-layout, but I haven't had time to debug it
+      // properly yet. Anyway, we need to use pullAll() so we are flexible
+      // enough to handle duplicates and missing items.
       pullAll(this._visibleIds, ids);
       this._updateVisibleIds();
     }

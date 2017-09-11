@@ -376,7 +376,6 @@ export class Workbench extends EventEmitter {
       const { component, factory } = this._registry[key];
       layout.registerComponent(key, component || factory);
     });
-    layout.init();
 
     return layout;
   }
@@ -427,6 +426,7 @@ export class Workbench extends EventEmitter {
 
     if (this._layout !== undefined) {
       this._layout.on("__all", this.emit, this);
+      this._layout.init();
     }
 
     this.emit("layoutChanged", this._layout);
