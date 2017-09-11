@@ -3,8 +3,9 @@
 import * as React from "react";
 import * as ReactDOM from "react-dom";
 
-import { Container, ItemConfigType, Module, ModuleDrawer, ModuleTray,
-         Workbench } from "../../src/index";
+import { Container, IPerspectiveStorage, ItemConfigType, Module, ModuleDrawer,
+         ModuleTray, PerspectiveBar, PerspectiveBuilder, PerspectiveStorage,
+         Workbench, WorkbenchBuilder } from "../../src/index";
 
 // Note that React stateless components are currently not allowed in
 // golden-layout as of 1.5.9. I have already submitted a pull request to
@@ -16,10 +17,6 @@ import { Container, ItemConfigType, Module, ModuleDrawer, ModuleTray,
 // in a golden-layout workbench.
 
 // =============================================================================
-
-function PlainComponent(container: Container, state: { label: string }): void {
-  container.getElement().html("<div class=\"big-letter\">" + state.label + "</div>");
-}
 
 interface IMyComponentProps {
   label: string;
@@ -37,15 +34,14 @@ class MyComponent extends React.Component<IMyComponentProps> {
 // =============================================================================
 
 interface IHeaderProps {
+  perspectives: IPerspectiveStorage;
   workbench: Workbench;
 }
 
-const Header = ({ workbench }: IHeaderProps) => (
+const Header = ({ perspectives, workbench }: IHeaderProps) => (
   <div style={{ display: "flex", alignItems: "center" }}>
     <div className="title">Workbench demo</div>
-    <div className="button-bar">
-      <button onClick={() => console.log(workbench.getState())}>Save</button>
-    </div>
+    <PerspectiveBar storage={perspectives} workbench={workbench} />
   </div>
 );
 
@@ -78,8 +74,7 @@ const Footer = ({ workbench }: IFooterProps) => (
 
 // =============================================================================
 
-const workbench = new Workbench.Builder()
-  .register("plain", PlainComponent)
+const workbench = new WorkbenchBuilder()
   .makeRows()
     .add(MyComponent, {
       props: { label: "A" },
@@ -92,8 +87,8 @@ const workbench = new Workbench.Builder()
           props: { label: "B" },
           title: "Panel B",
         }, "panel-b")
-        .add("plain", {
-          state: { label: "C" },
+        .add(MyComponent, {
+          props: { label: "C" },
           title: "Panel C",
         }, "panel-c")
       .finish()
@@ -103,8 +98,47 @@ const workbench = new Workbench.Builder()
       }, "panel-d")
   .build();
 
+const perspectives = PerspectiveStorage.fromArray([
+  {
+    id: "perspective-1",
+    label: "P1",
+    state: {
+      content:
+        new PerspectiveBuilder(workbench)
+          .makeRows()
+            .add(MyComponent, {
+              props: { label: "A" },
+              title: "Panel A"
+            }, "panel-a")
+            .add(MyComponent, {
+              props: { label: "B" },
+              title: "Panel B"
+            }, "panel-b")
+          .build()
+    }
+  },
+  {
+    id: "perspective-2",
+    label: "P2",
+    state: {
+      content:
+        new PerspectiveBuilder(workbench)
+          .makeColumns()
+            .add(MyComponent, {
+              props: { label: "A" },
+              title: "Panel A"
+            }, "panel-a")
+            .add(MyComponent, {
+              props: { label: "B" },
+              title: "Panel B"
+            }, "panel-b")
+          .build()
+    }
+  }
+]);
+
 // =============================================================================
 
 workbench.render("#root");
-ReactDOM.render(<Header workbench={workbench} />, $("#header").get(0));
+ReactDOM.render(<Header perspectives={perspectives} workbench={workbench} />, $("#header").get(0));
 ReactDOM.render(<Footer workbench={workbench} />, $("#footer").get(0));

@@ -4,7 +4,7 @@ import pick from "lodash-es/pick";
 import * as React from "react";
 import EventEmitter = require("wolfy87-eventemitter");
 
-import { Builder } from "./builder";
+import { WorkbenchBuilder } from "./builder";
 import { ComponentConstructor, DragSource, ItemConfigType } from "./types";
 import { getDisplayName } from "./utils";
 
@@ -12,15 +12,17 @@ import { getDisplayName } from "./utils";
 require("golden-layout/src/css/goldenlayout-base.css");
 require("golden-layout/src/css/goldenlayout-light-theme.css");
 
+// Require our own CSS files as well
+require("./workbench.css");
+
 // Require javascript-detect-element-resize so it gets included in the bundle
 const foo = require("javascript-detect-element-resize");
 
 export class Workbench extends EventEmitter {
 
-  public static Builder = Builder;
-
   private _config: GoldenLayout.Config | undefined;
   private _configDefaults: Partial<GoldenLayout.Config>;
+  private _domNode: HTMLElement | undefined;
   private _layout: GoldenLayout | undefined;
   private _registry: {
     [key: string]: {
@@ -34,6 +36,7 @@ export class Workbench extends EventEmitter {
    */
   constructor() {
     super();
+
     this._registry = {};
     this._configDefaults = {
       // Popouts are not nice so we take an opinionated override here
@@ -84,6 +87,14 @@ export class Workbench extends EventEmitter {
       componentName: name,
       type: "component"
     };
+  }
+
+  /**
+   * Destroys the workbench and removes it from the DOM.
+   */
+  public destroy(): void {
+    this._setLayout(undefined);
+    this._domNode = undefined;
   }
 
   /**
@@ -311,8 +322,8 @@ export class Workbench extends EventEmitter {
    * @param  node  the node to render the workbench into; omitting it means that
    *         the workbench must fill the entire page.
    */
-  public render(node?: Element | HTMLElement | JQuery | string): void {
-    const resolvedNode = node !== undefined ? this._resolve(node) : undefined;
+  public render(node?: HTMLElement | JQuery<HTMLElement> | string): void {
+    this._domNode = node !== undefined ? this._resolve(node) : document.body;
 
     if (this._config === undefined) {
       throw new Error("Workbench is not configured yet");
@@ -322,32 +333,52 @@ export class Workbench extends EventEmitter {
       throw new Error("Workbench has already been rendered");
     }
 
+    // Attach an event handler for resize events if the given node is not the
+    // document body
+    if (this._domNode !== undefined && this._domNode !== document.body) {
+      window.addResizeListener(this._domNode, this._onWorkbenchResized);
+    }
+
+    // Create the golden-layout object and set it
+    const layout = this._createLayoutFromConfig(this._config);
+    this._setLayout(layout);
+  }
+
+  /**
+   * Restores a saved state previously obtained by <code>getState()</code>.
+   */
+  public restoreState(state: any): void {
+    // Create a completely new golden-layout object with the new configuration
+    const layout = this._createLayoutFromConfig(state);
+    this._setLayout(layout);
+  }
+
+  /**
+   * Creates a new <code>golden-layout</code> object from the current
+   * configuration object and the DOM node that the workbench is associated
+   * to.
+   *
+   * @return  the newly created <code>golden-layout</code> object
+   */
+  private _createLayoutFromConfig(config: GoldenLayout.Config): GoldenLayout {
+    if (this._domNode === undefined) {
+      throw new Error("Workbench is not associated to a DOM node yet");
+    }
+
     // Create the final configuration object by merging the user-defined
     // config over our defaults
-    const config: GoldenLayout.Config = Object.assign(
-      {}, this._configDefaults, this._config
+    const effectiveConfig: GoldenLayout.Config = Object.assign(
+      {}, this._configDefaults, config
     );
 
-    // Create the golden-layout object and initialize it
-    const layout: GoldenLayout = new GoldenLayout(config, resolvedNode);
+    const layout: GoldenLayout = new GoldenLayout(effectiveConfig, this._domNode);
     Object.keys(this._registry).forEach((key: string) => {
       const { component, factory } = this._registry[key];
       layout.registerComponent(key, component || factory);
     });
     layout.init();
 
-    // Attach an event handler for resize events if the given node is not the
-    // document body
-    if (resolvedNode !== undefined && resolvedNode !== document.body) {
-      window.addResizeListener(resolvedNode, () => {
-        if (layout && layout.container && layout.container.width) {
-          layout.updateSize();
-        }
-      });
-    }
-
-    // Store the created layout object
-    this._setLayout(layout);
+    return layout;
   }
 
   /**
@@ -363,29 +394,45 @@ export class Workbench extends EventEmitter {
   }
 
   /**
+   * Event handlr that is called when the DOM node hosting the workbench
+   * has been resized.
+   */
+  private _onWorkbenchResized = (): void => {
+    const layout = this._layout;
+    if (layout && layout.container && layout.container.width) {
+      layout.updateSize();
+    }
+  }
+
+  /**
    * Sets the <code>golden-layout</code> object associated to the workbench.
    * Also takes care of registering or deregistering all the event handlers
    * that the Workbench instance might be interested in.
    */
-  private _setLayout(value: GoldenLayout): void {
+  private _setLayout(value: GoldenLayout | undefined): void {
     if (this._layout === value) {
       return;
     }
 
     if (this._layout !== undefined) {
-      this._layout.off("__all", this.emit.bind(this));
+      // The order is important here: first we destroy, then we unregister
+      // ourselves from all events. This is because the layout will fire
+      // itemDestroyed events during destruction, which others might be
+      // interested in.
+      this._layout.destroy();
+      this._layout.off("__all", this.emit, this);
     }
 
     this._layout = value;
 
     if (this._layout !== undefined) {
-      this._layout.on("__all", this.emit.bind(this));
+      this._layout.on("__all", this.emit, this);
     }
 
     this.emit("layoutChanged", this._layout);
   }
 
-  private _resolve(node: Element | HTMLElement | JQuery | string): Element | HTMLElement | JQuery {
+  private _resolve(node: HTMLElement | JQuery<HTMLElement> | string): HTMLElement {
     if (typeof node === "string") {
       const result = document.getElementById(node && node.charAt(0) === "#" ? node.substr(1) : node);
       if (result !== null) {
@@ -393,8 +440,10 @@ export class Workbench extends EventEmitter {
       } else {
         throw new Error("Cannot find DOM node: " + node);
       }
+    } else if (node instanceof JQuery) {
+      return (node as JQuery<HTMLElement>).get(0);
     } else {
-      return node;
+      return node as HTMLElement;
     }
   }
 

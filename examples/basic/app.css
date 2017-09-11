@@ -14,8 +14,10 @@ body {
 
 #header {
   background: #06c;
+  box-sizing: border-box;
   color: #fff;
   flex-flow: row;
+  min-height: 44px;
 
   padding: 0.5em 1em;
   flex-shrink: 0;
@@ -30,7 +32,8 @@ body {
   float: right;
 }
 .button-bar button,
-.wb-module-drawer button {
+.wb-module-drawer button,
+.wb-perspective-bar button {
   background: #49d;
   color: #fff;
   font-size: 16px;
@@ -43,15 +46,18 @@ body {
   text-shadow: 0px 1px 2px rgba(0, 0, 0, 0.65);
 }
 .button-bar button:hover,
-.wb-module-drawer button:hover {
+.wb-module-drawer button:hover,
+.wb-perspective-bar button:hover {
   background: #8cf;
 }
 .button-bar button:active,
-.wb-module-drawer button:active {
+.wb-module-drawer button:active,
+.wb-perspective-bar button:active {
   transform: translateY(2px);
 }
 
-.wb-module-drawer.wb-module-drawer-open button {
+.wb-module-drawer.wb-module-drawer-open button,
+.wb-perspective-bar button.wb-perspective-selected {
   background: #25a;
   box-shadow: inset 0 1px 2px rgba(0, 0, 0, 0.65);
 }
@@ -69,9 +75,21 @@ body {
   background: none;
 }
 
+.wb-perspective-bar button.wb-perspective-bar-save-button {
+  background: #fa4;
+}
+.wb-perspective-bar button.wb-perspective-bar-save-button:hover {
+  background: #fc6;
+}
+.wb-perspective-bar button.wb-perspective-bar-save-button:active {
+  background: #fc6;
+}
+
 #footer {
   background: #06c;
+  box-sizing: border-box;
   color: #fff;
+  min-height: 44px;
 
   padding: 1em;
   flex-shrink: 0;
@@ -96,42 +114,4 @@ body {
   justify-content: center; /* align horizontal */
   align-items: center;
   text-align: center;
-}
-
-/* Workbench-specific styling */
-.wb-module-tray {
-  display: flex;
-  flex-flow: row nowrap;
-  justify-content: center;
-}
-.wb-module-tray .wb-module-drawer {
-  padding: 0 2px;
-}
-.wb-module-tray .wb-module-drawer button {
-  min-width: 32px;
-}
-.wb-module-drawer-anchor {
-  position: relative;
-}
-.wb-module-drawer-contents {
-  position: absolute;
-  bottom: 5px;
-  min-width: 200px;
-  max-width: 400px;
-  border-radius: 4px;
-  padding: 4px 0;
-  user-select: none;
-}
-.wb-module-drawer-contents ul {
-  list-style-type: none;
-  margin: 0;
-  padding: 0;
-  text-align: left;
-}
-.wb-module-drawer-contents li {
-  padding: 0.5em 1em;
-  cursor: default;
-}
-.wb-module-disabled {
-  opacity: 0.5;
 }

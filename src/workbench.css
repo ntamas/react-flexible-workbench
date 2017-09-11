@@ -1,0 +1,52 @@
+/* CSS styling that should be applied to workbench-related components no
+ * matter what the exact UI style is. These stylings below should not be
+ * concerned with colors, paddings and stuff, although they may provide
+ * sensible defaults.
+ */
+
+.wb-module-tray {
+  display: flex;
+  flex-flow: row nowrap;
+  justify-content: center;
+}
+.wb-module-tray .wb-module-drawer {
+  padding: 0 2px;
+}
+.wb-module-tray .wb-module-drawer button {
+  min-width: 32px;
+}
+.wb-module-drawer-anchor {
+  position: relative;
+}
+.wb-module-drawer-contents {
+  position: absolute;
+  bottom: 5px;
+  min-width: 200px;
+  max-width: 400px;
+  border-radius: 4px;
+  padding: 4px 0;
+  user-select: none;
+}
+.wb-module-drawer-contents ul {
+  list-style-type: none;
+  margin: 0;
+  padding: 0;
+  text-align: left;
+}
+.wb-module-drawer-contents li {
+  padding: 0.5em 1em;
+  cursor: default;
+}
+.wb-module-disabled {
+  opacity: 0.5;
+}
+
+.wb-perspective-bar {
+  display: flex;
+  flex-flow: row nowrap;
+  justify-content: center;
+}
+.wb-perspective-bar button {
+  margin: 0 2px;
+  min-width: 32px;
+}
