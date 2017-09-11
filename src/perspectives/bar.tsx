@@ -1,7 +1,9 @@
 import * as React from "react";
 
-import { IPerspective, IPerspectiveStorage } from "./perspectives";
-import { Workbench } from "./workbench";
+import { IPerspective } from "./perspective";
+import { IPerspectiveStorage } from "./storage";
+
+import { Workbench } from "../workbench";
 
 /**
  * Props of the perspective bar component.
