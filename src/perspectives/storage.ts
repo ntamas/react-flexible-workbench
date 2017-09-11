@@ -27,6 +27,15 @@ export interface IPerspectiveStorage {
    */
   load: (id: string) => Promise<IPerspective>;
 
+  /**
+   * Saves the given perspective data into the storage.
+   *
+   * The operation may be asynchronous for certain storage backends,
+   * therefore the function will return a promise that resolves when the
+   * operation was successful.
+   */
+  save: (perspective: IPerspective) => Promise<void>;
+
 }
 
 /**
@@ -77,7 +86,7 @@ class ArrayBasedPerspectiveStorage implements IPerspectiveStorage {
    * @inheritDoc
    */
   public load(id: string): Promise<IPerspective> {
-    const perspective = this._data.find(value => value.id === id);
+    const perspective = this._findById(id);
     if (perspective !== undefined) {
       return Promise.resolve(perspective);
     } else {
@@ -85,4 +94,29 @@ class ArrayBasedPerspectiveStorage implements IPerspectiveStorage {
     }
   }
 
+  /**
+   * @inheritDoc
+   */
+  public save(perspective: IPerspective): Promise<void> {
+    if (perspective === undefined || perspective.id === undefined) {
+      return Promise.reject(new Error("Perspective does not have an ID"));
+    }
+
+    const index = this._findIndexById(perspective.id);
+    if (index >= 0) {
+      this._data[index] = perspective;
+    } else {
+      this._data.push(perspective);
+    }
+
+    return Promise.resolve();
+  }
+
+  private _findById(id: string): IPerspective | undefined {
+    return this._data.find(value => value.id === id);
+  }
+
+  private _findIndexById(id: string): number {
+    return this._data.findIndex(value => value.id === id);
+  }
 }

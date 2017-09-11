@@ -118,14 +118,18 @@ export class PerspectiveBar extends React.Component<IPerspectiveBarProps, IPersp
         } else {
           console.warn("Workbench is gone while the perspective was being loaded; this is probably a bug.");
         }
-        this.setState({
-          perspectiveChanged: false,
-          selectedPerspectiveId: perspective.id
-        });
+        this._markPerspectiveAsNotChanged(perspective.id);
       });
     } else {
       console.warn("No perspective storage while loading perspective by ID; this is probably a bug.");
     }
+  }
+
+  private _markPerspectiveAsNotChanged = (id?: string) => {
+    this.setState({
+      perspectiveChanged: false,
+      selectedPerspectiveId: id === undefined ? this.state.selectedPerspectiveId : id
+    });
   }
 
   private _onWorkbenchChanged = (): void => {
@@ -138,10 +142,20 @@ export class PerspectiveBar extends React.Component<IPerspectiveBarProps, IPersp
     }
   }
 
-  private _saveCurrentPerspective = (): void => {
-    const { workbench } = this.props;
-    console.log(workbench.getState());
-    alert("Not implemented yet");
+  private _saveCurrentPerspective = async (): Promise<void> => {
+    const { storage, workbench } = this.props;
+    const { selectedPerspectiveId } = this.state;
+
+    if (selectedPerspectiveId === undefined) {
+      console.warn("No selected perspective while trying to save; this is probably a bug.");
+    } else if (storage === undefined) {
+      console.warn("No perspective storage while saving perspective; this is probably a bug.");
+    } else {
+      const perspective: IPerspective = await storage.load(selectedPerspectiveId);
+      perspective.state = workbench.getState();
+      await storage.save(perspective);
+      this._markPerspectiveAsNotChanged(selectedPerspectiveId);
+    }
   }
 
   private _setWorkbench(value: Workbench | undefined): void {
