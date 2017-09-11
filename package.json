@@ -6,7 +6,7 @@
   "types": "lib/index.d.ts",
   "scripts": {
     "build": "npm run clean && npm run build:lib && npm run build:file && npm run build:minify",
-    "build:lib": "tsc",
+    "build:lib": "tsc && copyfiles -u 1 src/*.css lib",
     "build:file": "webpack --config webpack.build.js",
     "build:minify": "MINIFY=1 npm run build:file",
     "clean": "rimraf lib dist",
@@ -33,6 +33,7 @@
     "@types/react-dom": "^15.5.4",
     "@types/wolfy87-eventemitter": "^4.2.32",
     "awesome-typescript-loader": "^3.2.3",
+    "copyfiles": "^1.2.0",
     "css-loader": "^0.28.7",
     "jasmine": "^2.8.0",
     "rimraf": "^2.6.1",
