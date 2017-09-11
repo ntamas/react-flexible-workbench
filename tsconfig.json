@@ -2,7 +2,6 @@
     "compileOnSave": true,
 
     "compilerOptions": {
-        "allowSyntheticDefaultImports": true,
         "declaration": true,
         "experimentalDecorators": true,
         "forceConsistentCasingInFileNames": true,
@@ -34,12 +33,6 @@
         "node_modules",
         "spec/support"
     ],
-
-    "paths": {
-        "lodash/*": [
-            "node_modules/@types/lodash-es/*"
-        ]
-    },
 
     "atom": {
         "formatOnSave": false
