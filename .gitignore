@@ -29,8 +29,9 @@ build/Release
 # Generated API documentation
 doc/api/
 
-# Stuff packed by tsc
+# Stuff packed by tsc or webpack
 build/
+dist/
 lib/
 
 # Typescript type definitions at the top level

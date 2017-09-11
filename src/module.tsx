@@ -1,5 +1,5 @@
 import * as GoldenLayout from "golden-layout";
-import { isFunction } from "lodash";
+import isFunction from "lodash/isFunction";
 import * as PropTypes from "prop-types";
 import * as React from "react";
 

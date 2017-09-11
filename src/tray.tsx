@@ -1,5 +1,6 @@
 import * as GoldenLayout from "golden-layout";
-import { isArray, pullAll } from "lodash";
+import isArray from "lodash/isArray";
+import pullAll from "lodash/pullAll";
 import * as PropTypes from "prop-types";
 import * as React from "react";
 

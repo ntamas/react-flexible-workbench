@@ -38,8 +38,8 @@ module.exports = {
 
   resolve: {
     // Add .ts and .tsx as resolvable extensions, and prefer .es.js files
-	// over plain .js ones so we can use ES6 code if a dependent library
-	// provides it.
+    // over plain .js ones so we can use ES6 code if a dependent library
+    // provides it.
     extensions: [
       ".webpack.js", ".web.js", ".ts", ".tsx", ".es.js", ".js"
     ],

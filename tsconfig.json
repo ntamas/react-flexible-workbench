@@ -2,21 +2,24 @@
     "compileOnSave": true,
 
     "compilerOptions": {
+        "allowSyntheticDefaultImports": true,
         "declaration": true,
         "experimentalDecorators": true,
         "forceConsistentCasingInFileNames": true,
         "jsx": "react",
+        "lib": ["es2016", "dom"],
         "module": "commonjs",
+        "moduleResolution": "node",
         "noImplicitAny": true,
         "newLine": "lf",
         "outDir": "lib/",
-		"rootDirs": [
-			"./src",
-			"./examples"
-		],
+        "rootDirs": [
+            "./src",
+            "./examples"
+        ],
         "sourceMap": true,
         "strictNullChecks": true,
-        "target": "es6",
+        "target": "es5",
         "types": ["jasmine", "node"]
     },
 
@@ -31,6 +34,12 @@
         "node_modules",
         "spec/support"
     ],
+
+    "paths": {
+        "lodash/*": [
+            "node_modules/@types/lodash-es/*"
+        ]
+    },
 
     "atom": {
         "formatOnSave": false

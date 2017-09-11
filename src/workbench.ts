@@ -1,6 +1,6 @@
 import * as GoldenLayout from "golden-layout";
 import * as JQuery from "jquery";
-import { pick } from "lodash";
+import pick from "lodash/pick";
 import * as React from "react";
 import EventEmitter = require("wolfy87-eventemitter");
 
