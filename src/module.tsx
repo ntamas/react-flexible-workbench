@@ -72,10 +72,33 @@ export class Module extends React.Component<IModuleProps, {}> {
 
   private _dragSource?: DragSource;
   private _rootNode: HTMLElement | null;
+  private _workbench: Workbench | undefined;
 
   public constructor(props: IModuleProps) {
     super(props);
     this._rootNode = null;
+  }
+
+  public componentDidMount() {
+    this._setWorkbench(this.props.workbench);
+  }
+
+  public componentWillReceiveProps(newProps: IModuleProps) {
+    const disabledChanged = (!!newProps.disabled !== !!this.props.disabled);
+
+    if (disabledChanged) {
+      this._dragSource = undefined;
+    }
+
+    this._setWorkbench(newProps.workbench);
+
+    if (disabledChanged) {
+      this._updateDragSourceForProps( /* rootNodeChanged = */ false);
+    }
+  }
+
+  public componentWillUnmount() {
+    this._setWorkbench(undefined);
   }
 
   public render() {
@@ -130,6 +153,11 @@ export class Module extends React.Component<IModuleProps, {}> {
     };
   }
 
+  private _onWorkbenchLayoutChanged = () => {
+    this._dragSource = undefined;
+    this._updateDragSourceForProps( /* rootNodeChanged = */ false);
+  }
+
   private _setRootNode = (node: HTMLElement | null) => {
     if (this._rootNode === node) {
       return;
@@ -137,6 +165,22 @@ export class Module extends React.Component<IModuleProps, {}> {
 
     this._rootNode = node;
     this._updateDragSourceForProps( /* rootNodeChanged = */ true);
+  }
+
+  private _setWorkbench = (workbench: Workbench | undefined) => {
+    if (this._workbench === workbench) {
+      return;
+    }
+
+    if (this._workbench !== undefined) {
+      this._workbench.off("layoutChanged", this._onWorkbenchLayoutChanged);
+    }
+
+    this._workbench = workbench;
+
+    if (this._workbench !== undefined) {
+      this._workbench.on("layoutChanged", this._onWorkbenchLayoutChanged);
+    }
   }
 
   private _updateDragSourceForProps = (

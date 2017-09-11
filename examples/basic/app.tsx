@@ -57,7 +57,7 @@ const Footer = ({ workbench }: IFooterProps) => (
       <ModuleDrawer label="Generic">
         <Module id="panel-a" label="Panel A" component={MyComponent} props={{ label: "A" }} />
         <Module id="panel-b" label="Panel B" component={MyComponent} props={{ label: "B" }} />
-        <Module disabled id="panel-c" label="Panel C" component={MyComponent} props={{ label: "C" }} />
+        <Module id="panel-c" label="Panel C" component={MyComponent} props={{ label: "C" }} />
         <Module id="panel-d" label="Panel D" component={MyComponent} props={{ label: "D" }} />
       </ModuleDrawer>
       <ModuleDrawer label="Forecast">
