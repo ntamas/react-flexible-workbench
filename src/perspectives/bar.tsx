@@ -91,6 +91,7 @@ export class PerspectiveBar extends React.Component<IPerspectiveBarProps, IPersp
   private _saveCurrentPerspective = (): void => {
     const { workbench } = this.props;
     console.log(workbench.getState());
+    alert("Not implemented yet");
   }
 
 }
