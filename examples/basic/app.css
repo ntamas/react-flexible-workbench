@@ -56,6 +56,10 @@ body {
   transform: translateY(2px);
 }
 
+button:disabled {
+  opacity: 0.4;
+}
+
 .wb-module-drawer.wb-module-drawer-open button,
 .wb-perspective-bar button.wb-perspective-selected {
   background: #25a;
@@ -75,13 +79,16 @@ body {
   background: none;
 }
 
-.wb-perspective-bar button.wb-perspective-bar-save-button {
+.wb-perspective-bar button.wb-perspective-bar-save-button,
+.wb-perspective-bar button.wb-perspective-bar-new-button {
   background: #fa4;
 }
-.wb-perspective-bar button.wb-perspective-bar-save-button:hover {
+.wb-perspective-bar button.wb-perspective-bar-save-button:hover,
+.wb-perspective-bar button.wb-perspective-bar-new-button:hover {
   background: #fc6;
 }
-.wb-perspective-bar button.wb-perspective-bar-save-button:active {
+.wb-perspective-bar button.wb-perspective-bar-save-button:active
+.wb-perspective-bar button.wb-perspective-bar-new-button:active {
   background: #fc6;
 }
 
