@@ -1,0 +1,11 @@
+examples/
+lib/examples/
+lib/src/
+src/*.ts
+src/*.tsx
+.editorconfig
+.gitattributes
+tsconfig.json
+tslint.json
+webpack.*.js
+*.tgz

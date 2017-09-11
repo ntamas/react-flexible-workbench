@@ -52,3 +52,7 @@ config/production.js
 
 # IDE-related stuff at the top level
 /.vscode/
+
+# Tarballs prepared by 'npm pack'
+*.tgz
+
