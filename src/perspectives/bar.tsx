@@ -27,6 +27,11 @@ export interface IPerspectiveBarProps {
  */
 export interface IPerspectiveBarState {
   /**
+   * Dummy counter that can be used to force updates to the perspective bar.
+   */
+  counter: number;
+
+  /**
    * ID of the selected perspective that the user is currently editing.
    */
   selectedPerspectiveId: string | undefined;
@@ -43,27 +48,30 @@ export class PerspectiveBar extends React.Component<IPerspectiveBarProps, IPersp
    */
   private _ignoreStateChangeCounter: number;
 
+  private _storage: IPerspectiveStorage | undefined;
   private _workbench: Workbench | undefined;
 
   constructor(props: IPerspectiveBarProps) {
     super(props);
     this._ignoreStateChangeCounter = 0;
     this.state = {
+      counter: 0,
       selectedPerspectiveId: undefined
     };
-    // TODO: re-render if the perspective storage engine reports that the
-    // state of some perspective has changed
   }
 
   public componentDidMount() {
+    this._setStorage(this.props.storage);
     this._setWorkbench(this.props.workbench);
   }
 
   public componentWillReceiveProps(newProps: IPerspectiveBarProps) {
+    this._setStorage(newProps.storage);
     this._setWorkbench(newProps.workbench);
   }
 
   public componentWillUnmount() {
+    this._setStorage(undefined);
     this._setWorkbench(undefined);
   }
 
@@ -125,6 +133,12 @@ export class PerspectiveBar extends React.Component<IPerspectiveBarProps, IPersp
     }
   }
 
+  private _onStorageChanged = (): void => {
+    this.setState({
+      counter: 1 - this.state.counter
+    });
+  }
+
   private _onWorkbenchChanged = (): void => {
     if (this._ignoreStateChangeCounter > 0) {
       this._ignoreStateChangeCounter--;
@@ -135,6 +149,22 @@ export class PerspectiveBar extends React.Component<IPerspectiveBarProps, IPersp
 
   private _persistModificationsInCurrentPerspective = async (): Promise<void> => {
     return this._updateCurrentPerspective(true);
+  }
+
+  private _setStorage(value: IPerspectiveStorage | undefined): void {
+    if (this._storage === value) {
+      return;
+    }
+
+    if (this._storage !== undefined) {
+      this._storage.unsubscribe(this._onStorageChanged);
+    }
+
+    this._storage = value;
+
+    if (this._storage !== undefined) {
+      this._storage.subscribe(this._onStorageChanged);
+    }
   }
 
   private _setWorkbench(value: Workbench | undefined): void {
@@ -164,8 +194,6 @@ export class PerspectiveBar extends React.Component<IPerspectiveBarProps, IPersp
       if (persist) {
         await storage.persistModifications(selectedPerspectiveId);
       }
-      // TODO: get rid of this
-      this.forceUpdate();
     }
   }
 

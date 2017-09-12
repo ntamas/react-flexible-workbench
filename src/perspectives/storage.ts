@@ -81,6 +81,16 @@ export interface IPerspectiveStorage {
   save: (perspective: IPerspective, id?: string) => Promise<void>;
 
   /**
+   * Adds a function to be called whenever the perspective storage is modified.
+   */
+  subscribe: (callback: () => void) => void;
+
+  /**
+   * Removes a function to be called whenever the perspective storage is modified.
+   */
+  unsubscribe: (callback: () => void) => void;
+
+  /**
    * Updates the state stored in the perspective with the given ID in the
    * storage.
    *
@@ -113,9 +123,51 @@ export class PerspectiveStorage {
 }
 
 /**
+ * Base class for perspective storage objects.
+ */
+class PerspectiveStorageBase {
+  /**
+   * List of subscribers to notify when the perspective storage changes.
+   */
+  private _subscribers: Array<() => void>;
+
+  /**
+   * Constructor.
+   */
+  constructor() {
+    this._subscribers = [];
+  }
+
+  /**
+   * Notifies all subscribers that the perspective storage has changed.
+   */
+  protected notifySubscribers(): void {
+    this._subscribers.forEach(func => func());
+  }
+
+  /**
+   * Adds a new subscribers to the list of subscribers.
+   */
+  public subscribe(func: () => void): void {
+    this._subscribers.push(func);
+  }
+
+  /**
+   * Removes a subscriber from the list of subscribers.
+   */
+  public unsubscribe(func: () => void): void {
+    const index = this._subscribers.indexOf(func);
+    if (index >= 0) {
+      this._subscribers.splice(index, 1);
+    }
+  }
+
+}
+
+/**
  * Perspective storage object that stores perspectives in an array.
  */
-class ArrayBasedPerspectiveStorage implements IPerspectiveStorage {
+class ArrayBasedPerspectiveStorage extends PerspectiveStorageBase implements IPerspectiveStorage {
 
   /**
    * Object that stores the base states of the perspectives managed by this
@@ -142,6 +194,8 @@ class ArrayBasedPerspectiveStorage implements IPerspectiveStorage {
    *                array is copied by the storage.
    */
   constructor(initialContent?: IPerspective[]) {
+    super();
+
     this._baseStates = {};
     this._order = [];
     this._modifiedStates = {};
@@ -188,6 +242,9 @@ class ArrayBasedPerspectiveStorage implements IPerspectiveStorage {
       this._baseStates[id] = this._modifiedStates[id];
       delete this._modifiedStates[id];
     }
+
+    this.notifySubscribers();
+
     return Promise.resolve();
   }
 
@@ -206,6 +263,8 @@ class ArrayBasedPerspectiveStorage implements IPerspectiveStorage {
     this._baseStates[id] = perspective;
     delete this._modifiedStates[id];
 
+    this.notifySubscribers();
+
     return Promise.resolve();
   }
 
@@ -222,6 +281,8 @@ class ArrayBasedPerspectiveStorage implements IPerspectiveStorage {
     }
 
     this._modifiedStates[id].state = state;
+
+    this.notifySubscribers();
 
     return Promise.resolve();
   }
