@@ -1,5 +1,6 @@
 import * as React from "react";
 
+import { ModificationIndicator } from "./indicator";
 import { IPerspective } from "./perspective";
 import { IPerspectiveStorage } from "./storage";
 
@@ -26,11 +27,6 @@ export interface IPerspectiveBarProps {
  */
 export interface IPerspectiveBarState {
   /**
-   * Whether the current perspective has changed since it was loaded.
-   */
-  perspectiveChanged: boolean;
-
-  /**
    * ID of the selected perspective that the user is currently editing.
    */
   selectedPerspectiveId: string | undefined;
@@ -53,9 +49,10 @@ export class PerspectiveBar extends React.Component<IPerspectiveBarProps, IPersp
     super(props);
     this._ignoreStateChangeCounter = 0;
     this.state = {
-      perspectiveChanged: false,
       selectedPerspectiveId: undefined
     };
+    // TODO: re-render if the perspective storage engine reports that the
+    // state of some perspective has changed
   }
 
   public componentDidMount() {
@@ -72,12 +69,14 @@ export class PerspectiveBar extends React.Component<IPerspectiveBarProps, IPersp
 
   public render() {
     const { storage, workbench } = this.props;
-    const { perspectiveChanged, selectedPerspectiveId } = this.state;
+    const { selectedPerspectiveId } = this.state;
     const buttons: React.ReactNode[] = [];
 
     if (storage !== undefined) {
       storage.forEach((perspective, id) => {
-        const element = this._createLoadButtonFromStoredPerspective(perspective, id);
+        const element = this._createLoadButtonFromStoredPerspective(
+          perspective, id, storage.isModified(id)
+        );
         const extraProps: Partial<ILoadPerspectiveButtonProps> = {
           onClick: this._loadPerspectiveById.bind(this, id),
           selected: selectedPerspectiveId === id
@@ -85,19 +84,18 @@ export class PerspectiveBar extends React.Component<IPerspectiveBarProps, IPersp
         buttons.push(React.cloneElement(element, extraProps));
       });
       buttons.push(<NewPerspectiveButton key="__new" onClick={this._createNewPerspective} />);
-      buttons.push(<SavePerspectiveButton key="__save" onClick={this._saveCurrentPerspective}
-                                          disabled={selectedPerspectiveId === undefined || !perspectiveChanged} />);
+      buttons.push(<SavePerspectiveButton key="__save" onClick={this._persistModificationsInCurrentPerspective}
+                                          disabled={!storage.isModified(selectedPerspectiveId)} />);
     }
 
     return <div className="wb-perspective-bar">{buttons}</div>;
   }
 
   private _createLoadButtonFromStoredPerspective =
-    (perspective: IPerspective, id: string): React.ReactElement<ILoadPerspectiveButtonProps> => {
+    (perspective: IPerspective, id: string, modified: boolean): React.ReactElement<ILoadPerspectiveButtonProps> => {
     const { label } = perspective;
-    const { perspectiveChanged, selectedPerspectiveId } = this.state;
     return (
-      <LoadPerspectiveButton key={id} label={label} modified={selectedPerspectiveId === id && perspectiveChanged} />
+      <LoadPerspectiveButton key={id} label={label} modified={modified} />
     );
   }
 
@@ -118,44 +116,25 @@ export class PerspectiveBar extends React.Component<IPerspectiveBarProps, IPersp
         } else {
           console.warn("Workbench is gone while the perspective was being loaded; this is probably a bug.");
         }
-        this._markPerspectiveAsNotChanged(id);
+        this.setState({
+          selectedPerspectiveId: id
+        });
       });
     } else {
       console.warn("No perspective storage while loading perspective by ID; this is probably a bug.");
     }
   }
 
-  private _markPerspectiveAsNotChanged = (id?: string) => {
-    this.setState({
-      perspectiveChanged: false,
-      selectedPerspectiveId: id === undefined ? this.state.selectedPerspectiveId : id
-    });
-  }
-
   private _onWorkbenchChanged = (): void => {
     if (this._ignoreStateChangeCounter > 0) {
       this._ignoreStateChangeCounter--;
     } else {
-      this.setState({
-        perspectiveChanged: true
-      });
+      this._updateCurrentPerspective();
     }
   }
 
-  private _saveCurrentPerspective = async (): Promise<void> => {
-    const { storage, workbench } = this.props;
-    const { selectedPerspectiveId } = this.state;
-
-    if (selectedPerspectiveId === undefined) {
-      console.warn("No selected perspective while trying to save; this is probably a bug.");
-    } else if (storage === undefined) {
-      console.warn("No perspective storage while saving perspective; this is probably a bug.");
-    } else {
-      const perspective: IPerspective = await storage.load(selectedPerspectiveId);
-      perspective.state = workbench.getState();
-      await storage.save(perspective);
-      this._markPerspectiveAsNotChanged(selectedPerspectiveId);
-    }
+  private _persistModificationsInCurrentPerspective = async (): Promise<void> => {
+    return this._updateCurrentPerspective(true);
   }
 
   private _setWorkbench(value: Workbench | undefined): void {
@@ -173,6 +152,23 @@ export class PerspectiveBar extends React.Component<IPerspectiveBarProps, IPersp
       this._workbench.on("stateChanged", this._onWorkbenchChanged);
     }
   }
+
+  private _updateCurrentPerspective = async (persist: boolean = false): Promise<void> => {
+    const { storage, workbench } = this.props;
+    const { selectedPerspectiveId } = this.state;
+
+    if (storage === undefined) {
+      console.warn("No perspective storage while saving perspective; this is probably a bug.");
+    } else if (selectedPerspectiveId !== undefined) {
+      await storage.update(selectedPerspectiveId, workbench.getState());
+      if (persist) {
+        await storage.persistModifications(selectedPerspectiveId);
+      }
+      // TODO: get rid of this
+      this.forceUpdate();
+    }
+  }
+
 }
 
 /**
@@ -208,14 +204,19 @@ export interface ILoadPerspectiveButtonProps {
  */
 const LoadPerspectiveButton = (props: ILoadPerspectiveButtonProps) => {
   const { label, modified, onClick, selected } = props;
-  const classes = ["wb-perspective-bar-load-button"];
+  const classes = ["wb-perspective-bar-item"];
   if (selected) {
     classes.push("wb-perspective-selected");
   }
   if (modified) {
     classes.push("wb-perspective-modified");
   }
-  return <button className={classes.join(" ")} onClick={onClick}>{label}</button>;
+  return (
+    <div className={classes.join(" ")}>
+      <button className="wb-perspective-bar-load-button" onClick={onClick}>{label}</button>
+      <ModificationIndicator visible={modified} />
+    </div>
+  );
 };
 
 /**
@@ -234,7 +235,12 @@ export interface INewPerspectiveButtonProps {
  * to load a perspective.
  */
 const NewPerspectiveButton = ({ onClick }: INewPerspectiveButtonProps) => {
-  return <button className="wb-perspective-bar-new-button" onClick={onClick}>+ New</button>;
+  return (
+    <div className="wb-perspective-bar-item">
+      <button className="wb-perspective-bar-new-button"
+              onClick={onClick}>+ New</button>
+    </div>
+  );
 };
 
 /**
@@ -258,6 +264,10 @@ export interface ISavePerspectiveButtonProps {
  * to load a perspective.
  */
 const SavePerspectiveButton = ({ disabled, onClick }: ISavePerspectiveButtonProps) => {
-  return <button className="wb-perspective-bar-save-button"
-                 disabled={disabled} onClick={onClick}>Save</button>;
+  return (
+    <div className="wb-perspective-bar-item">
+      <button className="wb-perspective-bar-save-button"
+              disabled={disabled} onClick={onClick}>Save</button>
+    </div>
+  );
 };
