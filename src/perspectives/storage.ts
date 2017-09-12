@@ -8,6 +8,13 @@ export type PerspectiveIteratorCallback =
     (perspective: IPerspective, id: string, storage: IPerspectiveStorage) => void;
 
 /**
+ * Object that maps string keys to IPerspective objects.
+ */
+export interface IPerspectiveMapping {
+  [key: string]: IPerspective;
+}
+
+/**
  * Interface specification for objects that know how to store perspectives
  * in some storage backend.
  */
@@ -33,8 +40,14 @@ export interface IPerspectiveStorage {
    * The operation may be asynchronous for certain storage backends,
    * therefore the function will return a promise that resolves when the
    * operation was successful.
+   *
+   * @param  perspective  the perspective to save
+   * @param  id  the ID of the perspective. When undefined or empty, a new,
+   *         unique ID will be generated. Otherwise, when the ID points to
+   *         the ID of an existing perspective, the perspective will be
+   *         overwritten.
    */
-  save: (perspective: IPerspective) => Promise<void>;
+  save: (perspective: IPerspective, id?: string) => Promise<void>;
 
 }
 
@@ -59,9 +72,16 @@ export class PerspectiveStorage {
 class ArrayBasedPerspectiveStorage implements IPerspectiveStorage {
 
   /**
-   * Array that stores the perspectives managed by this storage.
+   * Object that stores the perspectives managed by this storage, keyed by
+   * their IDs.
    */
-  private _data: IPerspective[];
+  private _data: IPerspectiveMapping;
+
+  /**
+   * Array that stores the preferred order of perspectives as they should appear
+   * on the UI.
+   */
+  private _order: string[];
 
   /**
    * Constructor.
@@ -70,15 +90,20 @@ class ArrayBasedPerspectiveStorage implements IPerspectiveStorage {
    *                array is copied by the storage.
    */
   constructor(initialContent?: IPerspective[]) {
-    this._data = (initialContent && initialContent.length > 0) ? initialContent.concat() : [];
+    this._data = {};
+    this._order = [];
+
+    if (initialContent) {
+      initialContent.forEach(perspective => this.save(perspective));
+    }
   }
 
   /**
    * @inheritDoc
    */
   public forEach(func: PerspectiveIteratorCallback): void {
-    return this._data.forEach(perspective =>
-      func(perspective, perspective.id, this)
+    return this._order.forEach(id =>
+      func(this._data[id], id, this)
     );
   }
 
@@ -97,26 +122,32 @@ class ArrayBasedPerspectiveStorage implements IPerspectiveStorage {
   /**
    * @inheritDoc
    */
-  public save(perspective: IPerspective): Promise<void> {
-    if (perspective === undefined || perspective.id === undefined) {
-      return Promise.reject(new Error("Perspective does not have an ID"));
+  public save = (perspective: IPerspective, id?: string): Promise<void> => {
+    if (id === undefined || id.length === 0) {
+      id = this._findUnusedId();
     }
 
-    const index = this._findIndexById(perspective.id);
-    if (index >= 0) {
-      this._data[index] = perspective;
-    } else {
-      this._data.push(perspective);
+    if (this._order.indexOf(id) < 0) {
+      this._order.push(id);
     }
 
+    this._data[id] = perspective;
     return Promise.resolve();
   }
 
   private _findById(id: string): IPerspective | undefined {
-    return this._data.find(value => value.id === id);
+    return this._data[id];
   }
 
   private _findIndexById(id: string): number {
-    return this._data.findIndex(value => value.id === id);
+    return this._order.indexOf(id);
+  }
+
+  private _findUnusedId(): string {
+    let index = 0;
+    while (this._order.indexOf("id" + index) >= 0) {
+      index++;
+    }
+    return "id" + index;
   }
 }

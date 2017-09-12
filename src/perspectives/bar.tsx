@@ -76,9 +76,8 @@ export class PerspectiveBar extends React.Component<IPerspectiveBarProps, IPersp
     const buttons: React.ReactNode[] = [];
 
     if (storage !== undefined) {
-      storage.forEach(perspective => {
-        const { id } = perspective;
-        const element = this._createLoadButtonFromStoredPerspective(perspective);
+      storage.forEach((perspective, id) => {
+        const element = this._createLoadButtonFromStoredPerspective(perspective, id);
         const extraProps: Partial<ILoadPerspectiveButtonProps> = {
           onClick: this._loadPerspectiveById.bind(this, id),
           selected: selectedPerspectiveId === id
@@ -94,10 +93,11 @@ export class PerspectiveBar extends React.Component<IPerspectiveBarProps, IPersp
   }
 
   private _createLoadButtonFromStoredPerspective =
-    (perspective: IPerspective): React.ReactElement<ILoadPerspectiveButtonProps> => {
-    const { id, label } = perspective;
+    (perspective: IPerspective, id: string): React.ReactElement<ILoadPerspectiveButtonProps> => {
+    const { label } = perspective;
+    const { perspectiveChanged, selectedPerspectiveId } = this.state;
     return (
-      <LoadPerspectiveButton key={id} label={label} />
+      <LoadPerspectiveButton key={id} label={label} modified={selectedPerspectiveId === id && perspectiveChanged} />
     );
   }
 
@@ -118,7 +118,7 @@ export class PerspectiveBar extends React.Component<IPerspectiveBarProps, IPersp
         } else {
           console.warn("Workbench is gone while the perspective was being loaded; this is probably a bug.");
         }
-        this._markPerspectiveAsNotChanged(perspective.id);
+        this._markPerspectiveAsNotChanged(id);
       });
     } else {
       console.warn("No perspective storage while loading perspective by ID; this is probably a bug.");
@@ -185,6 +185,12 @@ export interface ILoadPerspectiveButtonProps {
   label?: React.ReactNode;
 
   /**
+   * Whether the perspective was modified by the user compared to its last
+   * stored base state in the perspective storage.
+   */
+  modified?: boolean;
+
+  /**
    * Handler to call when the user clicks on the button in order to load the
    * perspective.
    */
@@ -201,10 +207,13 @@ export interface ILoadPerspectiveButtonProps {
  * to load a perspective.
  */
 const LoadPerspectiveButton = (props: ILoadPerspectiveButtonProps) => {
-  const { label, onClick, selected } = props;
+  const { label, modified, onClick, selected } = props;
   const classes = ["wb-perspective-bar-load-button"];
   if (selected) {
     classes.push("wb-perspective-selected");
+  }
+  if (modified) {
+    classes.push("wb-perspective-modified");
   }
   return <button className={classes.join(" ")} onClick={onClick}>{label}</button>;
 };

@@ -49,4 +49,5 @@
 .wb-perspective-bar button {
   margin: 0 2px;
   min-width: 32px;
+  position: relative;
 }

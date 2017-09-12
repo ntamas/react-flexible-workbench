@@ -26,11 +26,6 @@ export interface IPerspective {
   icon?: string;
 
   /**
-   * A unique identifier for the perspective.
-   */
-  id: string;
-
-  /**
    * A human-readable name of the perspective.
    */
   label: string;

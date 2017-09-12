@@ -100,7 +100,6 @@ const workbench = new WorkbenchBuilder()
 
 const perspectives = PerspectiveStorage.fromArray([
   {
-    id: "perspective-1",
     label: "P1",
     state: {
       content:
@@ -118,7 +117,6 @@ const perspectives = PerspectiveStorage.fromArray([
     }
   },
   {
-    id: "perspective-2",
     label: "P2",
     state: {
       content:
