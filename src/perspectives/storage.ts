@@ -63,6 +63,15 @@ export interface IPerspectiveStorage {
   persistModifications: (id: string) => Promise<void>;
 
   /**
+   * Clears the modified state of the perspective with the given ID.
+   *
+   * The operation may be asynchronous for certain storage backends,
+   * therefore the function will return a promise that resolves when the
+   * operation was successful.
+   */
+  revertModifications: (id: string) => Promise<void>;
+
+  /**
    * Saves the given perspective data into the storage.
    *
    * When the ID is specified and it refers to an existing perspective, the
@@ -241,9 +250,22 @@ class ArrayBasedPerspectiveStorage extends PerspectiveStorageBase implements IPe
     if (this._modifiedStates[id]) {
       this._baseStates[id] = this._modifiedStates[id];
       delete this._modifiedStates[id];
+
+      this.notifySubscribers();
     }
 
-    this.notifySubscribers();
+    return Promise.resolve();
+  }
+
+  /**
+   * @inheritDoc
+   */
+  public revertModifications(id: string): Promise<void> {
+    if (this._modifiedStates[id]) {
+      delete this._modifiedStates[id];
+
+      this.notifySubscribers();
+    }
 
     return Promise.resolve();
   }
