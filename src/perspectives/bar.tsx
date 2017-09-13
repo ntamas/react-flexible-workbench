@@ -154,13 +154,19 @@ export class PerspectiveBar extends React.Component<IPerspectiveBarProps, IPersp
   }
 
   private _revertModificationsOfCurrentPerspective = async (): Promise<void> => {
-    const { storage } = this.props;
+    const { storage, workbench } = this.props;
     const { selectedPerspectiveId } = this.state;
 
     if (storage !== undefined) {
-      if (selectedPerspectiveId !== undefined) {
-        await storage.revertModifications(selectedPerspectiveId);
-        await this._loadPerspectiveById(selectedPerspectiveId);
+      if (selectedPerspectiveId !== undefined && storage.isModified(selectedPerspectiveId)) {
+        const { environment } = workbench;
+        const confirmation = await environment.confirm(
+          "Are you sure you want to revert the perspective to its last saved state?"
+        );
+        if (confirmation) {
+          await storage.revertModifications(selectedPerspectiveId);
+          await this._loadPerspectiveById(selectedPerspectiveId);
+        }
       }
     } else {
       console.warn("No perspective storage while reverting perspective by ID; this is probably a bug.");

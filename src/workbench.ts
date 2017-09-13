@@ -5,6 +5,7 @@ import * as React from "react";
 import EventEmitter = require("wolfy87-eventemitter");
 
 import { WorkbenchBuilder } from "./builder";
+import { Environment, IEnvironmentMethods } from "./environment";
 import { ComponentConstructor, DragSource, ItemConfigType, WorkbenchState } from "./types";
 import { getDisplayName } from "./utils";
 
@@ -30,6 +31,12 @@ export class Workbench extends EventEmitter {
       factory?: ComponentConstructor<any>;
     }
   };
+
+  /**
+   * The environment that the workbench lives in. Methods of this object are
+   * used to communicate with the application that hosts the workbench.
+   */
+  public environment: IEnvironmentMethods = Environment.browser;
 
   /**
    * Constructor. Creates an empty workbench.
