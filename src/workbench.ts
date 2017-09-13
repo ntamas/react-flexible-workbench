@@ -1,13 +1,16 @@
 import * as GoldenLayout from "golden-layout";
 import * as JQuery from "jquery";
+import isFunction from "lodash-es/isFunction";
 import pick from "lodash-es/pick";
 import * as React from "react";
+import { withContext } from "recompose";
 import EventEmitter = require("wolfy87-eventemitter");
 
 import { WorkbenchBuilder } from "./builder";
 import { Environment, IEnvironmentMethods } from "./environment";
-import { ComponentConstructor, DragSource, ItemConfigType, WorkbenchState } from "./types";
-import { getDisplayName } from "./utils";
+import { ComponentConstructor, ContextProvider, DragSource,
+         IContextDefinition, ItemConfigType, WorkbenchState } from "./types";
+import { getDisplayName, traverseWorkbench } from "./utils";
 
 // Require golden-layout CSS and theme files so they get included in the bundle
 require("golden-layout/src/css/goldenlayout-base.css");
@@ -31,6 +34,16 @@ export class Workbench extends EventEmitter {
       factory?: ComponentConstructor<any>;
     }
   };
+
+  /**
+   * The context provider object that knows how to construct a React context
+   * for React components that are added to the workbench.
+   *
+   * Note that changing this property when the workbench is already rendered
+   * will not affect the workbench - you will need to re-configure the workbench
+   * by saving its state and restoring it again.
+   */
+  public contextProvider: ContextProvider<any> | undefined;
 
   /**
    * The environment that the workbench lives in. Methods of this object are
@@ -364,6 +377,10 @@ export class Workbench extends EventEmitter {
    * configuration object and the DOM node that the workbench is associated
    * to.
    *
+   * This method takes care of post-processing the provided configuration
+   * object such that the appropriate context is provided for React components
+   * where needed.
+   *
    * @return  the newly created <code>golden-layout</code> object
    */
   private _createLayoutFromConfig(config: GoldenLayout.Config): GoldenLayout {
@@ -379,7 +396,21 @@ export class Workbench extends EventEmitter {
 
     const layout: GoldenLayout = new GoldenLayout(effectiveConfig, this._domNode);
     Object.keys(this._registry).forEach((key: string) => {
-      const { component, factory } = this._registry[key];
+      let { component } = this._registry[key];
+      const { factory } = this._registry[key];
+      if (component !== undefined && this.contextProvider !== undefined) {
+        const contextDefinition =
+          isFunction(this.contextProvider) ?
+            this.contextProvider(component) :
+            this.contextProvider;
+        if (contextDefinition !== undefined) {
+          console.log(contextDefinition);
+          component = withContext(
+            contextDefinition.childContextTypes,
+            contextDefinition.getChildContext
+          )(component);
+        }
+      }
       layout.registerComponent(key, component || factory);
     });
 

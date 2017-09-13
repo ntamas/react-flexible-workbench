@@ -110,15 +110,21 @@ button:disabled {
   padding: 5px;
 }
 
-.big-letter {
-  font-size: 800%;
-  font-weight: bold;
-  color: #aaa;
+.panel {
   height: 100%;
   width: 100%;
 
   display: flex;
+  flex-flow: column;
   justify-content: center; /* align horizontal */
   align-items: center;
   text-align: center;
+
+  color: #888;
+}
+
+.big-letter {
+  font-size: 800%;
+  font-weight: bold;
+  color: #aaa;
 }

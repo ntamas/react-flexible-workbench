@@ -32,6 +32,7 @@
     "@types/react": "^16.0.5",
     "@types/react-dom": "^15.5.4",
     "@types/react-transition-group": "^2.0.4",
+    "@types/recompose": "^0.24.1",
     "@types/wolfy87-eventemitter": "^4.2.32",
     "awesome-typescript-loader": "^3.2.3",
     "copyfiles": "^1.2.0",
@@ -51,6 +52,7 @@
     "lodash-es": "^4.17.4",
     "prop-types": "^15.5.10",
     "react-transition-group": "^2.2.0",
+    "recompose": "^0.25.0",
     "wolfy87-eventemitter": "^5.2.2"
   },
   "peerDependencies": {

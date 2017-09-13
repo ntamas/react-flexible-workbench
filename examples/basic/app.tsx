@@ -1,5 +1,6 @@
 // tslint:disable:no-shadowed-variable
 
+import * as PropTypes from "prop-types";
 import * as React from "react";
 import * as ReactDOM from "react-dom";
 
@@ -26,7 +27,9 @@ class MyComponent extends React.Component<IMyComponentProps> {
   public render() {
     const { label } = this.props;
     return (
-      <div className="big-letter">{ label }</div>
+      <div className="panel">
+        <div className="big-letter">{ label }</div>
+      </div>
     );
   }
 }
