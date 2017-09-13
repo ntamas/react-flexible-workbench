@@ -104,7 +104,8 @@ export interface IPerspectiveStorage {
    * storage.
    *
    * The new state will be stored in the modified state of the perspective; the
-   * base state will be left intact.
+   * base state will be left intact. The implementor of this method <em>must</em>
+   * take a deep copy of the state or stringify it before storing it.
    *
    * The operation may be asynchronous for certain storage backends,
    * therefore the function will return a promise that resolves when the
@@ -293,13 +294,13 @@ class ArrayBasedPerspectiveStorage extends PerspectiveStorageBase implements IPe
   /**
    * @inheritDoc
    */
-  public update = (id: string, state: any): Promise<void> => {
+  public update = (id: string, state: string): Promise<void> => {
     if (this._baseStates[id] === undefined) {
       return this._perspectiveNotFound(id);
     }
 
     if (this._modifiedStates[id] === undefined) {
-      this._modifiedStates[id] = this._baseStates[id];
+      this._modifiedStates[id] = Object.assign({}, this._baseStates[id]);
     }
 
     this._modifiedStates[id].state = state;

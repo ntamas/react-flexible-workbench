@@ -13,12 +13,9 @@ export interface IPerspective {
   color?: string;
 
   /**
-   * The state of the saved perspective.
+   * The state of the saved perspective, in serialized form.
    */
-  state: {
-    content: GoldenLayout.ItemConfigType[],
-    isClosable?: boolean
-  };
+  state: string;
 
   /**
    * A preferred icon to represent the perspective on the UI.

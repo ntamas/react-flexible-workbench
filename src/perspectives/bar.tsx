@@ -4,20 +4,12 @@ import { ModificationIndicator } from "./indicator";
 import { IPerspective } from "./perspective";
 import { IPerspectiveStorage } from "./storage";
 
-import { Environment, IEnvironmentMethods } from "../environment";
 import { Workbench } from "../workbench";
 
 /**
  * Props of the perspective bar component.
  */
 export interface IPerspectiveBarProps {
-  /**
-   * Object that describes how the perspective bar can interact with the
-   * application that hosts the perspective bar. See the documentation of
-   * IEnvironmentMethods for more details.
-   */
-  environment?: IEnvironmentMethods;
-
   /**
    * The perspective storage that the perspective bar uses to store
    * perspectives.
@@ -93,16 +85,17 @@ export class PerspectiveBar extends React.Component<IPerspectiveBarProps, IPersp
         const element = this._createLoadButtonFromStoredPerspective(
           perspective, id, storage.isModified(id)
         );
+        const selected = selectedPerspectiveId === id;
         const extraProps: Partial<ILoadPerspectiveButtonProps> = {
-          onClick: selectedPerspectiveId === id ?
-            this._revertPerspectiveById.bind(this, id) :
+          onClick: selected ?
+            this._revertModificationsOfCurrentPerspective.bind(this) :
             this._loadPerspectiveById.bind(this, id),
-          selected: selectedPerspectiveId === id
+          selected
         };
         buttons.push(React.cloneElement(element, extraProps));
       });
       buttons.push(<NewPerspectiveButton key="__new" onClick={this._createNewPerspective} />);
-      buttons.push(<SavePerspectiveButton key="__save" onClick={this._persistModificationsInCurrentPerspective}
+      buttons.push(<SavePerspectiveButton key="__save" onClick={this._persistModificationsOfCurrentPerspective}
                                           disabled={!storage.isModified(selectedPerspectiveId)} />);
     }
 
@@ -118,15 +111,9 @@ export class PerspectiveBar extends React.Component<IPerspectiveBarProps, IPersp
   }
 
   private _createNewPerspective = (): void => {
-    const { storage, workbench } = this.props;
-    const { selectedPerspectiveId } = this.state;
-
-    if (storage === undefined) {
-      console.warn("No perspective storage while creating a new perspective; this is probably a bug.");
-    } else {
-      alert("Not implemented yet");
-      // await storage.save(workbench.getState());
-    }
+    const { workbench } = this.props;
+    console.log(workbench.getState());
+    alert("Not implemented yet");
   }
 
   private _loadPerspectiveById = async (id: string): Promise<void> => {
@@ -136,7 +123,6 @@ export class PerspectiveBar extends React.Component<IPerspectiveBarProps, IPersp
       const { workbench } = this.props;
       if (workbench !== undefined) {
         this._ignoreStateChangeCounter++;
-        console.log(perspective.state);
         workbench.restoreState(perspective.state);
       } else {
         console.warn("Workbench is gone while the perspective was being loaded; this is probably a bug.");
@@ -163,16 +149,16 @@ export class PerspectiveBar extends React.Component<IPerspectiveBarProps, IPersp
     }
   }
 
-  private _persistModificationsInCurrentPerspective = async (): Promise<void> => {
+  private _persistModificationsOfCurrentPerspective = async (): Promise<void> => {
     return this._updateCurrentPerspective(true);
   }
 
-  private _revertPerspectiveById = async (id: string): Promise<void> => {
+  private _revertModificationsOfCurrentPerspective = async (): Promise<void> => {
     const { storage } = this.props;
     const { selectedPerspectiveId } = this.state;
 
     if (storage !== undefined) {
-      if (selectedPerspectiveId !== undefined && storage.isModified(selectedPerspectiveId)) {
+      if (selectedPerspectiveId !== undefined) {
         await storage.revertModifications(selectedPerspectiveId);
         await this._loadPerspectiveById(selectedPerspectiveId);
       }

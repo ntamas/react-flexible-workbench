@@ -149,15 +149,16 @@ export class Workbench extends EventEmitter {
   }
 
   /**
-   * Returns a JSON-friendly JavaScript object that stores the current state of
-   * the workbench.
+   * Returns a serialized representation of the current state of the workbench.
    *
    * Note that the state object returned here is not the full state of the
    * workbench, only the part that encodes where the panels are and how they
    * are sized relative to each other.
    */
-  public getState(): any {
-    return pick(this._getLayout().toConfig(), ["content", "isClosable"]);
+  public getState(): string {
+    return JSON.stringify(
+      pick(this._getLayout().toConfig(), ["content", "isClosable"])
+    );
   }
 
   /**
@@ -347,9 +348,9 @@ export class Workbench extends EventEmitter {
   /**
    * Restores a saved state previously obtained by <code>getState()</code>.
    */
-  public restoreState(state: any): void {
+  public restoreState(state: string): void {
     // Create a completely new golden-layout object with the new configuration
-    const layout = this._createLayoutFromConfig(state);
+    const layout = this._createLayoutFromConfig(JSON.parse(state));
     this._setLayout(layout);
   }
 
