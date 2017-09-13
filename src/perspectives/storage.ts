@@ -86,8 +86,9 @@ export interface IPerspectiveStorage {
    *
    * @param  perspective  the perspective to save
    * @param  id  the ID of the perspective
+   * @return the ID of the perspective that was saved
    */
-  save: (perspective: IPerspective, id?: string) => Promise<void>;
+  save: (perspective: IPerspective, id?: string) => Promise<string>;
 
   /**
    * Adds a function to be called whenever the perspective storage is modified.
@@ -273,7 +274,7 @@ class ArrayBasedPerspectiveStorage extends PerspectiveStorageBase implements IPe
   /**
    * @inheritDoc
    */
-  public save(perspective: IPerspective, id?: string): Promise<void> {
+  public save(perspective: IPerspective, id?: string): Promise<string> {
     if (id === undefined || id.length === 0) {
       id = this._findUnusedId();
     }
@@ -287,7 +288,7 @@ class ArrayBasedPerspectiveStorage extends PerspectiveStorageBase implements IPe
 
     this.notifySubscribers();
 
-    return Promise.resolve();
+    return Promise.resolve(id);
   }
 
   /**

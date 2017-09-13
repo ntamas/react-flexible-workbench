@@ -110,10 +110,25 @@ export class PerspectiveBar extends React.Component<IPerspectiveBarProps, IPersp
     );
   }
 
-  private _createNewPerspective = (): void => {
+  private _createNewPerspective = async (): Promise<void> => {
     const { workbench } = this.props;
-    console.log(workbench.getState());
-    alert("Not implemented yet");
+    const { environment } = workbench;
+    const perspective: IPerspective = {
+      label: "",
+      state: workbench.getState()
+    };
+    const confirmation = await environment.onCreatingNewPerspective(perspective);
+    if (confirmation) {
+      const { storage } = this.props;
+      if (storage !== undefined) {
+        const id = await storage.save(perspective);
+        this.setState({
+          selectedPerspectiveId: id
+        });
+      } else {
+        console.warn("No perspective storage while creating new perspective; this is probably a bug.");
+      }
+    }
   }
 
   private _loadPerspectiveById = async (id: string): Promise<void> => {
