@@ -101,7 +101,7 @@ const workbench = new WorkbenchBuilder()
 const perspectives = PerspectiveStorage.fromArray([
   {
     label: "P1",
-    state: JSON.stringify({
+    state: {
       content:
         new PerspectiveBuilder(workbench)
           .makeRows()
@@ -114,11 +114,11 @@ const perspectives = PerspectiveStorage.fromArray([
               title: "Panel B"
             }, "panel-b")
           .build()
-    })
+    }
   },
   {
     label: "P2",
-    state: JSON.stringify({
+    state: {
       content:
         new PerspectiveBuilder(workbench)
           .makeColumns()
@@ -131,7 +131,7 @@ const perspectives = PerspectiveStorage.fromArray([
               title: "Panel B"
             }, "panel-b")
           .build()
-    })
+    }
   }
 ]);
 

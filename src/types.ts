@@ -6,3 +6,8 @@ export type ComponentConstructor<TState> =
 export type Container = GoldenLayout.Container;
 export type DragSource = any;
 export type ItemConfigType = GoldenLayout.ItemConfigType;
+
+/**
+ * Type specification for the state of the workbench.
+ */
+export type WorkbenchState = any;

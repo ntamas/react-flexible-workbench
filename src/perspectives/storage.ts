@@ -104,8 +104,7 @@ export interface IPerspectiveStorage {
    * storage.
    *
    * The new state will be stored in the modified state of the perspective; the
-   * base state will be left intact. The implementor of this method <em>must</em>
-   * take a deep copy of the state or stringify it before storing it.
+   * base state will be left intact.
    *
    * The operation may be asynchronous for certain storage backends,
    * therefore the function will return a promise that resolves when the
