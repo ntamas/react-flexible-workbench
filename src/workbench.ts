@@ -1,10 +1,10 @@
+import { EventEmitter } from "eventemitter3";
 import * as GoldenLayout from "golden-layout";
 import * as JQuery from "jquery";
 import isFunction from "lodash-es/isFunction";
 import pick from "lodash-es/pick";
 import * as React from "react";
 import { withContext } from "recompose";
-import EventEmitter = require("wolfy87-eventemitter");
 
 import { WorkbenchBuilder } from "./builder";
 import { Environment, IEnvironmentMethods } from "./environment";
@@ -404,7 +404,6 @@ export class Workbench extends EventEmitter {
             this.contextProvider(component) :
             this.contextProvider;
         if (contextDefinition !== undefined) {
-          console.log(contextDefinition);
           component = withContext(
             contextDefinition.childContextTypes,
             contextDefinition.getChildContext

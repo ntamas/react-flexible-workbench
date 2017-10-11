@@ -11,6 +11,11 @@ export interface IModuleDrawerProps {
   /**
    * Function that decides whether a given module is enabled or not, based
    * on the props of the module.
+   *
+   * To avoid problems with golden-layout, this function must be designed
+   * in a way that the item that the user starts to drag to the workbench
+   * must be enabled; if it becomes disabled somehow before golden-layout
+   * creates its drag proxy, golden-layout will freak out.
    */
   isModuleEnabled?: (props: IModuleProps) => boolean;
 
@@ -63,7 +68,7 @@ export class ModuleDrawer extends React.Component<IModuleDrawerProps, {}> {
           workbench
         };
         if (isModuleEnabled !== undefined) {
-          newProps.disabled = isModuleEnabled(child.props);
+          newProps.disabled = !isModuleEnabled(child.props);
         }
         return React.cloneElement(child as any, newProps);
       }

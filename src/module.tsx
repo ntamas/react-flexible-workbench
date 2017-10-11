@@ -87,13 +87,13 @@ export class Module extends React.Component<IModuleProps, {}> {
     const disabledChanged = (!!newProps.disabled !== !!this.props.disabled);
 
     if (disabledChanged) {
-      this._dragSource = undefined;
+      this._removeDragSourceFromWorkbench(this.props.workbench);
     }
 
     this._setWorkbench(newProps.workbench);
 
     if (disabledChanged) {
-      this._updateDragSourceForProps( /* rootNodeChanged = */ false);
+      this._updateDragSourceForProps( /* rootNodeChanged = */ false, newProps);
     }
   }
 
@@ -154,7 +154,7 @@ export class Module extends React.Component<IModuleProps, {}> {
   }
 
   private _onWorkbenchLayoutChanged = () => {
-    this._dragSource = undefined;
+    this._removeDragSourceFromWorkbench(this.props.workbench);
     this._updateDragSourceForProps( /* rootNodeChanged = */ false);
   }
 
@@ -194,18 +194,27 @@ export class Module extends React.Component<IModuleProps, {}> {
                              workbench !== undefined && !disabled);
 
     if (needsDragSource) {
+      // workbench !== undefined here but TypeScript is not smart
+      // enough to infer it
       if (this._dragSource === undefined || rootNodeChanged) {
+        this._removeDragSourceFromWorkbench(workbench);
+        console.log("Adding new drag source, rootNodeChanged=", rootNodeChanged, " props=", props);
         this._dragSource = workbench!.createDragSource(
           node!, this._createItemConfigurationFromProps(props) as any
         );
       }
     } else {
-      if (this._dragSource !== undefined) {
-        if (workbench !== undefined) {
-          workbench.removeDragSource(this._dragSource);
-        }
-        this._dragSource = undefined;
+      this._removeDragSourceFromWorkbench(workbench);
+    }
+  }
+
+  private _removeDragSourceFromWorkbench = (workbench: Workbench | undefined) => {
+    if (this._dragSource !== undefined) {
+      if (workbench !== undefined) {
+        workbench.removeDragSource(this._dragSource);
       }
+      console.log("Remving drag source");
+      this._dragSource = undefined;
     }
   }
 

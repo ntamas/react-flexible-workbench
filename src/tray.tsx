@@ -64,7 +64,7 @@ export class ModuleTray extends React.Component<IModuleTrayProps, IModuleTraySta
             workbench
           };
           if (child.props.isModuleEnabled === undefined) {
-            newProps.isModuleEnabled = this._isModuleVisible;
+            newProps.isModuleEnabled = this._isModuleNotVisible;
           }
           child = React.cloneElement(child as any, newProps);
         }
@@ -89,12 +89,12 @@ export class ModuleTray extends React.Component<IModuleTrayProps, IModuleTraySta
   }
 
   /**
-   * Returns whether the module with the given props is already visible in
+   * Returns whether the module with the given props is not visible in
    * the workbench corresponding to the tray.
    */
-  private _isModuleVisible = (props: IModuleProps): boolean => {
+  private _isModuleNotVisible = (props: IModuleProps): boolean => {
     const { id } = props;
-    return (id !== undefined && this._visibleIds.indexOf(id) >= 0);
+    return (id === undefined || this._visibleIds.indexOf(id) < 0);
   }
 
   /**
@@ -128,20 +128,15 @@ export class ModuleTray extends React.Component<IModuleTrayProps, IModuleTraySta
     const ids = this._extractIdsFromContentItem(item);
     if (ids.length > 0) {
       Array.prototype.push.apply(this._visibleIds, ids);
-      this._updateVisibleIds();
+      this._updateVisibleIdsLater();
     }
   }
 
   private _onItemDestroyed = (item: GoldenLayout.ContentItem): void => {
     const ids = this._extractIdsFromContentItem(item);
     if (ids.length > 0) {
-      // There is an issue in golden-layout, which results in itemDestroyed
-      // events being fired multiple times. This is probably due to event
-      // bubbling within golden-layout, but I haven't had time to debug it
-      // properly yet. Anyway, we need to use pullAll() so we are flexible
-      // enough to handle duplicates and missing items.
       pullAll(this._visibleIds, ids);
-      this._updateVisibleIds();
+      this._updateVisibleIdsLater();
     }
   }
 
@@ -157,9 +152,24 @@ export class ModuleTray extends React.Component<IModuleTrayProps, IModuleTraySta
     });
   }
 
-  private _updateVisibleIds(): void {
+  private _updateVisibleIds = (): void => {
     this.setState({
       visibleIds: this._visibleIds.concat()
     });
+  }
+
+  /**
+   * This function is useful in cases when we want to update the set of
+   * visible IDs in the workbench with a delay.
+   *
+   * This is needed during dragging because golden-layout already creates an
+   * item when the user starts to drag it to the workbench, and in this case
+   * it gets confused when we suddenly disable the drag source in the
+   * corresponding drawer of the tray. Doing it after 100 msec seems to be
+   * okay. Using window.requestAnimationFrame() did not seem to do the
+   * trick.
+   */
+  private _updateVisibleIdsLater(): void {
+    setTimeout(100, this._updateVisibleIds);
   }
 }
