@@ -8,6 +8,7 @@ import { withContext } from "recompose";
 
 import { WorkbenchBuilder } from "./builder";
 import { Environment, IEnvironmentMethods } from "./environment";
+import { LazyReactComponentHandler } from "./handlers";
 import { ComponentConstructor, ContextProvider, DragSource,
          IContextDefinition, ItemConfigType, WorkbenchState } from "./types";
 import { getDisplayName, traverseWorkbench } from "./utils";
@@ -57,7 +58,11 @@ export class Workbench extends EventEmitter {
   constructor() {
     super();
 
-    this._registry = {};
+    this._registry = {
+      "lm-react-lazy-component": {
+        factory: LazyReactComponentHandler
+      }
+    };
     this._configDefaults = {
       // Popouts are not nice so we take an opinionated override here
       settings: {
@@ -247,7 +252,7 @@ export class Workbench extends EventEmitter {
     // constructor and golden-layout will freak out. We fix it by wrapping it
     // in another function that is not bound.
     if (!factory.hasOwnProperty("prototype")) {
-      const oldFactory = factory;
+      const oldFactory = factory as any;
       factory = function(node: GoldenLayout.Container, state: TState): void {
         oldFactory(node, state);
         return this;

@@ -198,7 +198,6 @@ export class Module extends React.Component<IModuleProps, {}> {
       // enough to infer it
       if (this._dragSource === undefined || rootNodeChanged) {
         this._removeDragSourceFromWorkbench(workbench);
-        console.log("Adding new drag source, rootNodeChanged=", rootNodeChanged, " props=", props);
         this._dragSource = workbench!.createDragSource(
           node!, this._createItemConfigurationFromProps(props) as any
         );
@@ -213,7 +212,6 @@ export class Module extends React.Component<IModuleProps, {}> {
       if (workbench !== undefined) {
         workbench.removeDragSource(this._dragSource);
       }
-      console.log("Remving drag source");
       this._dragSource = undefined;
     }
   }

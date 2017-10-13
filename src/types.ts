@@ -1,7 +1,11 @@
 import * as GoldenLayout from "golden-layout";
 
-export type ComponentConstructor<TState> =
-  (node: GoldenLayout.Container, state: TState) => void;
+export type ComponentConstructor<TState> = (
+  ((node: GoldenLayout.Container, state: TState) => void) |
+  {
+    new(node: GoldenLayout.Container, state: TState): {};
+  }
+);
 
 export type Container = GoldenLayout.Container;
 export type DragSource = any;
