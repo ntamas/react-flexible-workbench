@@ -118,6 +118,14 @@ export class Workbench extends EventEmitter {
    * Destroys the workbench and removes it from the DOM.
    */
   public destroy(): void {
+    this.detach();
+  }
+
+  /**
+   * Detaches the workbench and removes it from the DOM, leaving the
+   * possibility open to re-mount it later.
+   */
+  public detach(): void {
     this._setLayout(undefined);
     this._domNode = undefined;
   }
