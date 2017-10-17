@@ -37,6 +37,11 @@ export interface IModuleDrawerProps {
   label: React.ReactNode;
 
   /**
+   * Handler to call when the user clicked on a module in the module drawer.
+   */
+  onClick?: (moduleProps: IModuleProps, event?: React.SyntheticEvent<any>) => void;
+
+  /**
    * Handler to call when the drawer is about to be closed. It is the
    * responsibility of the handler to update the props of the drawer if the
    * drawer can be closed.
@@ -64,13 +69,14 @@ export class ModuleDrawer extends React.Component<IModuleDrawerProps, {}> {
 
   public render() {
     const { children, closeAfterDragging, isModuleEnabled, isOpen, label,
-            onClose, onOpen, workbench } = this.props;
+            onClick, onClose, onOpen, workbench } = this.props;
     const classes = ["wb-module-drawer"];
     classes.push(isOpen ? "wb-module-drawer-open" : "wb-module-drawer-closed");
 
     const items = React.Children.map(children, child => {
       if (isElementClassEqualTo(Module, child)) {
         const newProps: Partial<IModuleProps> = {
+          onClick: onClick ? onClick.bind(null, child.props as IModuleProps) : undefined,
           onStartDrag: closeAfterDragging ? onClose : undefined,
           workbench
         };

@@ -43,6 +43,11 @@ export interface IModuleProps {
   label: React.ReactNode;
 
   /**
+   * Callback function to call when the user clicked on the module.
+   */
+  onClick?: (event?: React.SyntheticEvent<any>) => void;
+
+  /**
    * Callback function to call when the module has been torn out of its drawer
    * by the user.
    */
@@ -110,7 +115,8 @@ export class Module extends React.Component<IModuleProps, {}> {
     }
 
     return (
-      <li className={classes.join(" ")} ref={this._setRootNode}>{ label }</li>
+      <li onClick={disabled ? undefined : this._onClick}
+          className={classes.join(" ")} ref={this._setRootNode}>{ label }</li>
     );
   }
 
@@ -151,6 +157,13 @@ export class Module extends React.Component<IModuleProps, {}> {
 
       return result;
     };
+  }
+
+  private _onClick = (event: React.SyntheticEvent<any>) => {
+    const { onClick } = this.props;
+    if (onClick) {
+      onClick(event);
+    }
   }
 
   private _onWorkbenchLayoutChanged = () => {
