@@ -1,13 +1,20 @@
 import * as React from "react";
 
+import { isElementClassEqualTo } from "../utils";
+import { Workbench } from "../workbench";
+
 import { IModuleProps, Module } from "./module";
-import { isElementClassEqualTo } from "./utils";
-import { Workbench } from "./workbench";
 
 /**
  * Props of a module drawer component.
  */
 export interface IModuleDrawerProps {
+  /**
+   * Decides whether the module drawer should be closed when a module is
+   * dragged out of it to the workbench.
+   */
+  closeAfterDragging?: boolean;
+
   /**
    * Function that decides whether a given module is enabled or not, based
    * on the props of the module.
@@ -56,15 +63,15 @@ export interface IModuleDrawerProps {
 export class ModuleDrawer extends React.Component<IModuleDrawerProps, {}> {
 
   public render() {
-    const { children, isModuleEnabled, isOpen, label, onClose, onOpen,
-            workbench } = this.props;
+    const { children, closeAfterDragging, isModuleEnabled, isOpen, label,
+            onClose, onOpen, workbench } = this.props;
     const classes = ["wb-module-drawer"];
     classes.push(isOpen ? "wb-module-drawer-open" : "wb-module-drawer-closed");
 
     const items = React.Children.map(children, child => {
       if (isElementClassEqualTo(Module, child)) {
         const newProps: Partial<IModuleProps> = {
-          onStartDrag: onClose,
+          onStartDrag: closeAfterDragging ? onClose : undefined,
           workbench
         };
         if (isModuleEnabled !== undefined) {

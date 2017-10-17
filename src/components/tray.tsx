@@ -1,18 +1,22 @@
 import * as GoldenLayout from "golden-layout";
 import isArray from "lodash-es/isArray";
 import pullAll from "lodash-es/pullAll";
+import uniq from "lodash-es/uniq";
 import * as PropTypes from "prop-types";
 import * as React from "react";
 
 import { IModuleDrawerProps, ModuleDrawer } from "./drawer";
 import { IModuleProps } from "./module";
-import { isElementClassEqualTo } from "./utils";
-import { Workbench } from "./workbench";
+
+import { isElementClassEqualTo } from "../utils";
+import { Workbench } from "../workbench";
 
 /**
  * Props of a module tray component.
  */
 export interface IModuleTrayProps {
+  allowMultipleSelection?: boolean;
+  vertical?: boolean;
   workbench: Workbench;
 }
 
@@ -20,7 +24,7 @@ export interface IModuleTrayProps {
  * State of a module tray component.
  */
 export interface IModuleTrayState {
-  indexOfOpenDrawer: number;
+  indexOfOpenDrawers: number[];
   visibleIds: string[];
 }
 
@@ -31,14 +35,16 @@ export interface IModuleTrayState {
  */
 export class ModuleTray extends React.Component<IModuleTrayProps, IModuleTrayState> {
 
+  private _draggedIds: string[];
   private _visibleIds: string[];
   private _workbench: Workbench;
 
   public constructor(props: IModuleTrayProps) {
     super(props);
+    this._draggedIds = [];
     this._visibleIds = [];
     this.state = {
-      indexOfOpenDrawer: NaN,
+      indexOfOpenDrawers: [],
       visibleIds: []
     };
   }
@@ -52,17 +58,20 @@ export class ModuleTray extends React.Component<IModuleTrayProps, IModuleTraySta
   }
 
   public render() {
-    const { children, workbench } = this.props;
-    const { indexOfOpenDrawer } = this.state;
+    const { allowMultipleSelection, children, vertical, workbench } = this.props;
+    const { indexOfOpenDrawers } = this.state;
     const drawers = React.Children.map(this.props.children,
       (child: React.ReactChild, index: number) => {
         if (isElementClassEqualTo(ModuleDrawer, child)) {
           const newProps: Partial<IModuleDrawerProps> = {
-            isOpen: index === indexOfOpenDrawer,
+            isOpen: indexOfOpenDrawers.includes(index),
             onClose: this._onTrayClosed.bind(this, index),
             onOpen: this._onTrayOpened.bind(this, index),
             workbench
           };
+          if (child.props.closeAfterDragging === undefined) {
+            newProps.closeAfterDragging = !allowMultipleSelection;
+          }
           if (child.props.isModuleEnabled === undefined) {
             newProps.isModuleEnabled = this._isModuleNotVisible;
           }
@@ -70,8 +79,14 @@ export class ModuleTray extends React.Component<IModuleTrayProps, IModuleTraySta
         }
         return child;
       });
+
+    const classes = ["wb-module-tray"];
+    if (vertical) {
+      classes.push("wb-module-tray-vertical");
+    }
+
     return (
-      <div className="wb-module-tray">{drawers}</div>
+      <div className={classes.join(" ")}>{drawers}</div>
     );
   }
 
@@ -94,7 +109,7 @@ export class ModuleTray extends React.Component<IModuleTrayProps, IModuleTraySta
    */
   private _isModuleNotVisible = (props: IModuleProps): boolean => {
     const { id } = props;
-    return (id === undefined || this._visibleIds.indexOf(id) < 0);
+    return (id === undefined || !this._visibleIds.includes(id));
   }
 
   /**
@@ -111,6 +126,7 @@ export class ModuleTray extends React.Component<IModuleTrayProps, IModuleTraySta
     if (this._workbench !== undefined) {
       this._workbench.off("itemCreated", this._onItemCreated);
       this._workbench.off("itemDestroyed", this._onItemDestroyed);
+      this._workbench.off("itemDropped", this._onItemDropped);
     }
 
     this._workbench = value;
@@ -118,7 +134,7 @@ export class ModuleTray extends React.Component<IModuleTrayProps, IModuleTraySta
     if (this._workbench !== undefined) {
       this._workbench.on("itemCreated", this._onItemCreated);
       this._workbench.on("itemDestroyed", this._onItemDestroyed);
-
+      this._workbench.on("itemDropped", this._onItemDropped);
       // TODO: iterate over all currently visible panels and fill the
       // _visibleIds array
     }
@@ -126,9 +142,12 @@ export class ModuleTray extends React.Component<IModuleTrayProps, IModuleTraySta
 
   private _onItemCreated = (item: GoldenLayout.ContentItem): void => {
     const ids = this._extractIdsFromContentItem(item);
-    if (ids.length > 0) {
+    const isDragging = document.body.classList.contains("lm_dragging");
+    if (isDragging) {
+      this._draggedIds = ids;
+    } else {
       Array.prototype.push.apply(this._visibleIds, ids);
-      this._updateVisibleIdsLater();
+      this._updateVisibleIds();
     }
   }
 
@@ -136,40 +155,33 @@ export class ModuleTray extends React.Component<IModuleTrayProps, IModuleTraySta
     const ids = this._extractIdsFromContentItem(item);
     if (ids.length > 0) {
       pullAll(this._visibleIds, ids);
-      this._updateVisibleIdsLater();
+      this._updateVisibleIds();
     }
   }
 
+  private _onItemDropped = (): void => {
+    this._visibleIds = uniq(this._visibleIds.concat(this._draggedIds));
+    this._draggedIds = [];
+    this._updateVisibleIds();
+  }
+
   private _onTrayOpened(index: number): void {
-    this.setState({
-      indexOfOpenDrawer: index
-    });
+    const { allowMultipleSelection } = this.props;
+    const indexOfOpenDrawers = allowMultipleSelection ? this.state.indexOfOpenDrawers.concat() : [];
+    indexOfOpenDrawers.push(index);
+    this.setState({ indexOfOpenDrawers });
   }
 
   private _onTrayClosed(index: number): void {
-    this.setState({
-      indexOfOpenDrawer: NaN
-    });
+    const { allowMultipleSelection } = this.props;
+    const indexOfOpenDrawers = allowMultipleSelection ?
+      this.state.indexOfOpenDrawers.filter(x => x !== index) : [];
+    this.setState({ indexOfOpenDrawers });
   }
 
   private _updateVisibleIds = (): void => {
     this.setState({
       visibleIds: this._visibleIds.concat()
     });
-  }
-
-  /**
-   * This function is useful in cases when we want to update the set of
-   * visible IDs in the workbench with a delay.
-   *
-   * This is needed during dragging because golden-layout already creates an
-   * item when the user starts to drag it to the workbench, and in this case
-   * it gets confused when we suddenly disable the drag source in the
-   * corresponding drawer of the tray. Doing it after 100 msec seems to be
-   * okay. Using window.requestAnimationFrame() did not seem to do the
-   * trick.
-   */
-  private _updateVisibleIdsLater(): void {
-    setTimeout(100, this._updateVisibleIds);
   }
 }

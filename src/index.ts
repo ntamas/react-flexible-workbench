@@ -1,9 +1,7 @@
 export { PerspectiveBuilder, WorkbenchBuilder } from "./builder";
-export { ModuleDrawer } from "./drawer";
+export { Module, ModuleDrawer, ModuleTray } from "./components";
 export { Environment, IEnvironmentMethods } from "./environment";
-export { Module } from "./module";
 export { IPerspective, IPerspectiveStorage, PerspectiveBar,
          PerspectiveStorage } from "./perspectives";
-export { ModuleTray } from "./tray";
 export { Container, ItemConfigType, WorkbenchState } from "./types";
 export { Workbench } from "./workbench";

@@ -9,22 +9,47 @@
   flex-flow: row nowrap;
   justify-content: center;
 }
+.wb-module-tray.wb-module-tray-vertical {
+  flex-flow: column nowrap;
+  justify-content: center;
+}
+
 .wb-module-tray .wb-module-drawer {
   padding: 0 2px;
 }
 .wb-module-tray .wb-module-drawer button {
   min-width: 32px;
+  text-overflow: ellipsis;
 }
+.wb-module-tray.wb-module-tray-vertical {
+  overflow-x: hidden;
+  overflow-y: auto;
+}
+.wb-module-tray.wb-module-tray-vertical .wb-module-drawer {
+  display: flex;
+  flex-flow: column nowrap;
+  padding: 0;
+}
+.wb-module-tray.wb-module-tray-vertical .wb-module-drawer-anchor {
+  order: 1;
+}
+.wb-module-tray.wb-module-tray-vertical .wb-module-drawer button {
+  min-width: unset;
+  order: 0;
+  padding: 0.5em 1em;
+  text-align: left;
+  width: 100%;
+}
+
 .wb-module-drawer-anchor {
   position: relative;
 }
 .wb-module-drawer-contents {
-  position: absolute;
-  bottom: 5px;
-  min-width: 200px;
-  max-width: 400px;
-  border-radius: 4px;
   padding: 4px 0;
+  user-select: none;
+}
+.wb-module-tray-vertical .wb-module-drawer-contents {
+  padding: 0;
   user-select: none;
 }
 .wb-module-drawer-contents ul {
@@ -36,6 +61,7 @@
 .wb-module-drawer-contents li {
   padding: 0.5em 1em;
   cursor: default;
+  text-overflow: ellipsis;
 }
 .wb-module-disabled {
   opacity: 0.5;

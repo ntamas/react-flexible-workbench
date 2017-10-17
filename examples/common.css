@@ -1,0 +1,56 @@
+html {
+  height: 100%;
+  overflow: hidden;
+}
+
+body {
+  font-family: Arial, sans-serif;
+  font-size: 16px;
+  margin: 0;
+  padding: 0;
+  overflow: hidden;
+
+  height: 100%;
+}
+
+#header {
+  background: #06c;
+  box-sizing: border-box;
+  color: #fff;
+  flex-flow: row;
+  min-height: 44px;
+
+  padding: 0.5em 1em;
+  flex-shrink: 0;
+  flex-grow: 0;
+}
+
+button:disabled {
+  opacity: 0.4;
+}
+
+#root {
+  background: #f4f4f4;
+  flex-grow: 1;
+  flex-shrink: 1;
+  padding: 5px;
+}
+
+.panel {
+  height: 100%;
+  width: 100%;
+
+  display: flex;
+  flex-flow: column;
+  justify-content: center; /* align horizontal */
+  align-items: center;
+  text-align: center;
+
+  color: #888;
+}
+
+.big-letter {
+  font-size: 800%;
+  font-weight: bold;
+  color: #aaa;
+}
