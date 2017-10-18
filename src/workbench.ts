@@ -406,6 +406,17 @@ export class Workbench extends EventEmitter {
   }
 
   /**
+   * Updates the size of the workbench to the given values. If no values
+   * are given, the workbench will measure its parent container and adjust
+   * its own size to the parent.
+   */
+  public updateSize(width?: number, height?: number): void {
+    if (this._layout) {
+      this._layout.updateSize(width, height);
+    }
+  }
+
+  /**
    * Creates a new <code>golden-layout</code> object from the current
    * configuration object and the DOM node that the workbench is associated
    * to.
