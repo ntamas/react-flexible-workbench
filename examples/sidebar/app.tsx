@@ -63,13 +63,11 @@ const SidebarButton = ({ isOpen, onClick, style }: ISidebarButtonProps) => {
                      shape={isOpen ? "close" : "menu"} style={style} />;
 };
 
-// =============================================================================
-
-interface ISidebarState {
+interface ISidebarButtonControllerState {
   isOpen: boolean;
 }
 
-class Sidebar extends React.Component<{}, ISidebarState> {
+class SidebarButtonController extends React.Component<{}, ISidebarButtonControllerState> {
   constructor(props: {}) {
     super(props);
     this.state = {
@@ -78,24 +76,46 @@ class Sidebar extends React.Component<{}, ISidebarState> {
   }
 
   public render() {
-    const { isOpen } = this.state;
-    const children = isOpen ? this.props.children : null;
-    const classes = ["sidebar", isOpen ? "sidebar-open" : "sidebar-closed"];
     return (
-      <div>
-        <SidebarButton isOpen={isOpen} onClick={this._toggleState}
-                       style={{ zIndex: 2000 }} />
-        <div className={classes.join(" ")} style={{ zIndex: 0 }}>
-          { children }
-        </div>
-      </div>
+      <SidebarButton onClick={toggleSidebar} isOpen={this.state.isOpen} />
     );
   }
+}
 
-  private _toggleState = (): void => {
-    this.setState({
-      isOpen: !this.state.isOpen
-    });
+// =============================================================================
+
+interface ISidebarProps {
+  children?: string | React.ReactNode | React.ReactNode[];
+  isOpen?: boolean;
+}
+
+const Sidebar = ({ children, isOpen }: ISidebarProps) => {
+  const classes = ["sidebar", isOpen ? "sidebar-open" : "sidebar-closed"];
+  return (
+    <div className={classes.join(" ")}>
+      { isOpen ? children : null }
+    </div>
+  );
+};
+
+interface ISidebarControllerState {
+  isOpen: boolean;
+}
+
+class SidebarController extends React.Component<{}, ISidebarControllerState> {
+  constructor(props: {}) {
+    super(props);
+    this.state = {
+      isOpen: false
+    };
+  }
+
+  public render() {
+    return (
+      <Sidebar isOpen={this.state.isOpen}>
+        {this.props.children}
+      </Sidebar>
+    );
   }
 }
 
@@ -164,10 +184,38 @@ const perspectives = PerspectiveStorage.fromArray([
 
 // =============================================================================
 
+let sidebarButton: SidebarButtonController;
+let sidebar: SidebarController;
+let sidebarVisible = false
+
+function setSidebarButton(value: any) {
+  sidebarButton = value;
+}
+
+function setSidebar(value: any) {
+  sidebar = value;
+}
+
+function toggleSidebar() {
+  sidebarVisible = !sidebarVisible;
+  sidebar.setState({
+    isOpen: sidebarVisible
+  }, () => {
+    // This function gets rid of some minor flickering after the sidebar opens
+    workbench.updateSize();
+  });
+  sidebarButton.setState({
+    isOpen: sidebarVisible
+  });
+}
+
+// =============================================================================
+
 workbench.render("#root");
 ReactDOM.render(<Header perspectives={perspectives} workbench={workbench} />, $("#header").get(0));
+ReactDOM.render(<SidebarButtonController ref={setSidebarButton} />, $("#menu-button").get(0));
 ReactDOM.render(
-  <Sidebar>
+  <SidebarController ref={setSidebar}>
     <h1>Workbench</h1>
     <ModuleTray allowMultipleSelection vertical workbench={workbench}>
       <ModuleDrawer label="Generic">
@@ -185,6 +233,6 @@ ReactDOM.render(
       <ModuleDrawer label="Master tables">
       </ModuleDrawer>
     </ModuleTray>
-  </Sidebar>,
+  </SidebarController>,
   $("#sidebar-container").get(0)
 );
