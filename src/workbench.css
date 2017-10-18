@@ -37,8 +37,21 @@
   min-width: unset;
   order: 0;
   padding: 0.5em 1em;
+  position: relative;
   text-align: left;
   width: 100%;
+}
+.wb-module-tray.wb-module-tray-vertical .wb-module-drawer.wb-module-drawer button::after {
+  content: "\25bc";
+  font-size: 80%;
+  position: absolute;
+  right: 1em;
+  top: 50%;
+  transform: translateY(-50%);
+  transition: transform 0.3s ease;
+}
+.wb-module-tray.wb-module-tray-vertical .wb-module-drawer.wb-module-drawer-open button::after {
+  transform: translateY(-50%) rotate(180deg);
 }
 
 .wb-module-drawer-anchor {

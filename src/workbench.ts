@@ -182,6 +182,26 @@ export class Workbench extends EventEmitter {
   }
 
   /**
+   * Calls the given function for each container and panel in the workbench,
+   * in DFS order.
+   */
+  public forEach(func: (item: GoldenLayout.ContentItem) => boolean | void): void {
+    if (this._layout === undefined) {
+      throw new Error("The workbench has not been mounted yet");
+    }
+
+    const stack: GoldenLayout.ContentItem[] = [this._layout.root];
+    while (stack.length > 0) {
+      const item: GoldenLayout.ContentItem = stack.pop()!;
+      if (!func(item)) {
+        if (item.contentItems) {
+          stack.push.apply(stack, item.contentItems);
+        }
+      }
+    }
+  }
+
+  /**
    * Returns a serialized representation of the current state of the workbench.
    *
    * Note that the state object returned here is not the full state of the

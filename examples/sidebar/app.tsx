@@ -8,6 +8,8 @@ import { Container, IPerspectiveStorage, ItemConfigType, Module, ModuleDrawer,
          ModuleTray, PerspectiveBar, PerspectiveBuilder, PerspectiveStorage,
          Workbench, WorkbenchBuilder } from "../../src/index";
 
+import { MenuButton } from "./MenuButton";
+
 // Note that React stateless components are currently not allowed in
 // golden-layout as of 1.5.9. I have already submitted a pull request to
 // address this issue:
@@ -43,10 +45,23 @@ interface IHeaderProps {
 
 const Header = ({ perspectives, workbench }: IHeaderProps) => (
   <div style={{ display: "flex", alignItems: "center" }}>
-    <div className="title">Workbench demo</div>
+    <div className="title"></div>
     <PerspectiveBar storage={perspectives} workbench={workbench} />
   </div>
 );
+
+// =============================================================================
+
+interface ISidebarButtonProps {
+  isOpen?: boolean;
+  onClick?: (event: React.SyntheticEvent<any>) => void;
+  style?: React.CSSProperties;
+}
+
+const SidebarButton = ({ isOpen, onClick, style }: ISidebarButtonProps) => {
+  return <MenuButton color="white" onClick={onClick} padding={14}
+                     shape={isOpen ? "close" : "menu"} style={style} />;
+};
 
 // =============================================================================
 
@@ -58,7 +73,7 @@ class Sidebar extends React.Component<{}, ISidebarState> {
   constructor(props: {}) {
     super(props);
     this.state = {
-      isOpen: true
+      isOpen: false
     };
   }
 
@@ -67,8 +82,20 @@ class Sidebar extends React.Component<{}, ISidebarState> {
     const children = isOpen ? this.props.children : null;
     const classes = ["sidebar", isOpen ? "sidebar-open" : "sidebar-closed"];
     return (
-      <div className={classes.join(" ")}>{ children }</div>
+      <div>
+        <SidebarButton isOpen={isOpen} onClick={this._toggleState}
+                       style={{ zIndex: 2000 }} />
+        <div className={classes.join(" ")} style={{ zIndex: 0 }}>
+          { children }
+        </div>
+      </div>
     );
+  }
+
+  private _toggleState = (): void => {
+    this.setState({
+      isOpen: !this.state.isOpen
+    });
   }
 }
 

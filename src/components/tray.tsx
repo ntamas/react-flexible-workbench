@@ -130,14 +130,21 @@ export class ModuleTray extends React.Component<IModuleTrayProps, IModuleTraySta
     }
 
     this._workbench = value;
+    this._draggedIds = [];
+    this._visibleIds = [];
 
     if (this._workbench !== undefined) {
       this._workbench.on("itemCreated", this._onItemCreated);
       this._workbench.on("itemDestroyed", this._onItemDestroyed);
       this._workbench.on("itemDropped", this._onItemDropped);
-      // TODO: iterate over all currently visible panels and fill the
-      // _visibleIds array
+
+      this._workbench.forEach(item => {
+        this._visibleIds.push.apply(this._visibleIds,
+          this._extractIdsFromContentItem(item));
+      });
     }
+
+    this._updateVisibleIds();
   }
 
   private _onItemCreated = (item: GoldenLayout.ContentItem): void => {
