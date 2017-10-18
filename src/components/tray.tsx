@@ -37,7 +37,7 @@ export class ModuleTray extends React.Component<IModuleTrayProps, IModuleTraySta
 
   private _draggedIds: string[];
   private _visibleIds: string[];
-  private _workbench: Workbench;
+  private _workbench: Workbench | undefined;
 
   public constructor(props: IModuleTrayProps) {
     super(props);
@@ -55,6 +55,10 @@ export class ModuleTray extends React.Component<IModuleTrayProps, IModuleTraySta
 
   public componentWillReceiveProps(newProps: IModuleTrayProps) {
     this._setWorkbench(newProps.workbench);
+  }
+
+  public componentWillUnmount() {
+    this._setWorkbench(undefined);
   }
 
   public render() {
@@ -118,7 +122,7 @@ export class ModuleTray extends React.Component<IModuleTrayProps, IModuleTraySta
    * Also takes care of registering or deregistering all the event handlers
    * that the ModuleTray instance might be interested in.
    */
-  private _setWorkbench(value: Workbench): void {
+  private _setWorkbench(value: Workbench | undefined): void {
     if (this._workbench === value) {
       return;
     }
