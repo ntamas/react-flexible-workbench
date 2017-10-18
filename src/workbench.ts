@@ -193,7 +193,7 @@ export class Workbench extends EventEmitter {
     const stack: GoldenLayout.ContentItem[] = [this._layout.root];
     while (stack.length > 0) {
       const item: GoldenLayout.ContentItem = stack.pop()!;
-      if (!func(item)) {
+      if (item && !func(item)) {
         if (item.contentItems) {
           stack.push.apply(stack, item.contentItems);
         }
