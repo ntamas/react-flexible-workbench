@@ -42,7 +42,7 @@
   width: 100%;
 }
 .wb-module-tray.wb-module-tray-vertical .wb-module-drawer.wb-module-drawer button::after {
-  content: "\25bc";
+  content: "\25b6";
   font-size: 80%;
   position: absolute;
   right: 1em;
@@ -51,7 +51,7 @@
   transition: transform 0.3s ease;
 }
 .wb-module-tray.wb-module-tray-vertical .wb-module-drawer.wb-module-drawer-open button::after {
-  transform: translateY(-50%) rotate(180deg);
+  transform: translateY(-50%) rotate(90deg);
 }
 
 .wb-module-drawer-anchor {
