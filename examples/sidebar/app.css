@@ -104,14 +104,20 @@
   margin: 0 14px;
 }
 
+body {
+  display: flex;
+  flex-flow: column nowrap;
+}
+
 #main {
   display: flex;
   flex-flow: row nowrap;
 
   height: 100%;
-  width: 100%;
-  max-width: 100%;
-  position: relative;
+  flex-grow: 1;
+  flex-shrink: 1;
+
+  overflow: hidden;
 }
 
 #menu-button {
