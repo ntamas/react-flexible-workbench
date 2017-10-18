@@ -17,7 +17,7 @@ export const MenuButton = (props: IMenuButtonProps) => {
   const shape: MenuButtonShape = props.shape || "menu";
   const thickness: number = props.thickness || 2;
   const width: number = props.width || 18;
-  const style: React.CSSProperties = Object.assign({
+  const style: React.CSSProperties = {
     alignItems: "center",
     background: "transparent",
     border: "none",
@@ -29,7 +29,8 @@ export const MenuButton = (props: IMenuButtonProps) => {
     outline: "none",
     padding: (padding + thickness) + "px " + padding + "px",
     width: width + 2 * padding,
-  }, props.style) as React.CSSProperties;
+    ...props.style
+  } as React.CSSProperties;
   const barStyle: React.CSSProperties = {
     boxSizing: "border-box",
     height: thickness,
@@ -71,9 +72,9 @@ export const MenuButton = (props: IMenuButtonProps) => {
 
   return (
     <button style={style} onClick={props.onClick}>
-      <div style={Object.assign(extraStyles.top, barStyle)} />
-      <div style={Object.assign(extraStyles.middle, barStyle)} />
-      <div style={Object.assign(extraStyles.bottom, barStyle)} />
+      <div style={{ ...extraStyles.top, ...barStyle}} />
+      <div style={{ ...extraStyles.middle, ...barStyle}} />
+      <div style={{ ...extraStyles.bottom, ...barStyle}} />
     </button>
   );
 };

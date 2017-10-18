@@ -186,7 +186,7 @@ const perspectives = PerspectiveStorage.fromArray([
 
 let sidebarButton: SidebarButtonController;
 let sidebar: SidebarController;
-let sidebarVisible = false
+let sidebarVisible = false;
 
 function setSidebarButton(value: any) {
   sidebarButton = value;
