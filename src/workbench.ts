@@ -10,8 +10,9 @@ import { WorkbenchBuilder } from "./builder";
 import { Environment, IEnvironmentMethods } from "./environment";
 import { LazyReactComponentHandler } from "./handlers";
 import { ComponentConstructor, ContextProvider, DragSource,
-         IContextDefinition, ItemConfigType, WorkbenchState } from "./types";
-import { getDisplayName, traverseWorkbench } from "./utils";
+         IContextDefinition, ItemConfigType, ItemVisitor,
+         WorkbenchState } from "./types";
+import { getDisplayName, onlyVisible, traverseWorkbench } from "./utils";
 
 // Require golden-layout CSS and theme files so they get included in the bundle
 require("golden-layout/src/css/goldenlayout-base.css");
@@ -185,20 +186,30 @@ export class Workbench extends EventEmitter {
    * Calls the given function for each container and panel in the workbench,
    * in DFS order.
    */
-  public forEach(func: (item: GoldenLayout.ContentItem) => boolean | void): void {
+  public forEach(func: ItemVisitor): void {
     if (this._layout === undefined) {
       throw new Error("The workbench has not been mounted yet");
     }
+    traverseWorkbench(this._layout, func);
+  }
 
-    const stack: GoldenLayout.ContentItem[] = [this._layout.root];
-    while (stack.length > 0) {
-      const item: GoldenLayout.ContentItem = stack.pop()!;
-      if (item && !func(item)) {
-        if (item.contentItems) {
-          stack.push.apply(stack, item.contentItems);
-        }
-      }
+  /**
+   * Calls the given function for each *visible* container and panel in the
+   * workbench, in DFS order. Panels that are hidden in a stack will not be
+   * visited.
+   */
+  public forEachVisible(func: ItemVisitor): void {
+    if (this._layout === undefined) {
+      throw new Error("The workbench has not been mounted yet");
     }
+    traverseWorkbench(this._layout, onlyVisible(func));
+  }
+
+  /**
+   * Returns the raw Golden-Layout object behind this workbench.
+   */
+  public get layout(): GoldenLayout | undefined {
+    return this._layout;
   }
 
   /**

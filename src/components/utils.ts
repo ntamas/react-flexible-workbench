@@ -15,12 +15,13 @@ export function convertModuleInTray(
   element: React.ReactElement<IModuleProps>
 ) {
   const { isModuleEnabled, onClick, workbench } = options;
+  const { props } = element;
   const newProps: Partial<IModuleProps> = {
-    onClick: onClick ? onClick.bind(null, element.props) : undefined,
+    onClick: onClick ? onClick.bind(null, props) : undefined,
     workbench
   };
   if (isModuleEnabled !== undefined) {
-    newProps.disabled = !isModuleEnabled(element.props);
+    newProps.disabled = !isModuleEnabled(props);
   }
   return React.cloneElement(element, newProps);
 }

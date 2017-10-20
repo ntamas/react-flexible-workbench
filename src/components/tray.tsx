@@ -1,15 +1,15 @@
 import * as GoldenLayout from "golden-layout";
-import isArray from "lodash-es/isArray";
 import pullAll from "lodash-es/pullAll";
 import uniq from "lodash-es/uniq";
 import * as PropTypes from "prop-types";
 import * as React from "react";
 
 import { IModuleDrawerProps, ModuleDrawer } from "./drawer";
-import { IModuleProps, Module } from "./module";
+import { createItemConfigurationFromProps, IModuleProps, Module } from "./module";
 import { convertModuleInTray } from "./utils";
 
-import { isElementClassEqualTo } from "../utils";
+import { extractIdsFromContentItem, isElementClassEqualTo,
+         proposePlaceForNewItemInWorkbench } from "../utils";
 import { Workbench } from "../workbench";
 
 /**
@@ -72,6 +72,7 @@ export class ModuleTray extends React.Component<IModuleTrayProps, IModuleTraySta
         if (isElementClassEqualTo(ModuleDrawer, child)) {
           const newProps: Partial<IModuleDrawerProps> = {
             isOpen: indexOfOpenDrawers.includes(index),
+            onClick: this._addNewItemToWorkbench,
             onClose: this._onTrayClosed.bind(this, index),
             onOpen: this._onTrayOpened.bind(this, index),
             workbench
@@ -85,7 +86,11 @@ export class ModuleTray extends React.Component<IModuleTrayProps, IModuleTraySta
           child = React.cloneElement(child as any, newProps);
         } else if (isElementClassEqualTo(Module, child)) {
           return convertModuleInTray(
-            { isModuleEnabled, workbench },
+            {
+              isModuleEnabled,
+              onClick: this._addNewItemToWorkbench,
+              workbench
+            },
             child
           );
         }
@@ -103,15 +108,28 @@ export class ModuleTray extends React.Component<IModuleTrayProps, IModuleTraySta
   }
 
   /**
-   * Extracts the component IDs from the given content item if it represents
-   * a component in the layout.
+   * Finds a place for a new item in the workbench if the user decides to
+   * click on a module in the tray instead of dragging it to the workbench.
+   * @type {[type]}
    */
-  private _extractIdsFromContentItem(item: GoldenLayout.ContentItem): string[] {
-    const maybeIds = item.type === "component" && item.config ? item.config.id : [];
-    if (maybeIds !== undefined) {
-      return isArray(maybeIds) ? maybeIds : [maybeIds];
-    } else {
-      return [];
+  private _addNewItemToWorkbench = (props: IModuleProps): void => {
+    const layout = this._workbench ? this._workbench.layout : undefined;
+    if (layout === undefined) {
+      throw new Error("Cannot add new item to a workbench when it is not mounted");
+    }
+
+    const place = proposePlaceForNewItemInWorkbench(layout);
+    console.log(place);
+
+    if (place !== undefined) {
+      const { parent, index } = place;
+      if (parent !== undefined) {
+        const config = createItemConfigurationFromProps({
+          ...props,
+          workbench: this._workbench
+        });
+        parent.addChild(config(), index + 1);
+      }
     }
   }
 
@@ -152,7 +170,7 @@ export class ModuleTray extends React.Component<IModuleTrayProps, IModuleTraySta
 
       this._workbench.forEach(item => {
         this._visibleIds.push.apply(this._visibleIds,
-          this._extractIdsFromContentItem(item));
+          extractIdsFromContentItem(item));
       });
     }
 
@@ -160,7 +178,7 @@ export class ModuleTray extends React.Component<IModuleTrayProps, IModuleTraySta
   }
 
   private _onItemCreated = (item: GoldenLayout.ContentItem): void => {
-    const ids = this._extractIdsFromContentItem(item);
+    const ids = extractIdsFromContentItem(item);
     const isDragging = document.body.classList.contains("lm_dragging");
     if (isDragging) {
       this._draggedIds = ids;
@@ -171,7 +189,7 @@ export class ModuleTray extends React.Component<IModuleTrayProps, IModuleTraySta
   }
 
   private _onItemDestroyed = (item: GoldenLayout.ContentItem): void => {
-    const ids = this._extractIdsFromContentItem(item);
+    const ids = extractIdsFromContentItem(item);
     if (ids.length > 0) {
       pullAll(this._visibleIds, ids);
       this._updateVisibleIds();

@@ -6,7 +6,6 @@ import { Workbench } from "../workbench";
 import { IModuleProps, Module } from "./module";
 import { convertModuleInTray } from "./utils";
 
-
 /**
  * Props of a module drawer component.
  */
@@ -80,6 +79,7 @@ export class ModuleDrawer extends React.Component<IModuleDrawerProps, {}> {
         return convertModuleInTray(
           {
             isModuleEnabled,
+            onClick,
             onStartDrag: closeAfterDragging ? onClose : undefined,
             workbench
           },

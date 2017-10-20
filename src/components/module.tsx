@@ -6,6 +6,43 @@ import * as React from "react";
 import { DragSource, ItemConfigType } from "../types";
 import { Workbench } from "../workbench";
 
+export function createItemConfigurationFromProps(props: IModuleProps): (() => ItemConfigType) {
+  return () => {
+    const { component, id, itemConfiguration, onStartDrag } = props;
+    let result;
+
+    if (onStartDrag) {
+      onStartDrag();
+    }
+
+    if (itemConfiguration !== undefined) {
+      result = Object.assign({},
+        isFunction(itemConfiguration) ? itemConfiguration() : itemConfiguration
+      );
+    } else if (component !== undefined) {
+      const { label, title, workbench } = props;
+      if (workbench === undefined) {
+        throw new Error("Workbench is undefined; this should not have happened");
+      }
+      const config = workbench.createItemConfigurationFor(component) as GoldenLayout.ReactComponentConfig;
+      config.title = title
+        ? (isFunction(title) ? title() : title)
+        : (typeof label === "string" ? label : "Untitled");
+      config.props = Object.assign({}, props.props);
+      result = config;
+    } else {
+      throw new Error("At least one of 'component' and 'itemConfiguration' " +
+                      "must be defined");
+    }
+
+    if (id !== undefined) {
+      result.id = id;
+    }
+
+    return result;
+  };
+}
+
 /**
  * Props of a single module component in a module drawer.
  */
@@ -120,45 +157,6 @@ export class Module extends React.Component<IModuleProps, {}> {
     );
   }
 
-  private _createItemConfigurationFromProps = (props?: IModuleProps): (() => ItemConfigType) => {
-    const effectiveProps = (props === undefined) ? this.props : props;
-
-    return () => {
-      const { component, id, itemConfiguration, onStartDrag } = effectiveProps;
-      let result;
-
-      if (onStartDrag) {
-        onStartDrag();
-      }
-
-      if (itemConfiguration !== undefined) {
-        result = Object.assign({},
-          isFunction(itemConfiguration) ? itemConfiguration() : itemConfiguration
-        );
-      } else if (component !== undefined) {
-        const { label, title, workbench } = effectiveProps;
-        if (workbench === undefined) {
-          throw new Error("Workbench is undefined; this should not have happened");
-        }
-        const config = workbench.createItemConfigurationFor(component) as GoldenLayout.ReactComponentConfig;
-        config.title = title
-          ? (isFunction(title) ? title() : title)
-          : (typeof label === "string" ? label : "Untitled");
-        config.props = Object.assign({}, effectiveProps.props);
-        result = config;
-      } else {
-        throw new Error("At least one of 'component' and 'itemConfiguration' " +
-                        "must be defined");
-      }
-
-      if (id !== undefined) {
-        result.id = id;
-      }
-
-      return result;
-    };
-  }
-
   private _onClick = (event: React.SyntheticEvent<any>) => {
     const { onClick } = this.props;
     if (onClick) {
@@ -212,7 +210,7 @@ export class Module extends React.Component<IModuleProps, {}> {
       if (this._dragSource === undefined || rootNodeChanged) {
         this._removeDragSourceFromWorkbench(workbench);
         this._dragSource = workbench!.createDragSource(
-          node!, this._createItemConfigurationFromProps(props) as any
+          node!, createItemConfigurationFromProps(props) as any
         );
       }
     } else {
