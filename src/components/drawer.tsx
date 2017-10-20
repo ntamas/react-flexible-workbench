@@ -4,6 +4,8 @@ import { isElementClassEqualTo } from "../utils";
 import { Workbench } from "../workbench";
 
 import { IModuleProps, Module } from "./module";
+import { convertModuleInTray } from "./utils";
+
 
 /**
  * Props of a module drawer component.
@@ -75,21 +77,20 @@ export class ModuleDrawer extends React.Component<IModuleDrawerProps, {}> {
 
     const items = React.Children.map(children, child => {
       if (isElementClassEqualTo(Module, child)) {
-        const newProps: Partial<IModuleProps> = {
-          onClick: onClick ? onClick.bind(null, child.props as IModuleProps) : undefined,
-          onStartDrag: closeAfterDragging ? onClose : undefined,
-          workbench
-        };
-        if (isModuleEnabled !== undefined) {
-          newProps.disabled = !isModuleEnabled(child.props);
-        }
-        return React.cloneElement(child as any, newProps);
+        return convertModuleInTray(
+          {
+            isModuleEnabled,
+            onStartDrag: closeAfterDragging ? onClose : undefined,
+            workbench
+          },
+          child
+        );
       }
     });
     const contents = items && items.length > 0 ? (
       <div className="wb-module-drawer-anchor" style={{ display: isOpen ? "block" : "none" }}>
         <div className="wb-module-drawer-contents">
-          <ul>{items}</ul>
+          {items}
         </div>
       </div>
     ) : [];

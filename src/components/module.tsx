@@ -115,8 +115,8 @@ export class Module extends React.Component<IModuleProps, {}> {
     }
 
     return (
-      <li onClick={disabled ? undefined : this._onClick}
-          className={classes.join(" ")} ref={this._setRootNode}>{ label }</li>
+      <div onClick={disabled ? undefined : this._onClick}
+          className={classes.join(" ")} ref={this._setRootNode}>{ label }</div>
     );
   }
 

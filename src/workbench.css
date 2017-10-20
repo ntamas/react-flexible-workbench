@@ -62,16 +62,12 @@
   user-select: none;
 }
 .wb-module-tray-vertical .wb-module-drawer-contents {
-  padding: 0;
-  user-select: none;
-}
-.wb-module-drawer-contents ul {
-  list-style-type: none;
   margin: 0;
   padding: 0;
+  user-select: none;
   text-align: left;
 }
-.wb-module-drawer-contents li {
+.wb-module {
   padding: 0.5em 1em;
   cursor: default;
   text-overflow: ellipsis;

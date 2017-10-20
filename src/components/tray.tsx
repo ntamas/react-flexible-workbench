@@ -6,7 +6,8 @@ import * as PropTypes from "prop-types";
 import * as React from "react";
 
 import { IModuleDrawerProps, ModuleDrawer } from "./drawer";
-import { IModuleProps } from "./module";
+import { IModuleProps, Module } from "./module";
+import { convertModuleInTray } from "./utils";
 
 import { isElementClassEqualTo } from "../utils";
 import { Workbench } from "../workbench";
@@ -64,6 +65,8 @@ export class ModuleTray extends React.Component<IModuleTrayProps, IModuleTraySta
   public render() {
     const { allowMultipleSelection, children, vertical, workbench } = this.props;
     const { indexOfOpenDrawers } = this.state;
+    const isModuleEnabled = this._isModuleNotVisible;
+
     const drawers = React.Children.map(this.props.children,
       (child: React.ReactChild, index: number) => {
         if (isElementClassEqualTo(ModuleDrawer, child)) {
@@ -77,9 +80,14 @@ export class ModuleTray extends React.Component<IModuleTrayProps, IModuleTraySta
             newProps.closeAfterDragging = !allowMultipleSelection;
           }
           if (child.props.isModuleEnabled === undefined) {
-            newProps.isModuleEnabled = this._isModuleNotVisible;
+            newProps.isModuleEnabled = isModuleEnabled;
           }
           child = React.cloneElement(child as any, newProps);
+        } else if (isElementClassEqualTo(Module, child)) {
+          return convertModuleInTray(
+            { isModuleEnabled, workbench },
+            child
+          );
         }
         return child;
       });

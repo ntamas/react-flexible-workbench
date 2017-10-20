@@ -55,7 +55,7 @@ interface IFooterProps {
 }
 
 const Footer = ({ workbench }: IFooterProps) => (
-  <div style={{ textAlign: "center" }}>
+  <div>
     <ModuleTray workbench={workbench}>
       <ModuleDrawer label="Generic">
         <Module id="panel-a" label="Panel A" component={MyComponent} props={{ label: "A" }} />
