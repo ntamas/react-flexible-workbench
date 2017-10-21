@@ -263,6 +263,11 @@ export class WorkbenchBuilder {
   private _builder: PerspectiveBuilder;
 
   /**
+   * The global settings of the workbench being built.
+   */
+  private _settings: GoldenLayout.Settings;
+
+  /**
    * Constructor.
    *
    * Creates a new workbench builder that can build new Workbench instances.
@@ -274,6 +279,7 @@ export class WorkbenchBuilder {
   constructor(factory?: () => Workbench) {
     this._workbench = factory ? factory() : new Workbench();
     this._builder = new PerspectiveBuilder(this._workbench);
+    this._settings = {};
   }
 
   /**
@@ -300,7 +306,8 @@ export class WorkbenchBuilder {
     const workbench = this._assertHasWorkbench();
     this._workbench = undefined;
     workbench.configure({
-      content: this._builder.build()
+      content: this._builder.build(),
+      settings: this._settings
     });
     return workbench;
   }
@@ -312,6 +319,13 @@ export class WorkbenchBuilder {
   public finish(): this {
     this._builder.finish();
     return this;
+  }
+
+  /**
+   * Specifies that panel headers should *not* be shown in the workbench.
+   */
+  public hideHeaders(): this {
+    return this.showHeaders(false);
   }
 
   /**
@@ -395,6 +409,14 @@ export class WorkbenchBuilder {
    */
   public setProperties(props: Partial<GoldenLayout.ItemConfigType>): this {
     this._builder.setProperties(props);
+    return this;
+  }
+
+  /**
+   * Specifies whether panel headers should be shown in the workbench.
+   */
+  public showHeaders(value: boolean = true): this {
+    this._settings.hasHeaders = value;
     return this;
   }
 
