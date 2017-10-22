@@ -232,7 +232,6 @@ ReactDOM.render(
       </ModuleDrawer>
       <ModuleDrawer label="Master tables">
       </ModuleDrawer>
-      <Module id="panel-x" label="Panel X" component={MyComponent} props={{ label: "X" }} />
     </ModuleTray>
   </SidebarController>,
   $("#sidebar-container").get(0)

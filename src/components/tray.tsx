@@ -122,13 +122,24 @@ export class ModuleTray extends React.Component<IModuleTrayProps, IModuleTraySta
     console.log(place);
 
     if (place !== undefined) {
-      const { parent, index } = place;
+      const { parent, index, segment } = place;
       if (parent !== undefined) {
         const config = createItemConfigurationFromProps({
           ...props,
           workbench: this._workbench
-        });
-        parent.addChild(config(), index + 1);
+        })();
+        if (segment !== undefined) {
+          // We are using a private API here but this is still the best way
+          // of achieving what we want while messing around with private
+          // APIs as little as possible
+          const contentItem = (layout as any)._$normalizeContentItem(Object.assign({}, config));
+          (parent as any)._dropSegment = segment;
+          (parent as any)._$onDrop(contentItem);
+        } else if (index !== undefined) {
+          parent.addChild(config, index + 1);
+        } else {
+          parent.addChild(config);
+        }
       }
     }
   }

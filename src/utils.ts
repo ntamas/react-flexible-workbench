@@ -133,27 +133,55 @@ export function onlyVisible(func: ItemVisitor): ItemVisitor {
  */
 export function proposePlaceForNewItemInWorkbench(tree: GoldenLayout): {
   parent: GoldenLayout.ContentItem | undefined,
-  index: number
+  index?: number,
+  segment?: "left" | "right" | "top" | "bottom" | "header" | "body"
 } | undefined {
   const largestPanel = findLargestVisiblePanel(tree);
   if (largestPanel === undefined) {
-    // TODO: what shall we do if there are no panels yet?
-    console.warn("There are no panels yet");
-    return undefined;
+    // There are no panels yet, so just add the new panel to the root
+    return {
+      parent: tree.root
+    };
   } else {
     const parent = largestPanel.parent;
     if (parent === undefined) {
-      // TODO: what shall we do if the largest panel has no parent?
-      console.warn("Largest panel has no parent");
-      return undefined;
-    } else if (parent.isStack) {
-      // TODO: what if the parent is a stack, how shall we cut it?
-      console.warn("Parent of largest panel is a stack");
+      // The largest panel has no parent. This should not really happen
+      // under normal conditions, but anyway, let's just add new the panel
+      // to the root as a new child.
       return {
-        index: parent.contentItems.indexOf(largestPanel),
-        parent
+        parent: tree.root
+      };
+    } else if (parent.isStack) {
+      // The parent of the largest panel is a stack, which is the typical
+      // case.
+      const size = extractSizeFromContentItem(parent);
+      let segment: "body" | "header" | "right" | "bottom";
+      console.log(size);
+
+      if (!parent.contentItems || parent.contentItems.length === 0) {
+        // Stack is empty, just add the item to its body
+        segment = "body";
+      } else if ((size[0] < 100 && size[1] < 100) &&
+                 (!tree.config.settings || tree.config.settings.hasHeaders)) {
+        // Stack is too small to split, just add another tab if the layout
+        // currently supports headers.
+        segment = "header";
+      } else if (size[0] < size[1]) {
+        // Stack is taller than wider, so split it horizontally
+        segment = "bottom";
+      } else {
+        // Stack is wider than taller, so split it vertically
+        segment = "right";
+      }
+
+      return {
+        parent, segment
       };
     } else {
+      // In normal conditions, we should not reach this branch because
+      // row and column containers always contain a stack within them.
+      // However, if we still reach it somehow, let's just specify that
+      // we want to add a new child at the given index
       return {
         index: parent.contentItems.indexOf(largestPanel),
         parent
