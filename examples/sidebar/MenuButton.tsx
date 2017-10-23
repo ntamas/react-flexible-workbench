@@ -71,10 +71,10 @@ export const MenuButton = (props: IMenuButtonProps) => {
   }
 
   return (
-    <button style={style} onClick={props.onClick}>
+    <div style={style} onClick={props.onClick}>
       <div style={{ ...extraStyles.top, ...barStyle}} />
       <div style={{ ...extraStyles.middle, ...barStyle}} />
       <div style={{ ...extraStyles.bottom, ...barStyle}} />
-    </button>
+    </div>
   );
 };
