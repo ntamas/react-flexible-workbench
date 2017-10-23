@@ -9,15 +9,16 @@ export function convertModuleInTray(
   options: {
     isModuleEnabled?: (props: IModuleProps) => boolean,
     onClick?: (props: IModuleProps, event: React.SyntheticEvent<any>) => void,
-    onStartDrag?: (event: React.SyntheticEvent<any>) => void,
+    onStartDrag?: () => void,
     workbench?: Workbench
   },
   element: React.ReactElement<IModuleProps>
 ) {
-  const { isModuleEnabled, onClick, workbench } = options;
+  const { isModuleEnabled, onClick, onStartDrag, workbench } = options;
   const { props } = element;
   const newProps: Partial<IModuleProps> = {
     onClick: onClick ? onClick.bind(null, props) : undefined,
+    onStartDrag,
     workbench
   };
   if (isModuleEnabled !== undefined) {
