@@ -63,25 +63,6 @@ const SidebarButton = ({ isOpen, onClick, style }: ISidebarButtonProps) => {
                      shape={isOpen ? "close" : "menu"} style={style} />;
 };
 
-interface ISidebarButtonControllerState {
-  isOpen: boolean;
-}
-
-class SidebarButtonController extends React.Component<{}, ISidebarButtonControllerState> {
-  constructor(props: {}) {
-    super(props);
-    this.state = {
-      isOpen: false
-    };
-  }
-
-  public render() {
-    return (
-      <SidebarButton onClick={toggleSidebar} isOpen={this.state.isOpen} />
-    );
-  }
-}
-
 // =============================================================================
 
 interface ISidebarProps {
@@ -97,27 +78,6 @@ const Sidebar = ({ children, isOpen }: ISidebarProps) => {
     </div>
   );
 };
-
-interface ISidebarControllerState {
-  isOpen: boolean;
-}
-
-class SidebarController extends React.Component<{}, ISidebarControllerState> {
-  constructor(props: {}) {
-    super(props);
-    this.state = {
-      isOpen: false
-    };
-  }
-
-  public render() {
-    return (
-      <Sidebar isOpen={this.state.isOpen}>
-        {this.props.children}
-      </Sidebar>
-    );
-  }
-}
 
 // =============================================================================
 
@@ -184,65 +144,69 @@ const perspectives = PerspectiveStorage.fromArray([
 
 // =============================================================================
 
-let sidebarButton: SidebarButtonController;
-let sidebar: SidebarController;
-let sidebarVisible = false;
-
-function setSidebarButton(value: any) {
-  sidebarButton = value;
+interface IAppState {
+  sidebarOpen: boolean;
 }
 
-function setSidebar(value: any) {
-  sidebar = value;
-}
+class App extends React.Component<{}, IAppState> {
 
-function toggleSidebar() {
-  sidebarVisible = !sidebarVisible;
-  sidebar.setState({
-    isOpen: sidebarVisible
-  }, () => {
-    // This function gets rid of some minor flickering after the sidebar opens
-    workbench.updateSize();
-  });
-  sidebarButton.setState({
-    isOpen: sidebarVisible
-  });
-}
+  constructor(props: {}) {
+    super(props);
+    this.state = {
+      sidebarOpen: false
+    };
+  }
 
-// =============================================================================
-
-const App = () => {
-  return (
-    <div id="app">
-      <div id="menu-button"><SidebarButtonController ref={setSidebarButton} /></div>
-      <Header perspectives={perspectives} workbench={workbench} />
-      <div id="main">
-        <div id="sidebar-container">
-          <SidebarController ref={setSidebar}>
-            <h1>Workbench</h1>
-            <ModuleTray allowMultipleSelection vertical workbench={workbench}>
-              <ModuleDrawer label="Generic">
-                <Module id="panel-a" label="Panel A" component={MyComponent} props={{ label: "A" }} />
-                <Module id="panel-b" label="Panel B" component={MyComponent} props={{ label: "B" }} />
-                <Module id="panel-c" label="Panel C" component={MyComponent} props={{ label: "C" }} />
-                <Module id="panel-d" label="Panel D" component={MyComponent} props={{ label: "D" }} />
-              </ModuleDrawer>
-              <ModuleDrawer label="Forecast">
-              </ModuleDrawer>
-              <ModuleDrawer label="Safety stock">
-              </ModuleDrawer>
-              <ModuleDrawer label="Import">
-              </ModuleDrawer>
-              <ModuleDrawer label="Master tables">
-              </ModuleDrawer>
-            </ModuleTray>
-          </SidebarController>
+  public render() {
+    const { sidebarOpen } = this.state;
+    return (
+      <div id="app">
+        <div id="menu-button">
+          <SidebarButton isOpen={sidebarOpen} onClick={this.toggleSidebar} />
         </div>
-        <div id="root-container">
-          <WorkbenchView workbench={workbench} id="root" />
+
+        <Header perspectives={perspectives} workbench={workbench} />
+
+        <div id="main">
+          <div id="sidebar-container">
+            <Sidebar isOpen={sidebarOpen}>
+              <h1>Workbench</h1>
+              <ModuleTray allowMultipleSelection vertical workbench={workbench}>
+                <ModuleDrawer label="Generic">
+                  <Module id="panel-a" label="Panel A" component={MyComponent} props={{ label: "A" }} />
+                  <Module id="panel-b" label="Panel B" component={MyComponent} props={{ label: "B" }} />
+                  <Module id="panel-c" label="Panel C" component={MyComponent} props={{ label: "C" }} />
+                  <Module id="panel-d" label="Panel D" component={MyComponent} props={{ label: "D" }} />
+                </ModuleDrawer>
+                <ModuleDrawer label="Forecast">
+                </ModuleDrawer>
+                <ModuleDrawer label="Safety stock">
+                </ModuleDrawer>
+                <ModuleDrawer label="Import">
+                </ModuleDrawer>
+                <ModuleDrawer label="Master tables">
+                </ModuleDrawer>
+              </ModuleTray>
+            </Sidebar>
+          </div>
+          <div id="root-container">
+            <WorkbenchView workbench={workbench} id="root" />
+          </div>
         </div>
       </div>
-    </div>
-  );
+    );
+  }
+
+  public toggleSidebar = () => {
+    const { sidebarOpen } = this.state;
+    this.setState({
+      sidebarOpen: !sidebarOpen
+    }, () => {
+      // This function gets rid of some minor flickering after the sidebar opens
+      workbench.updateSize();
+    });
+  }
+
 }
+
 ReactDOM.render(<App />, document.getElementById("app-container"));
