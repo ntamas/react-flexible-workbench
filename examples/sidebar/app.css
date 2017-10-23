@@ -104,11 +104,6 @@
   margin: 0 14px;
 }
 
-body {
-  display: flex;
-  flex-flow: column nowrap;
-}
-
 #main {
   display: flex;
   flex-flow: row nowrap;

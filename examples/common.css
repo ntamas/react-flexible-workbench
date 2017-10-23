@@ -13,6 +13,16 @@ body {
   height: 100%;
 }
 
+#app-container {
+  height: 100%;
+}
+
+#app {
+  display: flex;
+  flex-flow: column;
+  height: 100%;
+}
+
 #header {
   background: #06c;
   box-sizing: border-box;

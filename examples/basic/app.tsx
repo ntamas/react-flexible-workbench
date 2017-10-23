@@ -42,7 +42,7 @@ interface IHeaderProps {
 }
 
 const Header = ({ perspectives, workbench }: IHeaderProps) => (
-  <div style={{ display: "flex", alignItems: "center" }}>
+  <div id="header" style={{ display: "flex", alignItems: "center" }}>
     <div className="title">Workbench demo</div>
     <PerspectiveBar storage={perspectives} workbench={workbench} />
   </div>
@@ -55,7 +55,7 @@ interface IFooterProps {
 }
 
 const Footer = ({ workbench }: IFooterProps) => (
-  <div>
+  <div id="footer">
     <ModuleTray workbench={workbench}>
       <ModuleDrawer label="Generic">
         <Module id="panel-a" label="Panel A" component={MyComponent} props={{ label: "A" }} />
@@ -142,15 +142,9 @@ const perspectives = PerspectiveStorage.fromArray([
 
 const App = () => (
   <div id="app">
-    <div id="header">
-      <Header perspectives={perspectives} workbench={workbench} />
-    </div>
-
+    <Header perspectives={perspectives} workbench={workbench} />
     <WorkbenchView id="root" workbench={workbench} />
-
-    <div id="footer">
-      <Footer workbench={workbench} />
-    </div>
+    <Footer workbench={workbench} />
   </div>
 );
 ReactDOM.render(<App />, document.getElementById("app-container"));

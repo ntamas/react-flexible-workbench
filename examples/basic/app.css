@@ -1,7 +1,3 @@
-html, body, #app-container {
-  height: 100%;
-}
-
 #app {
   display: flex;
   flex-flow: column;

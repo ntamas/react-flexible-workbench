@@ -6,7 +6,7 @@ import * as ReactDOM from "react-dom";
 
 import { Container, IPerspectiveStorage, ItemConfigType, Module, ModuleDrawer,
          ModuleTray, PerspectiveBar, PerspectiveBuilder, PerspectiveStorage,
-         Workbench, WorkbenchBuilder } from "../../src/index";
+         Workbench, WorkbenchBuilder, WorkbenchView } from "../../src/index";
 
 import { MenuButton } from "./MenuButton";
 
@@ -44,7 +44,7 @@ interface IHeaderProps {
 }
 
 const Header = ({ perspectives, workbench }: IHeaderProps) => (
-  <div style={{ display: "flex", alignItems: "center" }}>
+  <div id="header" style={{ display: "flex", alignItems: "center" }}>
     <div className="title"></div>
     <PerspectiveBar storage={perspectives} workbench={workbench} />
   </div>
@@ -211,28 +211,38 @@ function toggleSidebar() {
 
 // =============================================================================
 
-workbench.render("#root");
-ReactDOM.render(<Header perspectives={perspectives} workbench={workbench} />, $("#header").get(0));
-ReactDOM.render(<SidebarButtonController ref={setSidebarButton} />, $("#menu-button").get(0));
-ReactDOM.render(
-  <SidebarController ref={setSidebar}>
-    <h1>Workbench</h1>
-    <ModuleTray allowMultipleSelection vertical workbench={workbench}>
-      <ModuleDrawer label="Generic">
-        <Module id="panel-a" label="Panel A" component={MyComponent} props={{ label: "A" }} />
-        <Module id="panel-b" label="Panel B" component={MyComponent} props={{ label: "B" }} />
-        <Module id="panel-c" label="Panel C" component={MyComponent} props={{ label: "C" }} />
-        <Module id="panel-d" label="Panel D" component={MyComponent} props={{ label: "D" }} />
-      </ModuleDrawer>
-      <ModuleDrawer label="Forecast">
-      </ModuleDrawer>
-      <ModuleDrawer label="Safety stock">
-      </ModuleDrawer>
-      <ModuleDrawer label="Import">
-      </ModuleDrawer>
-      <ModuleDrawer label="Master tables">
-      </ModuleDrawer>
-    </ModuleTray>
-  </SidebarController>,
-  $("#sidebar-container").get(0)
-);
+const App = () => {
+  return (
+    <div id="app">
+      <div id="menu-button"><SidebarButtonController ref={setSidebarButton} /></div>
+      <Header perspectives={perspectives} workbench={workbench} />
+      <div id="main">
+        <div id="sidebar-container">
+          <SidebarController ref={setSidebar}>
+            <h1>Workbench</h1>
+            <ModuleTray allowMultipleSelection vertical workbench={workbench}>
+              <ModuleDrawer label="Generic">
+                <Module id="panel-a" label="Panel A" component={MyComponent} props={{ label: "A" }} />
+                <Module id="panel-b" label="Panel B" component={MyComponent} props={{ label: "B" }} />
+                <Module id="panel-c" label="Panel C" component={MyComponent} props={{ label: "C" }} />
+                <Module id="panel-d" label="Panel D" component={MyComponent} props={{ label: "D" }} />
+              </ModuleDrawer>
+              <ModuleDrawer label="Forecast">
+              </ModuleDrawer>
+              <ModuleDrawer label="Safety stock">
+              </ModuleDrawer>
+              <ModuleDrawer label="Import">
+              </ModuleDrawer>
+              <ModuleDrawer label="Master tables">
+              </ModuleDrawer>
+            </ModuleTray>
+          </SidebarController>
+        </div>
+        <div id="root-container">
+          <WorkbenchView workbench={workbench} id="root" />
+        </div>
+      </div>
+    </div>
+  );
+}
+ReactDOM.render(<App />, document.getElementById("app-container"));
