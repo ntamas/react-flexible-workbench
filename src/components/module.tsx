@@ -202,11 +202,9 @@ export class Module extends React.Component<IModuleProps, {}> {
     const { disabled, workbench } = props;
     const node = this._rootNode;
     const needsDragSource = (node !== null && node !== undefined &&
-                             workbench !== undefined && !disabled);
-
+                             workbench !== undefined &&
+                             workbench.isRendered && !disabled);
     if (needsDragSource) {
-      // workbench !== undefined here but TypeScript is not smart
-      // enough to infer it
       if (this._dragSource === undefined || rootNodeChanged) {
         this._removeDragSourceFromWorkbench(workbench);
         this._dragSource = workbench!.createDragSource(

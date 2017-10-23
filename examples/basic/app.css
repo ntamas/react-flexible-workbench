@@ -1,6 +1,11 @@
-body {
+html, body, #app-container {
+  height: 100%;
+}
+
+#app {
   display: flex;
   flex-flow: column;
+  height: 100%;
 }
 
 .title {
@@ -74,15 +79,4 @@ body {
 .wb-perspective-bar button.wb-perspective-bar-save-button:active
 .wb-perspective-bar button.wb-perspective-bar-new-button:active {
   background: #fc6;
-}
-
-#footer {
-  background: #06c;
-  box-sizing: border-box;
-  color: #fff;
-  min-height: 44px;
-
-  padding: 1em;
-  flex-shrink: 0;
-  flex-grow: 0;
 }

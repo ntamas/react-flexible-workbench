@@ -6,7 +6,7 @@ import * as ReactDOM from "react-dom";
 
 import { Container, IPerspectiveStorage, ItemConfigType, Module, ModuleDrawer,
          ModuleTray, PerspectiveBar, PerspectiveBuilder, PerspectiveStorage,
-         Workbench, WorkbenchBuilder } from "../../src/index";
+         Workbench, WorkbenchBuilder, WorkbenchView } from "../../src/index";
 
 // Note that React stateless components are currently not allowed in
 // golden-layout as of 1.5.9. I have already submitted a pull request to
@@ -140,6 +140,17 @@ const perspectives = PerspectiveStorage.fromArray([
 
 // =============================================================================
 
-workbench.render("#root");
-ReactDOM.render(<Header perspectives={perspectives} workbench={workbench} />, $("#header").get(0));
-ReactDOM.render(<Footer workbench={workbench} />, $("#footer").get(0));
+const App = () => (
+  <div id="app">
+    <div id="header">
+      <Header perspectives={perspectives} workbench={workbench} />
+    </div>
+
+    <WorkbenchView id="root" workbench={workbench} />
+
+    <div id="footer">
+      <Footer workbench={workbench} />
+    </div>
+  </div>
+);
+ReactDOM.render(<App />, document.getElementById("app-container"));

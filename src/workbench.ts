@@ -2,6 +2,7 @@ import { EventEmitter } from "eventemitter3";
 import * as GoldenLayout from "golden-layout";
 import * as JQuery from "jquery";
 import isFunction from "lodash-es/isFunction";
+import merge from "lodash-es/merge";
 import pick from "lodash-es/pick";
 import * as React from "react";
 import { withContext } from "recompose";
@@ -28,7 +29,7 @@ export class Workbench extends EventEmitter {
 
   private _config: GoldenLayout.Config | undefined;
   private _configDefaults: Partial<GoldenLayout.Config>;
-  private _domNode: HTMLElement | undefined;
+  private _domNode: Element | undefined;
   private _layout: GoldenLayout | undefined;
   private _registry: {
     [key: string]: {
@@ -187,10 +188,9 @@ export class Workbench extends EventEmitter {
    * in DFS order.
    */
   public forEach(func: ItemVisitor): void {
-    if (this._layout === undefined) {
-      throw new Error("The workbench has not been mounted yet");
+    if (this.isRendered) {
+      traverseWorkbench(this._getLayout(), func);
     }
-    traverseWorkbench(this._layout, func);
   }
 
   /**
@@ -199,10 +199,9 @@ export class Workbench extends EventEmitter {
    * visited.
    */
   public forEachVisible(func: ItemVisitor): void {
-    if (this._layout === undefined) {
-      throw new Error("The workbench has not been mounted yet");
+    if (this.isRendered) {
+      traverseWorkbench(this._getLayout(), onlyVisible(func));
     }
-    traverseWorkbench(this._layout, onlyVisible(func));
   }
 
   /**
@@ -236,6 +235,13 @@ export class Workbench extends EventEmitter {
    */
   public isRegisteredAsReact(name: string): boolean {
     return this.isRegistered(name) && this._registry[name].component !== undefined;
+  }
+
+  /**
+   * Returns whether the workbench is currently attached to a DOM node.
+   */
+  public get isRendered(): boolean {
+    return this._layout !== undefined;
   }
 
   /**
@@ -385,7 +391,7 @@ export class Workbench extends EventEmitter {
    * @param  node  the node to render the workbench into; omitting it means that
    *         the workbench must fill the entire page.
    */
-  public render(node?: HTMLElement | JQuery<HTMLElement> | string): void {
+  public render(node?: Element | JQuery<HTMLElement> | string): void {
     this._domNode = node !== undefined ? this._resolve(node) : document.body;
 
     if (this._config === undefined) {
@@ -418,8 +424,8 @@ export class Workbench extends EventEmitter {
 
   /**
    * Updates the size of the workbench to the given values. If no values
-   * are given, the workbench will measure its parent container and adjust
-   * its own size to the parent.
+   * are given, the workbench will measure the DOM node it is attached to
+   * and adjusts its own size to the size of that node.
    */
   public updateSize(width?: number, height?: number): void {
     if (this._layout) {
@@ -445,7 +451,7 @@ export class Workbench extends EventEmitter {
 
     // Create the final configuration object by merging the user-defined
     // config over our defaults
-    const effectiveConfig: GoldenLayout.Config = Object.assign(
+    const effectiveConfig: GoldenLayout.Config = merge(
       {}, this._configDefaults, config
     );
 
@@ -488,10 +494,7 @@ export class Workbench extends EventEmitter {
    * has been resized.
    */
   private _onWorkbenchResized = (): void => {
-    const layout = this._layout;
-    if (layout && layout.container && layout.container.width) {
-      layout.updateSize();
-    }
+    this.updateSize();
   }
 
   /**
@@ -523,7 +526,7 @@ export class Workbench extends EventEmitter {
     this.emit("layoutChanged", this._layout);
   }
 
-  private _resolve(node: HTMLElement | JQuery<HTMLElement> | string): HTMLElement {
+  private _resolve(node: Element | JQuery<HTMLElement> | string): HTMLElement {
     if (typeof node === "string") {
       const result = document.getElementById(node && node.charAt(0) === "#" ? node.substr(1) : node);
       if (result !== null) {

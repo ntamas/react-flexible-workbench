@@ -199,13 +199,10 @@ export function proposePlaceForNewItemInWorkbench(tree: GoldenLayout): {
  * @param {ItemVisitor}  func  the visitor function to call on each visited item
  */
 export function traverseWorkbench(tree: GoldenLayout, func: ItemVisitor): void {
-  const queue: GoldenLayout.ContentItem[] = [];
-  if (tree.root !== undefined) {
-    queue.push(tree.root);
-  }
+  const queue: GoldenLayout.ContentItem[] = [tree.root];
   while (queue.length > 0) {
     const node = queue.pop();
-    if (node !== undefined) {
+    if (node !== null && node !== undefined) {
       const shouldStop = func(node);
       const children = node.hasOwnProperty("contentItems") ? node.contentItems : [];
       if (!shouldStop) {
