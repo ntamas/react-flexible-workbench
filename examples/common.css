@@ -28,7 +28,7 @@ body {
   box-sizing: border-box;
   color: #fff;
   flex-flow: row;
-  min-height: 44px;
+  min-height: 48px;
 
   padding: 0.5em 1em;
   flex-shrink: 0;
@@ -39,7 +39,7 @@ body {
   background: #06c;
   box-sizing: border-box;
   color: #fff;
-  min-height: 44px;
+  min-height: 48px;
 
   padding: 1em;
   flex-shrink: 0;

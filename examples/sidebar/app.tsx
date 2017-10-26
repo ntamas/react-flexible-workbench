@@ -3,12 +3,11 @@
 import * as PropTypes from "prop-types";
 import * as React from "react";
 import * as ReactDOM from "react-dom";
+import Shapeshifter from "react-shapeshifter";
 
 import { Container, IPerspectiveStorage, ItemConfigType, Module, ModuleDrawer,
          ModuleTray, PerspectiveBar, PerspectiveBuilder, PerspectiveStorage,
          Workbench, WorkbenchBuilder, WorkbenchView } from "../../src/index";
-
-import { MenuButton } from "./MenuButton";
 
 // Note that React stateless components are currently not allowed in
 // golden-layout as of 1.5.9. I have already submitted a pull request to
@@ -55,13 +54,13 @@ const Header = ({ perspectives, workbench }: IHeaderProps) => (
 interface ISidebarButtonProps {
   isOpen?: boolean;
   onClick?: (event: React.SyntheticEvent<any>) => void;
-  style?: React.CSSProperties;
 }
 
-const SidebarButton = ({ isOpen, onClick, style }: ISidebarButtonProps) => {
-  return <MenuButton color="white" onClick={onClick} padding={14}
-                     shape={isOpen ? "close" : "menu"} style={style} />;
-};
+const SidebarButton = ({ isOpen, onClick }: ISidebarButtonProps) => (
+  <div id="menu-button">
+    <Shapeshifter color="white" onClick={onClick} shape={isOpen ? "close" : "menu"} />
+  </div>
+);
 
 // =============================================================================
 
@@ -161,10 +160,7 @@ class App extends React.Component<{}, IAppState> {
     const { sidebarOpen } = this.state;
     return (
       <div id="app">
-        <div id="menu-button">
-          <SidebarButton isOpen={sidebarOpen} onClick={this.toggleSidebar} />
-        </div>
-
+        <SidebarButton isOpen={sidebarOpen} onClick={this.toggleSidebar} />
         <Header perspectives={perspectives} workbench={workbench} />
 
         <div id="main">
