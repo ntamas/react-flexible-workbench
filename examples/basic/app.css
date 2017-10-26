@@ -57,6 +57,19 @@
 .wb-module.wb-module-disabled:hover {
   background: none;
 }
+.wb-module-icon {
+  border-radius: 25%;
+  background-color: #06c;
+  display: inline-block;
+  min-width: 16px;
+  min-height: 16px;
+  text-align: center;
+  margin-right: 1ex;
+  padding: 2px 4px;
+}
+.wb-module-disabled .wb-module-icon {
+  opacity: 0;
+}
 
 .wb-perspective-bar button.wb-perspective-bar-save-button,
 .wb-perspective-bar button.wb-perspective-bar-new-button {

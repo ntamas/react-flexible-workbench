@@ -61,6 +61,11 @@ export interface IModuleProps {
   disabled?: boolean;
 
   /**
+   * An optional icon for the module.
+   */
+  icon?: React.ReactNode;
+
+  /**
    * A unique identifier for the module. When given, and the layout already
    * contains a module with the same ID, the module component in the module
    * drawer will be disabled.
@@ -144,7 +149,7 @@ export class Module extends React.Component<IModuleProps, {}> {
   }
 
   public render() {
-    const { disabled, label } = this.props;
+    const { disabled, icon, label } = this.props;
     const classes = ["wb-module"];
 
     if (disabled) {
@@ -153,7 +158,10 @@ export class Module extends React.Component<IModuleProps, {}> {
 
     return (
       <div onClick={disabled ? undefined : this._onClick}
-          className={classes.join(" ")} ref={this._setRootNode}>{ label }</div>
+        className={classes.join(" ")} ref={this._setRootNode}>
+        { icon ? <span className="wb-icon wb-module-icon">{icon}</span> : null }
+        { label }
+      </div>
     );
   }
 

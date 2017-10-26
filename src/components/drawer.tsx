@@ -33,6 +33,11 @@ export interface IModuleDrawerProps {
   isOpen?: boolean;
 
   /**
+   * An optional icon for the module drawer button.
+   */
+  icon?: React.ReactNode;
+
+  /**
    * The label to show on the module drawer button.
    */
   label: React.ReactNode;
@@ -69,7 +74,7 @@ export interface IModuleDrawerProps {
 export class ModuleDrawer extends React.Component<IModuleDrawerProps, {}> {
 
   public render() {
-    const { children, closeAfterDragging, isModuleEnabled, isOpen, label,
+    const { children, closeAfterDragging, icon, isModuleEnabled, isOpen, label,
             onClick, onClose, onOpen, workbench } = this.props;
     const classes = ["wb-module-drawer"];
     classes.push(isOpen ? "wb-module-drawer-open" : "wb-module-drawer-closed");
@@ -98,7 +103,10 @@ export class ModuleDrawer extends React.Component<IModuleDrawerProps, {}> {
     return (
       <div className={classes.join(" ")}>
         {contents}
-        <button onClick={isOpen ? onClose : onOpen }>{label}</button>
+        <button onClick={isOpen ? onClose : onOpen }>
+          { icon ? <span className="wb-icon wb-module-drawer-icon">{icon}</span> : null }
+          {label}
+        </button>
       </div>
     );
   }
