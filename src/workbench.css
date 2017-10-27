@@ -4,6 +4,12 @@
  * sensible defaults.
  */
 
+.wb-icon {
+  display: inline-block;
+  vertical-align: middle;
+  padding-right: 0.5em;
+}
+
 .wb-module-tray {
   display: flex;
   flex-flow: row nowrap;

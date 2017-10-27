@@ -5,6 +5,8 @@ import * as React from "react";
 import * as ReactDOM from "react-dom";
 import Shapeshifter from "react-shapeshifter";
 
+import * as icons from "./icons";
+
 import { Container, IPerspectiveStorage, ItemConfigType, Module, ModuleDrawer,
          ModuleTray, PerspectiveBar, PerspectiveBuilder, PerspectiveStorage,
          Workbench, WorkbenchBuilder, WorkbenchView } from "../../src/index";
@@ -168,19 +170,19 @@ class App extends React.Component<{}, IAppState> {
             <Sidebar isOpen={sidebarOpen}>
               <h1>Workbench</h1>
               <ModuleTray allowMultipleSelection vertical workbench={workbench}>
-                <ModuleDrawer label="Generic">
+                <ModuleDrawer icon={<icons.Generic />} label="Generic">
                   <Module id="panel-a" label="Panel A" component={MyComponent} props={{ label: "A" }} />
                   <Module id="panel-b" label="Panel B" component={MyComponent} props={{ label: "B" }} />
                   <Module id="panel-c" label="Panel C" component={MyComponent} props={{ label: "C" }} />
                   <Module id="panel-d" label="Panel D" component={MyComponent} props={{ label: "D" }} />
                 </ModuleDrawer>
-                <ModuleDrawer label="Forecast">
+                <ModuleDrawer icon={<icons.Chart />} label="Forecast">
                 </ModuleDrawer>
-                <ModuleDrawer label="Safety stock">
+                <ModuleDrawer icon={<icons.Storage />} label="Safety stock">
                 </ModuleDrawer>
-                <ModuleDrawer label="Import">
+                <ModuleDrawer icon={<icons.Import />} label="Import">
                 </ModuleDrawer>
-                <ModuleDrawer label="Master tables">
+                <ModuleDrawer icon={<icons.Table />} label="Master tables">
                 </ModuleDrawer>
               </ModuleTray>
             </Sidebar>
