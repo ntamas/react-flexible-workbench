@@ -156,7 +156,6 @@ export function proposePlaceForNewItemInWorkbench(tree: GoldenLayout): {
       // case.
       const size = extractSizeFromContentItem(parent);
       let segment: "body" | "header" | "right" | "bottom";
-      console.log(size);
 
       if (!parent.contentItems || parent.contentItems.length === 0) {
         // Stack is empty, just add the item to its body

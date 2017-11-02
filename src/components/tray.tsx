@@ -119,7 +119,6 @@ export class ModuleTray extends React.Component<IModuleTrayProps, IModuleTraySta
     }
 
     const place = proposePlaceForNewItemInWorkbench(layout);
-    console.log(place);
 
     if (place !== undefined) {
       const { parent, index, segment } = place;
