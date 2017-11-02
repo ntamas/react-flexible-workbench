@@ -2,6 +2,7 @@
 .wb-perspective-bar button {
   background: #49d;
   color: #fff;
+  font-family: inherit;
   font-size: inherit;
   padding: 5px;
   border: none;
