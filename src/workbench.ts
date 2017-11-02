@@ -27,6 +27,7 @@ const foo = require("javascript-detect-element-resize");
 
 export class Workbench extends EventEmitter {
 
+  private _blockedEvents: { [key: string]: number };
   private _config: GoldenLayout.Config | undefined;
   private _configDefaults: Partial<GoldenLayout.Config>;
   private _domNode: Element | undefined;
@@ -60,6 +61,7 @@ export class Workbench extends EventEmitter {
   constructor() {
     super();
 
+    this._blockedEvents = {};
     this._registry = {
       "lm-react-lazy-component": {
         factory: LazyReactComponentHandler
@@ -429,8 +431,17 @@ export class Workbench extends EventEmitter {
    */
   public updateSize(width?: number, height?: number): void {
     if (this._layout) {
+      this._blockNextEvent("stateChanged");
       this._layout.updateSize(width, height);
     }
+  }
+
+  /**
+   * Blocks the next event with the given name coming from the wrapped workbench
+   * instance so it is not re-dispatched from this instance.
+   */
+  private _blockNextEvent(event: string): void {
+    this._blockedEvents[event] = (this._blockedEvents[event] || 0) + 1;
   }
 
   /**
@@ -490,11 +501,23 @@ export class Workbench extends EventEmitter {
   }
 
   /**
-   * Event handlr that is called when the DOM node hosting the workbench
+   * Event handler that is called when the DOM node hosting the workbench
    * has been resized.
    */
   private _onWorkbenchResized = (): void => {
     this.updateSize();
+  }
+
+  /**
+   * Re-dispatches the given event originating from the wrapped workbench
+   * object, optionally swallowing certain events that we want to suppress.
+   */
+  private _redispatch = (event: string, ...args: any[]): void => {
+    if (this._blockedEvents[event] > 0) {
+      delete this._blockedEvents[event];
+    } else {
+      this.emit(event, ...args);
+    }
   }
 
   /**
@@ -513,13 +536,13 @@ export class Workbench extends EventEmitter {
       // itemDestroyed events during destruction, which others might be
       // interested in.
       this._layout.destroy();
-      this._layout.off("__all", this.emit, this);
+      this._layout.off("__all", this._redispatch, this);
     }
 
     this._layout = value;
 
     if (this._layout !== undefined) {
-      this._layout.on("__all", this.emit, this);
+      this._layout.on("__all", this._redispatch, this);
       this._layout.init();
     }
 
