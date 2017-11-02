@@ -38,6 +38,11 @@
 .wb-module-drawer button:active {
   color: #fff;
 }
+.wb-module-tray.wb-module-tray-vertical {
+  /* this is to leave space for the last button in the tray to move
+   * vertically when it is pressed, without triggering the scroll bars */
+  padding-bottom: 2px;
+}
 
 .wb-perspective-bar-item.wb-perspective-selected button {
   background: #25a;
