@@ -11,6 +11,8 @@ import { Container, IPerspectiveStorage, ItemConfigType, Module, ModuleDrawer,
          ModuleTray, PerspectiveBar, PerspectiveBuilder, PerspectiveStorage,
          Workbench, WorkbenchBuilder, WorkbenchView } from "../../src/index";
 
+require("../../src/themes/dark.css");
+
 // Note that React stateless components are currently not allowed in
 // golden-layout as of 1.5.9. I have already submitted a pull request to
 // address this issue:
