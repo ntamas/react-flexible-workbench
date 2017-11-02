@@ -396,6 +396,8 @@ export class Workbench extends EventEmitter {
   public render(node?: Element | JQuery<HTMLElement> | string): void {
     this._domNode = node !== undefined ? this._resolve(node) : document.body;
 
+    // Sanity checks; we cannot proceed if we are not configured or if we are
+    // already rendered
     if (this._config === undefined) {
       throw new Error("Workbench is not configured yet");
     }
@@ -419,9 +421,14 @@ export class Workbench extends EventEmitter {
    * Restores a saved state previously obtained by <code>getState()</code>.
    */
   public restoreState(state: WorkbenchState): void {
-    // Create a completely new golden-layout object with the new configuration
-    const layout = this._createLayoutFromConfig(state);
-    this._setLayout(layout);
+    if (this._domNode !== undefined) {
+      // Create a completely new golden-layout object with the new configuration
+      const layout = this._createLayoutFromConfig(state);
+      this._setLayout(layout);
+    } else {
+      // Just pretend that this was a call to configure()
+      this.configure(state);
+    }
   }
 
   /**
@@ -448,6 +455,9 @@ export class Workbench extends EventEmitter {
    * Creates a new <code>golden-layout</code> object from the current
    * configuration object and the DOM node that the workbench is associated
    * to.
+   *
+   * The method must be called only after the workbench was associated to a
+   * DOM node.
    *
    * This method takes care of post-processing the provided configuration
    * object such that the appropriate context is provided for React components
