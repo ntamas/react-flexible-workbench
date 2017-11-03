@@ -65,7 +65,9 @@
 .wb-module.wb-module-disabled:hover {
   background: none;
 }
-
+.wb-module.wb-module-disabled .wb-icon {
+  opacity: 0.25;
+}
 .wb-perspective-bar button.wb-perspective-bar-save-button,
 .wb-perspective-bar button.wb-perspective-bar-new-button {
   background: #fa4;
