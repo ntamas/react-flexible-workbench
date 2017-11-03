@@ -15,25 +15,10 @@ export type ItemConfigType = GoldenLayout.ItemConfigType;
 export type Validator<T> = (object: T, key: string, componentName: string, ...rest: any[]) => Error | null;
 
 /**
- * Interface for objects that describe the context that has to be provided to
- * every React component in the workbench.
+ * React higher-order component type specification.
  */
-export interface IContextDefinition<T> {
-  childContextTypes: {
-    [key: string]: Validator<any>;
-  };
-
-  getChildContext(): T;
-}
-
-/**
- * Interface for objects that are either context definitions themselves, or
- * can provide a context definition for a React component that is about to be
- * displayed in the workbench.
- */
-export type ContextProvider<T> =
-  IContextDefinition<T> |
-  ((component: React.ComponentType<any>) => IContextDefinition<T> | undefined);
+export type HigherOrderComponent<SProps, TProps> =
+  (component: React.ComponentType<SProps>) => React.ComponentType<TProps>;
 
 /**
  * Interface specification for functions that can be used as an argument

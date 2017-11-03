@@ -10,9 +10,8 @@ import { withContext } from "recompose";
 import { WorkbenchBuilder } from "./builder";
 import { Environment, IEnvironmentMethods } from "./environment";
 import { LazyReactComponentHandler } from "./handlers";
-import { ComponentConstructor, ContextProvider, DragSource,
-         IContextDefinition, ItemConfigType, ItemVisitor,
-         WorkbenchState } from "./types";
+import { ComponentConstructor, DragSource, HigherOrderComponent, ItemConfigType,
+         ItemVisitor, WorkbenchState } from "./types";
 import { getDisplayName, onlyVisible, traverseWorkbench } from "./utils";
 
 // Require golden-layout CSS and theme files so they get included in the bundle
@@ -40,14 +39,19 @@ export class Workbench extends EventEmitter {
   };
 
   /**
-   * The context provider object that knows how to construct a React context
-   * for React components that are added to the workbench.
+   * An optional React higher-order component that will be called with every
+   * React component that is being registered in the workbench. You can use this
+   * in conjunction with HOC libraries (e.g., `recompose`) to provide context
+   * for React components or to wrap them in another component.
+   *
+   * This feature replaces the `contextProvider` property in previous versions
+   * of `react-flexible-workbench`; you can use the `withContext()` HOC from
+   * `recompose` to achieve the same functionality.
    *
    * Note that changing this property when the workbench is already rendered
-   * will not affect the workbench - you will need to re-configure the workbench
-   * by saving its state and restoring it again.
+   * will not affect the workbench.
    */
-  public contextProvider: ContextProvider<any> | undefined;
+  public hoc: HigherOrderComponent<any, any> | undefined;
 
   /**
    * The environment that the workbench lives in. Methods of this object are
@@ -480,17 +484,8 @@ export class Workbench extends EventEmitter {
     Object.keys(this._registry).forEach((key: string) => {
       let { component } = this._registry[key];
       const { factory } = this._registry[key];
-      if (component !== undefined && this.contextProvider !== undefined) {
-        const contextDefinition =
-          isFunction(this.contextProvider) ?
-            this.contextProvider(component) :
-            this.contextProvider;
-        if (contextDefinition !== undefined) {
-          component = withContext(
-            contextDefinition.childContextTypes,
-            contextDefinition.getChildContext
-          )(component);
-        }
+      if (component !== undefined && this.hoc !== undefined) {
+        component = this.hoc(component);
       }
       layout.registerComponent(key, component || factory);
     });
