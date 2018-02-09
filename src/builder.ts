@@ -57,7 +57,7 @@ export class PerspectiveBuilder {
     const newItem = workbench.createItemConfigurationFor(nameOrComponent);
 
     newItem.title = title;
-    if (newItem.type === "react-component" && props !== undefined) {
+    if (newItem.type === "react-component") {
       if (props !== undefined) {
         (newItem as GoldenLayout.ReactComponentConfig).props = props;
       }
