@@ -58,7 +58,9 @@ export class PerspectiveBuilder {
 
     newItem.title = title;
     if (newItem.type === "react-component" && props !== undefined) {
-      (newItem as GoldenLayout.ReactComponentConfig).props = props;
+      if (props !== undefined) {
+        (newItem as GoldenLayout.ReactComponentConfig).props = props;
+      }
       if (!eager) {
         // React component needs to be lazy, i.e. it needs to be unmounted
         // when it is hidden. This will be handled with a special
