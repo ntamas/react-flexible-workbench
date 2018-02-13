@@ -17,6 +17,7 @@ import { Workbench } from "../workbench";
  */
 export interface IModuleTrayProps {
   allowMultipleSelection?: boolean;
+  style?: React.CSSProperties;
   vertical?: boolean;
   workbench: Workbench;
 }
@@ -63,7 +64,7 @@ export class ModuleTray extends React.Component<IModuleTrayProps, IModuleTraySta
   }
 
   public render() {
-    const { allowMultipleSelection, children, vertical, workbench } = this.props;
+    const { allowMultipleSelection, children, style, vertical, workbench } = this.props;
     const { indexOfOpenDrawers } = this.state;
     const isModuleEnabled = this._isModuleNotVisible;
 
@@ -103,7 +104,7 @@ export class ModuleTray extends React.Component<IModuleTrayProps, IModuleTraySta
     }
 
     return (
-      <div className={classes.join(" ")}>{drawers}</div>
+      <div className={classes.join(" ")} style={style}>{drawers}</div>
     );
   }
 
