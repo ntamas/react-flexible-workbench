@@ -42,13 +42,13 @@ const Header = ({ perspectives, workbench }: IHeaderProps) => (
 // =============================================================================
 
 interface ISidebarButtonProps {
-  isOpen?: boolean;
+  open?: boolean;
   onClick?: (event: React.SyntheticEvent<any>) => void;
 }
 
-const SidebarButton = ({ isOpen, onClick }: ISidebarButtonProps) => (
+const SidebarButton = ({ open, onClick }: ISidebarButtonProps) => (
   <div id="menu-button">
-    <Shapeshifter color="white" onClick={onClick} shape={isOpen ? "close" : "menu"} />
+    <Shapeshifter color="white" onClick={onClick} shape={open ? "close" : "menu"} />
   </div>
 );
 
@@ -56,14 +56,14 @@ const SidebarButton = ({ isOpen, onClick }: ISidebarButtonProps) => (
 
 interface ISidebarProps {
   children?: string | React.ReactNode | React.ReactNode[];
-  isOpen?: boolean;
+  open?: boolean;
 }
 
-const Sidebar = ({ children, isOpen }: ISidebarProps) => {
-  const classes = ["sidebar", isOpen ? "sidebar-open" : "sidebar-closed"];
+const Sidebar = ({ children, open }: ISidebarProps) => {
+  const classes = ["sidebar", open ? "sidebar-open" : "sidebar-closed"];
   return (
     <div className={classes.join(" ")}>
-      { isOpen ? children : null }
+      { open ? children : null }
     </div>
   );
 };
@@ -150,15 +150,15 @@ class App extends React.Component<{}, IAppState> {
     const { sidebarOpen } = this.state;
     return (
       <div id="app">
-        <SidebarButton isOpen={sidebarOpen} onClick={this.toggleSidebar} />
+        <SidebarButton open={sidebarOpen} onClick={this.toggleSidebar} />
         <Header perspectives={perspectives} workbench={workbench} />
 
         <div id="main">
           <div id="sidebar-container">
-            <Sidebar isOpen={sidebarOpen}>
+            <Sidebar open={sidebarOpen}>
               <h1>Workbench</h1>
               <ModuleTray allowMultipleSelection vertical workbench={workbench}>
-                <ModuleDrawer icon={<icons.Generic />} label="Generic">
+                <ModuleDrawer icon={<icons.Generic />} label="Generic" open>
                   <Module id="panel-a" label="Panel A" component={MyComponent} props={{ label: "A" }} />
                   <Module id="panel-b" label="Panel B" component={MyComponent} props={{ label: "B" }} />
                   <Module id="panel-c" label="Panel C" component={MyComponent} props={{ label: "C" }} />

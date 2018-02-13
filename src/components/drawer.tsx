@@ -28,11 +28,6 @@ export interface IModuleDrawerProps {
   isModuleEnabled?: (props: IModuleProps) => boolean;
 
   /**
-   * Whether the drawer is open or not.
-   */
-  isOpen?: boolean;
-
-  /**
    * An optional icon for the module drawer button.
    */
   icon?: React.ReactNode;
@@ -62,6 +57,11 @@ export interface IModuleDrawerProps {
   onOpen?: (event?: React.SyntheticEvent<any>) => void;
 
   /**
+   * Whether the drawer is open or not.
+   */
+  open?: boolean;
+
+  /**
    * The workbench that the items in the drawer can be dragged into.
    */
   workbench?: Workbench;
@@ -74,10 +74,10 @@ export interface IModuleDrawerProps {
 export class ModuleDrawer extends React.Component<IModuleDrawerProps, {}> {
 
   public render() {
-    const { children, closeAfterDragging, icon, isModuleEnabled, isOpen, label,
-            onClick, onClose, onOpen, workbench } = this.props;
+    const { children, closeAfterDragging, icon, isModuleEnabled, label,
+            onClick, onClose, onOpen, open, workbench } = this.props;
     const classes = ["wb-module-drawer"];
-    classes.push(isOpen ? "wb-module-drawer-open" : "wb-module-drawer-closed");
+    classes.push(open ? "wb-module-drawer-open" : "wb-module-drawer-closed");
 
     const items = React.Children.map(children, child => {
       if (isElementClassEqualTo(Module, child)) {
@@ -93,7 +93,7 @@ export class ModuleDrawer extends React.Component<IModuleDrawerProps, {}> {
       }
     });
     const contents = items && items.length > 0 ? (
-      <div className="wb-module-drawer-anchor" style={{ display: isOpen ? "block" : "none" }}>
+      <div className="wb-module-drawer-anchor" style={{ display: open ? "block" : "none" }}>
         <div className="wb-module-drawer-contents">
           {items}
         </div>
@@ -103,7 +103,7 @@ export class ModuleDrawer extends React.Component<IModuleDrawerProps, {}> {
     return (
       <div className={classes.join(" ")}>
         {contents}
-        <button onClick={isOpen ? onClose : onOpen }>
+        <button onClick={open ? onClose : onOpen }>
           { icon ? <span className="wb-icon wb-module-drawer-icon">{icon}</span> : null }
           {label}
         </button>

@@ -43,10 +43,20 @@ export class ModuleTray extends React.Component<IModuleTrayProps, IModuleTraySta
 
   public constructor(props: IModuleTrayProps) {
     super(props);
+
     this._draggedIds = [];
     this._visibleIds = [];
+
     this.state = {
-      indexOfOpenDrawers: [],
+      indexOfOpenDrawers: React.Children.map(this.props.children,
+        (child: React.ReactChild, index: number) => {
+          if (isElementClassEqualTo(ModuleDrawer, child) && child.props.open) {
+            return index;
+          } else {
+            return -1;
+          }
+        }
+      ).filter(value => value >= 0),
       visibleIds: []
     };
   }
@@ -72,10 +82,10 @@ export class ModuleTray extends React.Component<IModuleTrayProps, IModuleTraySta
       (child: React.ReactChild, index: number) => {
         if (isElementClassEqualTo(ModuleDrawer, child)) {
           const newProps: Partial<IModuleDrawerProps> = {
-            isOpen: indexOfOpenDrawers.includes(index),
             onClick: this._addNewItemToWorkbench,
             onClose: this._onTrayClosed.bind(this, index),
             onOpen: this._onTrayOpened.bind(this, index),
+            open: indexOfOpenDrawers.includes(index),
             workbench
           };
           if (child.props.closeAfterDragging === undefined) {
