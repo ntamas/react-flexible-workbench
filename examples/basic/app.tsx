@@ -10,31 +10,17 @@ import { Container, IPerspectiveStorage, ItemConfigType, Module, ModuleDrawer,
 
 require("../../themes/blue.css");
 
-// Note that React stateless components are currently not allowed in
-// golden-layout as of 1.5.9. I have already submitted a pull request to
-// address this issue:
-//
-// https://github.com/deepstreamIO/golden-layout/pull/334
-//
-// Until the PR is resolved, please use React classes only as root components
-// in a golden-layout workbench.
-
 // =============================================================================
 
 interface IMyComponentProps {
   label: string;
 }
 
-class MyComponent extends React.Component<IMyComponentProps> {
-  public render() {
-    const { label } = this.props;
-    return (
-      <div className="panel">
-        <div className="big-letter">{ label }</div>
-      </div>
-    );
-  }
-}
+const MyComponent = ({ label }: IMyComponentProps) => (
+  <div className="panel">
+    <div className="big-letter">{ label }</div>
+  </div>
+);
 
 // =============================================================================
 

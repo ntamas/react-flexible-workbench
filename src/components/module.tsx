@@ -52,7 +52,7 @@ export interface IModuleProps {
    * module is dropped on the workbench. Note that <code>itemConfiguration</code>
    * takes precedence over this prop if both are given.
    */
-  component?: React.ComponentClass<any>;
+  component?: React.ComponentType<any>;
 
   /**
    * Whether the module component is disabled. A disabled component cannot be

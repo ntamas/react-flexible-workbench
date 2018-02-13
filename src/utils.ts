@@ -217,3 +217,28 @@ export function traverseWorkbench(tree: GoldenLayout, func: ItemVisitor): void {
     }
   }
 }
+
+export interface IWrappedComponent<T> {
+  wrappedComponent: React.ComponentType<T>;
+}
+
+/**
+ * Function that takes a React stateless functional component and wraps it in
+ * an equivalent React stateful component class to ensure that it is handled
+ * correctly by `react-flexible-workbench`.
+ *
+ * @param  {React.SFC<T>} func  the stateless functional component to wrap
+ * @return {WrappedSFC<T>} the wrapped React component
+ */
+export function wrapInComponent<T>(func: React.SFC<T>): React.ComponentClass<T> & IWrappedComponent<T> {
+  const result: React.ComponentClass<T> & IWrappedComponent<T> =
+    class extends React.Component<T, {}> {
+      public static wrappedComponent = func;
+
+      public render() {
+        return func(this.props, this.context);
+      }
+    };
+  result.displayName = `wrapInComponent(${getDisplayName(func)})`;
+  return result;
+}

@@ -12,7 +12,7 @@ import { Environment, IEnvironmentMethods } from "./environment";
 import { LazyReactComponentHandler } from "./handlers";
 import { ComponentConstructor, DragSource, HigherOrderComponent, ItemConfigType,
          ItemVisitor, WorkbenchState } from "./types";
-import { getDisplayName, onlyVisible, traverseWorkbench } from "./utils";
+import { getDisplayName, onlyVisible, traverseWorkbench, wrapInComponent } from "./utils";
 
 // Require golden-layout CSS and theme files so they get included in the bundle
 require("golden-layout/src/css/goldenlayout-base.css");
@@ -185,7 +185,8 @@ export class Workbench extends EventEmitter {
   ): string | undefined {
     return Object.keys(this._registry).find(key => {
       const value = this._registry[key];
-      return value.component === factory || value.factory === factory;
+      return value.component === factory || value.factory === factory ||
+        (value.component !== undefined && (value.component as any).wrappedComponent === factory);
     });
   }
 
@@ -357,6 +358,17 @@ export class Workbench extends EventEmitter {
       if (name.length === 0) {
         throw new Error("cannot register unnamed components without specifying " +
                         "a name explicitly");
+      }
+      if (typeof component === "function") {
+        // Component is a stateless functional component. These are currently
+        // not allowed in golden-layout as of 1.5.9. I have already submitted a
+        // pull request to address this issue:
+        //
+        // https://github.com/deepstreamIO/golden-layout/pull/334
+        //
+        // Until the PR is resolved, we need to wrap the component in a React
+        // component class.
+        component = wrapInComponent(component as React.StatelessComponent<TProps>);
       }
     }
 
