@@ -45,7 +45,7 @@ interface IFooterProps {
 const Footer = ({ workbench }: IFooterProps) => (
   <div id="footer">
     <ModuleTray workbench={workbench}>
-      <ModuleDrawer label="Generic" open>
+      <ModuleDrawer label="Generic">
         <Module id="panel-a" label="Panel A" component={MyComponent} props={{ label: "A" }} />
         <Module id="panel-b" label="Panel B" component={MyComponent} props={{ label: "B" }} />
         <Module id="panel-c" label="Panel C" component={MyComponent} props={{ label: "C" }} />
