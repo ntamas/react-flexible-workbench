@@ -158,7 +158,7 @@ class App extends React.Component<{}, IAppState> {
             <Sidebar open={sidebarOpen}>
               <h1>Workbench</h1>
               <ModuleTray allowMultipleSelection vertical workbench={workbench}>
-                <ModuleDrawer icon={<icons.Generic />} label="Generic" open>
+                <ModuleDrawer icon={<icons.Generic />} label="Generic">
                   <Module id="panel-a" label="Panel A" component={MyComponent} props={{ label: "A" }} />
                   <Module id="panel-b" label="Panel B" component={MyComponent} props={{ label: "B" }} />
                   <Module id="panel-c" label="Panel C" component={MyComponent} props={{ label: "C" }} />
