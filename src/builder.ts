@@ -102,7 +102,8 @@ export class PerspectiveBuilder {
     this._workbench = undefined;
 
     if (this._content.length !== 1) {
-      throw new Error("Perspective must have a single root component");
+      // Create an empty stack so we have something at the root
+      this.makeStack().finish();
     }
 
     const result = this._content;
