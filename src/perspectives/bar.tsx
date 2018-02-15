@@ -1,9 +1,9 @@
 import * as React from "react";
 
-import { ModificationIndicator } from "./indicator";
 import { IPerspective } from "./perspective";
 import { IPerspectiveStorage } from "./storage";
 
+import { Badge } from "../components";
 import { Workbench } from "../workbench";
 
 /**
@@ -263,6 +263,8 @@ export interface ILoadPerspectiveButtonProps {
   selected?: boolean;
 }
 
+const badgeOffset = [-3, -3];
+
 /**
  * Stateless component that renders a button that can be clicked by the user
  * to load a perspective.
@@ -279,7 +281,7 @@ const LoadPerspectiveButton = (props: ILoadPerspectiveButtonProps) => {
   return (
     <div className={classes.join(" ")}>
       <button className="wb-perspective-bar-load-button" onClick={onClick}>{label}</button>
-      <ModificationIndicator visible={modified} />
+      <Badge visible={modified} offset={badgeOffset} />
     </div>
   );
 };

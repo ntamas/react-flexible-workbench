@@ -6,6 +6,7 @@
 
 .wb-icon {
   display: inline-block;
+  position: relative;
   vertical-align: middle;
   padding-right: 0.5em;
 }
@@ -95,15 +96,15 @@
   min-width: 32px;
 }
 
-.wb-modification-indicator {
+.wb-badge {
   background: red;
   border-radius: 50%;
   box-shadow: 0px 1px 2px rgba(0, 0, 0, 0.65);
   content: "";
   display: block;
-  height: 10px;
+  font-size: 10px;
+  min-height: 10px;
+  min-width: 10px;
   position: absolute;
-  right: -3px;
-  top: -3px;
-  width: 10px;
+  user-select: none;
 }
