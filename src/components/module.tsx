@@ -48,6 +48,17 @@ export function createItemConfigurationFromProps(props: IModuleProps): (() => It
  */
 export interface IModuleProps {
   /**
+   * The React component to show as a badge on the icon. Typically, this
+   * prop should be a `<Badge/>` component, but it may be anything else
+   * as long as it is absolutely positioned in CSS, assuming that its parent
+   * is a container that contains the icon as well.
+   *
+   * CSS effects applied to the icon in disabled state will not affect the
+   * badge itself.
+   */
+  badge?: React.ReactNode;
+
+  /**
    * The React component to show in the new item that will be created when the
    * module is dropped on the workbench. Note that <code>itemConfiguration</code>
    * takes precedence over this prop if both are given.
@@ -149,18 +160,25 @@ export class Module extends React.Component<IModuleProps, {}> {
   }
 
   public render() {
-    const { disabled, icon, label } = this.props;
+    const { badge, disabled, icon, label } = this.props;
     const classes = ["wb-module"];
 
     if (disabled) {
       classes.push("wb-module-disabled");
     }
 
+    const iconSpan = icon ? <span className="wb-icon wb-module-icon">{icon}</span> : null;
+    const labelSpan = label ? <span className="wb-label wb-module-label">{label}</span> : null;
+
     return (
       <div onClick={disabled ? undefined : this._onClick}
         className={classes.join(" ")} ref={this._setRootNode}>
-        { icon ? <span className="wb-icon wb-module-icon">{icon}</span> : null }
-        { label }
+        { icon ? (
+            badge ? (
+              <div className="wb-badge-container">{iconSpan}{badge}</div>
+            ) : iconSpan
+          ) : iconSpan }
+        { labelSpan }
       </div>
     );
   }

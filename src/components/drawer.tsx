@@ -105,7 +105,7 @@ export class ModuleDrawer extends React.Component<IModuleDrawerProps, {}> {
         {contents}
         <button onClick={open ? onClose : onOpen }>
           { icon ? <span className="wb-icon wb-module-drawer-icon">{icon}</span> : null }
-          {label}
+          { label ? <span className="wb-label wb-module-drawer-label">{label}</span> : null }
         </button>
       </div>
     );

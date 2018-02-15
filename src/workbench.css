@@ -6,7 +6,6 @@
 
 .wb-icon {
   display: inline-block;
-  position: relative;
   vertical-align: middle;
   padding-right: 0.5em;
 }
@@ -79,8 +78,13 @@
   cursor: default;
   text-overflow: ellipsis;
 }
-.wb-module-disabled {
+.wb-module.wb-module-disabled .wb-icon,
+.wb-module.wb-module-disabled .wb-label {
   opacity: 0.5;
+}
+.wb-module .wb-badge-container .wb-badge {
+  top: 0;
+  right: 0.5em;
 }
 
 .wb-perspective-bar {
@@ -103,8 +107,14 @@
   content: "";
   display: block;
   font-size: 10px;
-  min-height: 10px;
-  min-width: 10px;
+  line-height: 12px;
+  min-height: 12px;
+  min-width: 12px;
   position: absolute;
+  text-align: center;
   user-select: none;
+}
+.wb-badge-container {
+  display: inline-block;
+  position: relative;
 }
