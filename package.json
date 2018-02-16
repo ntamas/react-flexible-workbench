@@ -1,6 +1,6 @@
 {
   "name": "react-flexible-workbench",
-  "version": "0.12.1",
+  "version": "0.12.2",
   "description": "Provides a flexible workspace UI for single-page web apps based on GoldenLayout",
   "main": "lib/index.js",
   "types": "lib/index.d.ts",
