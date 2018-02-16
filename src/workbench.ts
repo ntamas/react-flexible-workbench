@@ -359,7 +359,7 @@ export class Workbench extends EventEmitter {
         throw new Error("cannot register unnamed components without specifying " +
                         "a name explicitly");
       }
-      if (typeof component === "function") {
+      if (typeof component === "function" && component.prototype === undefined) {
         // Component is a stateless functional component. These are currently
         // not allowed in golden-layout as of 1.5.9. I have already submitted a
         // pull request to address this issue:
