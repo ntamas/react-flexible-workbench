@@ -107,9 +107,9 @@
   content: "";
   display: block;
   font-size: 10px;
-  line-height: 12px;
-  min-height: 12px;
-  min-width: 12px;
+  line-height: 10px;
+  min-height: 10px;
+  min-width: 10px;
   position: absolute;
   text-align: center;
   user-select: none;

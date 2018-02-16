@@ -1,9 +1,11 @@
 import * as React from "react";
 
+import { areWorkbenchStatesEqualIgnoringSelection } from "./compare";
 import { IPerspective } from "./perspective";
 import { IPerspectiveStorage } from "./storage";
 
 import { Badge } from "../components";
+import { WorkbenchState } from "../types";
 import { Workbench } from "../workbench";
 
 /**
@@ -47,6 +49,11 @@ export class PerspectiveBar extends React.Component<IPerspectiveBarProps, IPersp
    * variable of the bar.
    */
   private _ignoreStateChangeCounter: number;
+
+  /**
+   * The last known state of the workbench.
+   */
+  private _lastState: WorkbenchState | undefined;
 
   private _storage: IPerspectiveStorage | undefined;
   private _workbench: Workbench | undefined;
@@ -125,10 +132,30 @@ export class PerspectiveBar extends React.Component<IPerspectiveBarProps, IPersp
         this.setState({
           selectedPerspectiveId: id
         });
+        this._lastState = perspective.state;
       } else {
         console.warn("No perspective storage while creating new perspective; this is probably a bug.");
       }
     }
+  }
+
+  /**
+   * Determines whether the state of the current perspective needs to be saved
+   * after a `stateChanged` event.
+   *
+   * The problem we are solving here is that `stateChanged` is fired not only
+   * for item creations / rearrangements but also when the user changes the
+   * selection in the perspective. We want to ignore selection changes but save
+   * the perspective state whenever an actual change happens.
+   *
+   * @param  {IPerspective}  newState  the new state of the workbench
+   * @return {boolean}  if the new state of the workbench is different from the
+   *         state of the current perspective in the perspective storage,
+   *         ignoring selection changes
+   */
+  private _currentPerspectiveNeedsSavingAfterChange(newState: IPerspective): boolean {
+    return this.state.selectedPerspectiveId !== undefined &&
+      !areWorkbenchStatesEqualIgnoringSelection(this._lastState, newState);
   }
 
   private _loadPerspectiveById = async (id: string): Promise<void> => {
@@ -142,6 +169,7 @@ export class PerspectiveBar extends React.Component<IPerspectiveBarProps, IPersp
       } else {
         console.warn("Workbench is gone while the perspective was being loaded; this is probably a bug.");
       }
+      this._lastState = workbench.getState();     // there are extra keys there compared to perspective.state
       this.setState({
         selectedPerspectiveId: id
       });
@@ -160,7 +188,11 @@ export class PerspectiveBar extends React.Component<IPerspectiveBarProps, IPersp
     if (this._ignoreStateChangeCounter > 0) {
       this._ignoreStateChangeCounter--;
     } else {
-      this._updateCurrentPerspective();
+      const { workbench } = this.props;
+      const newState = workbench.getState();
+      if (this._currentPerspectiveNeedsSavingAfterChange(newState)) {
+        this._updateCurrentPerspectiveWith(newState);
+      }
     }
   }
 
@@ -221,13 +253,19 @@ export class PerspectiveBar extends React.Component<IPerspectiveBarProps, IPersp
   }
 
   private _updateCurrentPerspective = async (persist: boolean = false): Promise<void> => {
+    const { workbench } = this.props;
+    return this._updateCurrentPerspectiveWith(workbench.getState(), persist);
+  }
+
+  private _updateCurrentPerspectiveWith = async (newState: WorkbenchState, persist: boolean = false): Promise<void> => {
     const { storage, workbench } = this.props;
     const { selectedPerspectiveId } = this.state;
 
     if (storage === undefined) {
       console.warn("No perspective storage while saving perspective; this is probably a bug.");
     } else if (selectedPerspectiveId !== undefined) {
-      await storage.update(selectedPerspectiveId, workbench.getState());
+      await storage.update(selectedPerspectiveId, newState);
+      this._lastState = newState;
       if (persist) {
         await storage.persistModifications(selectedPerspectiveId);
       }
@@ -281,7 +319,7 @@ const LoadPerspectiveButton = (props: ILoadPerspectiveButtonProps) => {
   return (
     <div className={classes.join(" ")}>
       <button className="wb-perspective-bar-load-button" onClick={onClick}>{label}</button>
-      <Badge visible={modified} offset={badgeOffset}>2</Badge>
+      <Badge visible={modified} offset={badgeOffset} />
     </div>
   );
 };

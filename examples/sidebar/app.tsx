@@ -105,10 +105,16 @@ const perspectives = PerspectiveStorage.fromArray([
               props: { label: "A" },
               title: "Panel A"
             }, "panel-a")
-            .add(MyComponent, {
-              props: { label: "B" },
-              title: "Panel B"
-            }, "panel-b")
+            .makeStack()
+              .add(MyComponent, {
+                props: { label: "B" },
+                title: "Panel B"
+              }, "panel-b")
+              .add(MyComponent, {
+                props: { label: "C" },
+                title: "Panel C"
+              }, "panel-c")
+            .finish()
           .build()
     }
   },
