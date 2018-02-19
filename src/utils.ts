@@ -83,6 +83,13 @@ export function isElementClassEqualTo<P>(
   }
 }
 
+export function isReactSFC(obj: any): boolean {
+  if (obj === undefined || typeof obj !== "function") {
+    return false;
+  }
+  return !(obj instanceof React.Component);
+}
+
 /**
  * Takes an item visitor function and returns another one that will traverse
  * only the part of the workbench that is currently visible (and not hidden

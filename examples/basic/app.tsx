@@ -22,6 +22,15 @@ const MyComponent = ({ label }: IMyComponentProps) => (
   </div>
 );
 
+class MyComponentClass extends React.Component<IMyComponentProps> {
+  public render() {
+    return (
+      <div className="panel">
+        <div className="big-letter">{ this.props.label }</div>
+      </div>
+    );
+  }
+}
 // =============================================================================
 
 interface IHeaderProps {
@@ -78,12 +87,12 @@ const workbench = new WorkbenchBuilder()
           props: { label: "B" },
           title: "Panel B",
         }, "panel-b")
-        .add(MyComponent, {
+        .add(MyComponentClass, {
           props: { label: "C" },
           title: "Panel C",
         }, "panel-c")
       .finish()
-      .add(MyComponent, {
+      .add(MyComponentClass, {
         props: { label: "D" },
         title: "Panel D",
       }, "panel-d")

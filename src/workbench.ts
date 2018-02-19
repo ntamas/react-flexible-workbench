@@ -12,7 +12,8 @@ import { Environment, IEnvironmentMethods } from "./environment";
 import { LazyReactComponentHandler } from "./handlers";
 import { ComponentConstructor, DragSource, HigherOrderComponent, ItemConfigType,
          ItemVisitor, WorkbenchState } from "./types";
-import { getDisplayName, onlyVisible, traverseWorkbench, wrapInComponent } from "./utils";
+import { getDisplayName, isReactSFC, onlyVisible, traverseWorkbench,
+         wrapInComponent } from "./utils";
 
 // Require golden-layout CSS and theme files so they get included in the bundle
 require("golden-layout/src/css/goldenlayout-base.css");
@@ -359,7 +360,7 @@ export class Workbench extends EventEmitter {
         throw new Error("cannot register unnamed components without specifying " +
                         "a name explicitly");
       }
-      if (typeof component === "function" && component.prototype === undefined) {
+      if (isReactSFC(component)) {
         // Component is a stateless functional component. These are currently
         // not allowed in golden-layout as of 1.5.9. I have already submitted a
         // pull request to address this issue:
