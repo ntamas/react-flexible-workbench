@@ -87,7 +87,7 @@ export function isReactSFC(obj: any): boolean {
   if (obj === undefined || typeof obj !== "function") {
     return false;
   }
-  return !(obj instanceof React.Component);
+  return !(obj.prototype instanceof React.Component);
 }
 
 /**
