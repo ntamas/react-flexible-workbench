@@ -10,7 +10,8 @@ import { withContext } from "recompose";
 import { WorkbenchBuilder } from "./builder";
 import { Environment, IEnvironmentMethods } from "./environment";
 import { LazyReactComponentHandler } from "./handlers";
-import { ComponentConstructor, DragSource, HigherOrderComponent, ItemConfigType,
+import { ComponentConstructor, DragSource, HigherOrderComponent,
+         IItemConfigurationOptions, ItemConfigType,
          ItemVisitor, WorkbenchState } from "./types";
 import { getDisplayName, isReactSFC, onlyVisible, traverseWorkbench,
          wrapInComponent } from "./utils";
@@ -111,16 +112,47 @@ export class Workbench extends EventEmitter {
    *
    * @param  nameOrComponent  the name of the component constructor or the
    *                          React component
+   * @param  options  additional options that can be used to tweak the
+   *                  configuration object
    */
-  public createItemConfigurationFor(nameOrComponent: string | React.ComponentType<any>): ItemConfigType {
+  public createItemConfigurationFor(
+    nameOrComponent: string | React.ComponentType<any>,
+    options?: Partial<IItemConfigurationOptions>
+  ): ItemConfigType {
     const name = this.ensureComponentIsRegistered(nameOrComponent);
-    return this.isRegisteredAsReact(name) ? {
-      component: name,
-      type: "react-component"
-    } : {
-      componentName: name,
-      type: "component"
-    };
+    const effectiveOptions = Object.assign({
+      eager: false,
+      props: {},
+      title: ""
+    }, options);
+    let result: ItemConfigType;
+    const { eager, props, title } = effectiveOptions;
+
+    if (this.isRegisteredAsReact(name)) {
+      // TODO: handle eager
+      result = {
+        component: name,
+        props: Object.assign({}, props),
+        type: "react-component"
+      };
+
+      if (!eager) {
+        // React component needs to be lazy, i.e. it needs to be unmounted
+        // when it is hidden. This will be handled with a special
+        // golden-layout handler class.
+        result.type = "component";
+        (result as any).componentName = "lm-react-lazy-component";
+      }
+    } else {
+      result = {
+        componentName: name,
+        type: "component"
+      };
+    }
+
+    result.title = isFunction(title) ? title() : title;
+
+    return result;
   }
 
   /**

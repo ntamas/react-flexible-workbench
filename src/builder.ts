@@ -54,24 +54,11 @@ export class PerspectiveBuilder {
     id?: string
   ): this {
     const workbench = this._assertHasWorkbench();
-    const newItem = workbench.createItemConfigurationFor(nameOrComponent);
+    const newItem = workbench.createItemConfigurationFor(
+      nameOrComponent, { eager, props, title }
+    );
 
-    newItem.title = title;
-    if (newItem.type === "react-component") {
-      if (props !== undefined) {
-        (newItem as GoldenLayout.ReactComponentConfig).props = props;
-      }
-      if (!eager) {
-        // React component needs to be lazy, i.e. it needs to be unmounted
-        // when it is hidden. This will be handled with a special
-        // golden-layout handler class.
-        newItem.type = "component";
-        (newItem as GoldenLayout.ComponentConfig).componentName =
-          "lm-react-lazy-component";
-        state = undefined;
-      }
-    }
-    if (newItem.type === "component" && state !== undefined) {
+    if (state !== undefined) {
       (newItem as GoldenLayout.ComponentConfig).componentState = state;
     }
 

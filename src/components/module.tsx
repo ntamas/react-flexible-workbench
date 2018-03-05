@@ -8,7 +8,7 @@ import { Workbench } from "../workbench";
 
 export function createItemConfigurationFromProps(props: IModuleProps): (() => ItemConfigType) {
   return () => {
-    const { component, id, itemConfiguration, onStartDrag } = props;
+    const { component, eager, id, itemConfiguration, onStartDrag } = props;
     let result;
 
     if (onStartDrag) {
@@ -24,12 +24,11 @@ export function createItemConfigurationFromProps(props: IModuleProps): (() => It
       if (workbench === undefined) {
         throw new Error("Workbench is undefined; this should not have happened");
       }
-      const config = workbench.createItemConfigurationFor(component) as GoldenLayout.ReactComponentConfig;
-      config.title = title
-        ? (isFunction(title) ? title() : title)
-        : (typeof label === "string" ? label : "Untitled");
-      config.props = Object.assign({}, props.props);
-      result = config;
+      result = workbench.createItemConfigurationFor(component, {
+        eager,
+        props: props.props,
+        title: title || (typeof label === "string" ? label : "Untitled")
+      }) as GoldenLayout.ReactComponentConfig;
     } else {
       throw new Error("At least one of 'component' and 'itemConfiguration' " +
                       "must be defined");
@@ -70,6 +69,13 @@ export interface IModuleProps {
    * dragged out of its drawer.
    */
   disabled?: boolean;
+
+  /**
+   * Whether the module should produce a component that is eagerly mounted,
+   * i.e. that mounts itself to the DOM tree even if it is in the background
+   * in some tab stack.
+   */
+  eager?: boolean;
 
   /**
    * An optional icon for the module.

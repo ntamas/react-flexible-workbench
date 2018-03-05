@@ -20,6 +20,12 @@ export type Validator<T> = (object: T, key: string, componentName: string, ...re
 export type HigherOrderComponent<SProps, TProps> =
   (component: React.ComponentType<SProps>) => React.ComponentType<TProps>;
 
+export interface IItemConfigurationOptions {
+  eager: boolean;
+  props: any;
+  title: string | (() => string);
+}
+
 /**
  * Interface specification for functions that can be used as an argument
  * to `traverseWorkbench()` and `Workbench.forEach()`. These functions take
