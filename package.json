@@ -51,10 +51,12 @@
     "webpack-dev-server": "^2.9.3"
   },
   "dependencies": {
+    "arrive": "^2.4.1",
     "eventemitter3": "^2.0.3",
     "golden-layout": "^1.5.9",
     "javascript-detect-element-resize": "^0.5.3",
     "lodash-es": "^4.17.4",
+    "mutation-observer": "^1.0.3",
     "prop-types": "^15.6.0",
     "react-transition-group": "^2.2.1",
     "recompose": "^0.26.0"

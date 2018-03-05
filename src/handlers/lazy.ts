@@ -1,6 +1,13 @@
 import { Container } from "golden-layout";
+import uniqueId from "lodash-es/uniqueId";
 import * as React from "react";
 import { render, unmountComponentAtNode } from "react-dom";
+
+// Polyfill MutationObserver for browsers that don't support it.
+require("mutation-observer");
+
+// Add support for document.arrive()
+require("arrive");
 
 /**
  * Golden-layout component handler for React components that are meant to
@@ -15,6 +22,8 @@ export class LazyReactComponentHandler {
   private _originalComponentWillUpdate: ((...args: any[]) => void) | undefined;
   private _reactClass: React.SFC<any> | React.ComponentClass<any> | string;
   private _reactComponent: React.Component<any, any> | undefined;
+  private _temporaryClassNameForContainer: string | undefined;
+  private _waitingForContainerAddition: HTMLElement | undefined;
 
   /**
    * Constructor.
@@ -27,6 +36,8 @@ export class LazyReactComponentHandler {
     this._isOpen = false;
     this._isVisible = false;
     this._setReactComponent(null);
+    this._temporaryClassNameForContainer = undefined;
+    this._waitingForContainerAddition = undefined;
 
     this._container = container;
     this._container.on("open", this._open, this);
@@ -89,10 +100,28 @@ export class LazyReactComponentHandler {
       return;
     }
 
-    render(
-      this._createReactComponent(this._setReactComponent),
-      this._container.getElement()[0]
-    );
+    const firstElement = this._container.getElement()[0];
+    if (!document.body.contains(firstElement)) {
+      // Container is not in the DOM tree yet, so let's start watching the
+      // DOM tree and try mounting again if it is finally added
+      this._waitForContainerAddition(firstElement);
+    } else {
+      render(
+        this._createReactComponent(this._setReactComponent), firstElement
+      );
+    }
+  }
+
+  /**
+   * Callback that is called when the DOM node that will contain the
+   * component itself is added to the DOM tree of the document.
+   */
+  private _onContainerAdded = (): void => {
+    // Stop watching the container, it's not needed now.
+    this._waitForContainerAddition(undefined);
+
+    // Let's try mounting again.
+    this._mountIfNeeded();
   }
 
   private _setReactComponent = (component: React.Component<any, any> | null): void => {
@@ -123,8 +152,12 @@ export class LazyReactComponentHandler {
    */
   private _unmountIfNeeded(): void {
     if (this._reactComponent && (!this._isVisible || !this._isOpen)) {
+      // Unmount the component from the container
       const firstElement = this._container.getElement()[0];
       unmountComponentAtNode(firstElement);
+
+      // Don't wait for the mounting of any DOM node any more
+      this._waitForContainerAddition(undefined);
     }
   }
 
@@ -178,6 +211,41 @@ export class LazyReactComponentHandler {
     const configProps = (this._container as any)._config.props;
     const props = Object.assign(defaultProps, configProps, { ref });
     return React.createElement(this._reactClass, props);
+  }
+
+  /**
+   * Asks the handler to start waiting for the given DOM node to be mounted
+   * to the DOM tree of the document.
+   */
+  private _waitForContainerAddition(element: HTMLElement | undefined): void {
+    if (this._waitingForContainerAddition === element) {
+      return;
+    }
+
+    if (this._waitingForContainerAddition) {
+      // Get rid of the existing handler and the temporary class that we
+      // have attached to the container.
+      (document as any).unbindArrive(
+        "." + this._temporaryClassNameForContainer,
+        this._onContainerAdded
+      );
+      this._waitingForContainerAddition.classList.remove(
+        this._temporaryClassNameForContainer!);
+      this._temporaryClassNameForContainer = undefined;
+    }
+
+    this._waitingForContainerAddition = element;
+
+    if (this._waitingForContainerAddition) {
+      // Create a new handler for the given element.
+      this._temporaryClassNameForContainer = uniqueId("__wb_container_");
+      this._waitingForContainerAddition.classList.add(
+        this._temporaryClassNameForContainer);
+      (document as any).arrive(
+        "." + this._temporaryClassNameForContainer,
+        this._onContainerAdded
+      );
+    }
   }
 
 }
