@@ -58,7 +58,7 @@
     "lodash-es": "^4.17.7",
     "mutation-observer": "^1.0.3",
     "prop-types": "^15.6.1",
-    "react-badger": "file:../react-badger/react-badger-1.0.0.tgz",
+    "react-badger": "^1.0.0",
     "recompose": "^0.26.0"
   },
   "peerDependencies": {
