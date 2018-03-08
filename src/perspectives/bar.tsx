@@ -319,7 +319,7 @@ const LoadPerspectiveButton = (props: ILoadPerspectiveButtonProps) => {
   return (
     <div className={classes.join(" ")}>
       <button className="wb-perspective-bar-load-button" onClick={onClick}>{label}</button>
-      <Badge visible={modified} offset={badgeOffset} />
+      <Badge className="wb-badge" visible={modified} offset={badgeOffset} />
     </div>
   );
 };

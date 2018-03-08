@@ -2,6 +2,7 @@
 
 import * as PropTypes from "prop-types";
 import * as React from "react";
+import Badge from "react-badger";
 import * as ReactDOM from "react-dom";
 import Shapeshifter from "react-shapeshifter";
 
@@ -174,7 +175,7 @@ class App extends React.Component<{}, IAppState> {
                 </ModuleDrawer>
                 <ModuleDrawer icon={<icons.Storage />} label="Safety stock">
                 </ModuleDrawer>
-                <ModuleDrawer icon={<icons.Import />} label="Import">
+                <ModuleDrawer badge={<Badge />} icon={<icons.Import />} label="Import">
                 </ModuleDrawer>
                 <ModuleDrawer icon={<icons.Table />} label="Master tables">
                 </ModuleDrawer>

@@ -175,16 +175,15 @@ export class Module extends React.Component<IModuleProps, {}> {
 
     const iconSpan = icon ? <span className="wb-icon wb-module-icon">{icon}</span> : null;
     const labelSpan = label ? <span className="wb-label wb-module-label">{label}</span> : null;
+    const iconAndBadge = iconSpan ? (
+      <div className="wb-sidebar-icon-container">{iconSpan}{badge}</div>
+    ) : null;
 
     return (
       <div onClick={disabled ? undefined : this._onClick}
         className={classes.join(" ")} ref={this._setRootNode}>
-        { icon ? (
-            badge ? (
-              <div className="wb-badge-container">{iconSpan}{badge}</div>
-            ) : iconSpan
-          ) : iconSpan }
-        { labelSpan }
+        {iconAndBadge}
+        {labelSpan}
       </div>
     );
   }

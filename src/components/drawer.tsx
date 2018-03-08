@@ -11,6 +11,17 @@ import { convertModuleInTray } from "./utils";
  */
 export interface IModuleDrawerProps {
   /**
+   * The React component to show as a badge on the icon. Typically, this
+   * prop should be a `<Badge/>` component, but it may be anything else
+   * as long as it is absolutely positioned in CSS, assuming that its parent
+   * is a container that contains the icon as well.
+   *
+   * CSS effects applied to the icon in disabled state will not affect the
+   * badge itself.
+   */
+  badge?: React.ReactNode;
+
+  /**
    * Decides whether the module drawer should be closed when a module is
    * dragged out of it to the workbench.
    */
@@ -74,7 +85,7 @@ export interface IModuleDrawerProps {
 export class ModuleDrawer extends React.Component<IModuleDrawerProps, {}> {
 
   public render() {
-    const { children, closeAfterDragging, icon, isModuleEnabled, label,
+    const { badge, children, closeAfterDragging, icon, isModuleEnabled, label,
             onClick, onClose, onOpen, open, workbench } = this.props;
     const classes = ["wb-module-drawer"];
     classes.push(open ? "wb-module-drawer-open" : "wb-module-drawer-closed");
@@ -100,12 +111,18 @@ export class ModuleDrawer extends React.Component<IModuleDrawerProps, {}> {
       </div>
     ) : [];
 
+    const iconSpan = icon ? <span className="wb-icon wb-module-drawer-icon">{icon}</span> : null;
+    const labelSpan = label ? <span className="wb-label wb-module-drawer-label">{label}</span> : null;
+    const iconAndBadge = iconSpan ? (
+      <div className="wb-sidebar-icon-container">{iconSpan}{badge}</div>
+    ) : null;
+
     return (
       <div className={classes.join(" ")}>
         {contents}
         <button onClick={open ? onClose : onOpen }>
-          { icon ? <span className="wb-icon wb-module-drawer-icon">{icon}</span> : null }
-          { label ? <span className="wb-label wb-module-drawer-label">{label}</span> : null }
+          {iconAndBadge}
+          {labelSpan}
         </button>
       </div>
     );
