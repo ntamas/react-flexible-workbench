@@ -1,10 +1,10 @@
 import * as React from "react";
+import { Badge } from "react-badger";
 
 import { areWorkbenchStatesEqualIgnoringSelection } from "./compare";
 import { IPerspective } from "./perspective";
 import { IPerspectiveStorage } from "./storage";
 
-import { Badge } from "../components";
 import { WorkbenchState } from "../types";
 import { Workbench } from "../workbench";
 
