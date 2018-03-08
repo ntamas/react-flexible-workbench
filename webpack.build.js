@@ -17,6 +17,7 @@ if (process.env.MINIFY) {
 }
 module.exports = {
   entry: path.resolve(getPackageMain()),
+  mode: "development",
 
   output: {
     filename: './dist/' + COMPONENT_NAME + '.js',

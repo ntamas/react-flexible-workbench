@@ -25,6 +25,7 @@ function buildEntries() {
 
 module.exports = {
   entry: buildEntries(),
+  mode: "development",
 
   output: {
     filename: '[name].js',
@@ -33,8 +34,12 @@ module.exports = {
     publicPath: '/__build__/'
   },
 
-  // Enable sourcemaps
-  devtool: "cheap-source-map",
+  optimization: {
+    splitChunks: {
+      chunks: "all",
+      name: "shared"
+    }
+  },
 
   resolve: {
     // Add .ts and .tsx as resolvable extensions, and prefer .es.js files
@@ -56,8 +61,9 @@ module.exports = {
       // Process .ts and .tsx files via the TypeScript compiler
       {
         test: /\.[jt]sx?$/,
-        use: ["awesome-typescript-loader"],
-        exclude: /node_modules/
+        loader: "awesome-typescript-loader",
+        exclude: /node_modules/,
+        options: { silent: true }
       },
 
 	    // Process .css files via style-loader and css-loader
@@ -79,8 +85,6 @@ module.exports = {
   },
 
   plugins: [
-    new webpack.optimize.CommonsChunkPlugin("shared"),
-
     // Provide $, jQuery, React and ReactDOM as UMD globals because golden-layout
     // wants them so. :(
     new webpack.ProvidePlugin({
