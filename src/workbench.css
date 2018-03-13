@@ -12,11 +12,16 @@
 .wb-module-tray {
   display: flex;
   flex-flow: row nowrap;
+  /* This might cause problems if the tray is too narrow but scrollable, and
+   * not all buttons fit in it. The user won't be able to scroll to the left
+   * to see the left edge of the first button. If this is a concern, the
+   * solution is to use margin: auto in the first and last items instead of
+   * justify-content: center */
   justify-content: center;
 }
 .wb-module-tray.wb-module-tray-vertical {
   flex-flow: column nowrap;
-  justify-content: center;
+  justify-content: normal;
 }
 
 .wb-module-tray .wb-module-drawer {
