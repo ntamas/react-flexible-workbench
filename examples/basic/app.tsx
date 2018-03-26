@@ -16,21 +16,40 @@ interface IMyComponentProps {
   label: string;
 }
 
+interface IMyComponentState {
+  counter: number;
+}
+
 const MyComponent = ({ label }: IMyComponentProps) => (
   <div className="panel">
     <div className="big-letter">{ label }</div>
   </div>
 );
 
-class MyComponentClass extends React.Component<IMyComponentProps> {
+class MyComponentClass extends React.Component<IMyComponentProps, IMyComponentState> {
+  constructor(props) {
+    super(props);
+    this.state = {
+      counter: 0
+    };
+    this._onClick = this._onClick.bind(this);
+  }
+
   public render() {
     return (
-      <div className="panel">
-        <div className="big-letter">{ this.props.label }</div>
+      <div className="panel" onClick={this._onClick} style={{ cursor: "pointer" }}>
+        <div className="big-letter">{ this.props.label }{ this.state.counter }</div>
       </div>
     );
   }
+
+  private _onClick() {
+    this.setState({
+      counter: (this.state.counter + 1) % 10
+    });
+  }
 }
+
 // =============================================================================
 
 interface IHeaderProps {
