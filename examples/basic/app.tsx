@@ -27,7 +27,7 @@ const MyComponent = ({ label }: IMyComponentProps) => (
 );
 
 class MyComponentClass extends React.Component<IMyComponentProps, IMyComponentState> {
-  constructor(props) {
+  constructor(props: IMyComponentProps) {
     super(props);
     this.state = {
       counter: 0
