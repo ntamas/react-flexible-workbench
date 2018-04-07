@@ -1,4 +1,4 @@
-import { EventEmitter } from "eventemitter3";
+import { EventEmitter, ListenerFn } from "eventemitter3";
 import * as GoldenLayout from "golden-layout";
 import * as JQuery from "jquery";
 import isFunction from "lodash-es/isFunction";
@@ -13,8 +13,8 @@ import { LazyReactComponentHandler } from "./handlers";
 import { ComponentConstructor, DragSource, HigherOrderComponent,
          IItemConfigurationOptions, ItemConfigType,
          ItemVisitor, WorkbenchState } from "./types";
-import { getDisplayName, isReactSFC, onlyVisible, traverseWorkbench,
-         wrapInComponent } from "./utils";
+import { capitalizeEventName, getDisplayName, isReactSFC, onlyVisible,
+         traverseWorkbench, wrapInComponent } from "./utils";
 
 // Require golden-layout CSS and theme files so they get included in the bundle
 require("golden-layout/src/css/goldenlayout-base.css");
@@ -79,6 +79,20 @@ export class Workbench extends EventEmitter {
         showPopoutIcon: false
       }
     };
+  }
+
+  /**
+   * Alias to the `addListener()` method to allow the workbench object to be
+   * used with `react-event-listener` or other classes that expect a DOM-like
+   * API.
+   *
+   * DOM event APIs typically use all-lowercase event names; however, the
+   * workbench uses mixed-case event names (e.g., `stateChanged`). Therefore,
+   * this method will map all-lowercase event names to their correctly capitalized
+   * versions for all events that are officially supported by `golden-layout`
+   */
+  public addEventListener(eventName: string | symbol, listener: ListenerFn): void {
+    this.addListener(capitalizeEventName(eventName), listener);
   }
 
   /**
@@ -434,6 +448,15 @@ export class Workbench extends EventEmitter {
         (layout as any)._dragSources.indexOf(dragSource), 1
       );
     }
+  }
+
+  /**
+   * Alias to the `removeListener()` method to allow the workbench object to be
+   * used with `react-event-listener` or other classes that expect a DOM-like
+   * API.
+   */
+  public removeEventListener(eventName: string | symbol, listener?: ListenerFn): void {
+    this.removeListener(capitalizeEventName(eventName), listener);
   }
 
   /**

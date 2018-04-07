@@ -7,6 +7,33 @@ import * as React from "react";
 
 import { ItemVisitor } from "./types";
 
+const _eventNameMapping: { [key: string]: string } = {
+  activecontentitemchanged: "activeContentItemChanged",
+  columncreated: "columnCreated",
+  componentcreated: "componentCreated",
+  itemcreated: "itemCreated",
+  itemdestroyed: "itemDestroyed",
+  rowcreated: "rowCreated",
+  selectionchanged: "selectionChanged",
+  stackcreated: "stackCreated",
+  statechanged: "stateChanged",
+  tabcreated: "tabCreated",
+  titlechanged: "titleChanged",
+  windowclosed: "windowClosed",
+  windowopened: "windowOpened"
+};
+
+/**
+ * Capitalizes the all-lowercase variants of events officially supported by
+ * `golden-layout`.
+ */
+export function capitalizeEventName(eventName: string | symbol): string | symbol {
+  if (typeof eventName === "symbol") {
+    return eventName;
+  } else {
+    return _eventNameMapping[eventName.toLowerCase()] || eventName;
+  }
+}
 /**
  * Extracts the component IDs from the given content item if it represents
  * a component in a layout.
