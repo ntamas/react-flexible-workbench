@@ -465,7 +465,7 @@ export class Workbench extends EventEmitter {
    * @param  node  the node to render the workbench into; omitting it means that
    *         the workbench must fill the entire page.
    */
-  public render(node?: Element | JQuery<HTMLElement> | string): void {
+  public render(node?: Element | JQuery<HTMLElement> | Text | string): void {
     this._domNode = node !== undefined ? this._resolve(node) : document.body;
 
     // Sanity checks; we cannot proceed if we are not configured or if we are
@@ -622,7 +622,7 @@ export class Workbench extends EventEmitter {
     this.emit("layoutChanged", this._layout);
   }
 
-  private _resolve(node: Element | JQuery<HTMLElement> | string): HTMLElement {
+  private _resolve(node: Element | JQuery<HTMLElement> | Text | string): HTMLElement {
     if (typeof node === "string") {
       const result = document.getElementById(node && node.charAt(0) === "#" ? node.substr(1) : node);
       if (result !== null) {

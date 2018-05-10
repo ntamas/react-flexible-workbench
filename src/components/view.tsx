@@ -76,7 +76,13 @@ export class WorkbenchView extends React.Component<IWorkbenchViewProps, {}> {
       this._shouldBeAttached && this._isMounted;
 
     if (shouldBeAttached && !this._isAttached) {
-      this._workbench!.render(findDOMNode(this));
+      const node = findDOMNode(this);
+      if (node === null) {
+        throw new Error("No DOM node found for WorkbenchView. " +
+                        "This is most likely a bug.");
+      } else {
+        this._workbench!.render(node);
+      }
     } else if (!shouldBeAttached && this._isAttached) {
       this._workbench!.detach();
     }
