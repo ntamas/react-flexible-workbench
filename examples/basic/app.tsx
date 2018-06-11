@@ -14,15 +14,17 @@ require("../../themes/blue.css");
 
 interface IMyComponentProps {
   label: string;
+  message?: string;
 }
 
 interface IMyComponentState {
   counter: number;
 }
 
-const MyComponent = ({ label }: IMyComponentProps) => (
+const MyComponent = ({ label, message }: IMyComponentProps) => (
   <div className="panel">
     <div className="big-letter">{ label }</div>
+    { message ? <div>{message}</div> : null}
   </div>
 );
 
@@ -80,6 +82,9 @@ const Footer = ({ workbench }: IFooterProps) => (
         <Module id="panel-d" label="Panel D" component={MyComponent} props={{ label: "D" }} />
       </ModuleDrawer>
       <ModuleDrawer label="Forecast">
+        <Module label="Panel E" component={MyComponent} props={{
+          label: "E", message: "This panel may have multiple instances"
+        }} />
       </ModuleDrawer>
       <ModuleDrawer label="Safety stock">
       </ModuleDrawer>
