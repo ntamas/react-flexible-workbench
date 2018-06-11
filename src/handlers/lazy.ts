@@ -19,7 +19,7 @@ export class LazyReactComponentHandler {
   private _container: Container;
   private _isOpen: boolean;
   private _isVisible: boolean;
-  private _originalComponentWillUpdate: ((...args: any[]) => void) | undefined;
+  private _originalComponentDidUpdate: ((...args: any[]) => void) | undefined;
   private _reactClass: React.SFC<any> | React.ComponentClass<any> | string;
   private _reactComponent: React.Component<any, any> | undefined;
   private _temporaryClassNameForContainer: string | undefined;
@@ -129,16 +129,16 @@ export class LazyReactComponentHandler {
 
     /* tslint:disable:no-empty */
     if (this._reactComponent) {
-      this._originalComponentWillUpdate =
-        this._reactComponent.componentWillUpdate || (() => {});
-      this._reactComponent.componentWillUpdate = this._onUpdate;
+      this._originalComponentDidUpdate =
+        this._reactComponent.componentDidUpdate || (() => {});
+      this._reactComponent.componentDidUpdate = this._onUpdate;
 
       const state = this._container.getState();
       if (state) {
         this._reactComponent.setState(state);
       }
     } else {
-      this._originalComponentWillUpdate = undefined;
+      this._originalComponentDidUpdate = undefined;
     }
     /* tslint:enable:no-empty */
 
@@ -165,14 +165,18 @@ export class LazyReactComponentHandler {
    * Hooks into React's state management and applies the component state
    * to GoldenLayout
    *
-   * @param  nextProps  the next set of properties for the React component
-   * @param  nextState  the next state for the React component
+   * @param  prevProps  the previous set of properties for the React component
+   * @param  prevState  the previous state for the React component
+   * @param  snapshot   the snapshot taken from the React component before the
+   *         current update
    */
-  private _onUpdate = (nextProps: any, nextState: any): void => {
-    this._container.setState(nextState);
-    if (this._originalComponentWillUpdate !== undefined) {
-      this._originalComponentWillUpdate.call(
-        this._reactComponent, nextProps, nextState
+  private _onUpdate = (prevProps: any, prevState: any, snapshot: any): void => {
+    if (this._reactComponent) {
+      this._container.setState(this._reactComponent.state);
+    }
+    if (this._originalComponentDidUpdate !== undefined) {
+      this._originalComponentDidUpdate.call(
+        this._reactComponent, prevProps, prevState, snapshot
       );
     }
   }
