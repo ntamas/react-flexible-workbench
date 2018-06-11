@@ -5,7 +5,7 @@ import isFunction from "lodash-es/isFunction";
 import reject from "lodash-es/reject";
 import * as React from "react";
 
-import { ItemVisitor } from "./types";
+import { ItemVisitor, IWorkbenchPlace } from "./types";
 
 const _eventNameMapping: { [key: string]: string } = {
   activecontentitemchanged: "activeContentItemChanged",
@@ -165,11 +165,7 @@ export function onlyVisible(func: ItemVisitor): ItemVisitor {
  * The function will find the largest visible panel in the layout and then
  * it will attempt to split the panel in half.
  */
-export function proposePlaceForNewItemInWorkbench(tree: GoldenLayout): {
-  parent: GoldenLayout.ContentItem | undefined,
-  index?: number,
-  segment?: "left" | "right" | "top" | "bottom" | "header" | "body"
-} | undefined {
+export function proposePlaceForNewItemInLayout(tree: GoldenLayout): IWorkbenchPlace {
   const largestPanel = findLargestVisiblePanel(tree);
   if (largestPanel === undefined) {
     // There are no panels yet, so just add the new panel to the root

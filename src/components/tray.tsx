@@ -9,7 +9,7 @@ import { createItemConfigurationFromProps, IModuleProps, Module } from "./module
 import { convertModuleInTray } from "./utils";
 
 import { extractIdsFromContentItem, isElementClassEqualTo,
-         proposePlaceForNewItemInWorkbench } from "../utils";
+         proposePlaceForNewItemInLayout } from "../utils";
 import { Workbench } from "../workbench";
 
 /**
@@ -123,34 +123,17 @@ export class ModuleTray extends React.Component<IModuleTrayProps, IModuleTraySta
    * click on a module in the tray instead of dragging it to the workbench.
    */
   private _addNewItemToWorkbench = (props: IModuleProps): void => {
-    const layout = this._workbench ? this._workbench.layout : undefined;
-    if (layout === undefined) {
-      throw new Error("Cannot add new item to a workbench when it is not mounted");
+    if (this._workbench === undefined) {
+      throw new Error("Cannot add new item when the tray is not associated " +
+                      "to a workbench yet");
     }
 
-    const place = proposePlaceForNewItemInWorkbench(layout);
+    const config = createItemConfigurationFromProps({
+      ...props,
+      workbench: this._workbench
+    })();
 
-    if (place !== undefined) {
-      const { parent, index, segment } = place;
-      if (parent !== undefined) {
-        const config = createItemConfigurationFromProps({
-          ...props,
-          workbench: this._workbench
-        })();
-        if (segment !== undefined) {
-          // We are using a private API here but this is still the best way
-          // of achieving what we want while messing around with private
-          // APIs as little as possible
-          const contentItem = (layout as any)._$normalizeContentItem(Object.assign({}, config));
-          (parent as any)._dropSegment = segment;
-          (parent as any)._$onDrop(contentItem);
-        } else if (index !== undefined) {
-          parent.addChild(config, index + 1);
-        } else {
-          parent.addChild(config);
-        }
-      }
-    }
+    this._workbench.addNewItemWithConfiguration(config);
   }
 
   /**

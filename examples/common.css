@@ -77,3 +77,8 @@ button:disabled {
   font-weight: bold;
   color: #aaa;
 }
+
+.panel button {
+  font-size: 16px;
+  padding: 0.5em;
+}

@@ -36,6 +36,32 @@ export interface IWorkbenchPanelProps {
 }
 
 /**
+ * Object that identifies a "place" in the workbench where a new item can be
+ * dropped or placed.
+ */
+export interface IWorkbenchPlace {
+  /**
+   * The parent container of the place.
+   */
+  parent: GoldenLayout.ContentItem | undefined;
+
+  /**
+   * Index of the slot within the parent container. The slot may refer to a
+   * place between two panels in a horizontal or vertical container, or to a
+   * tab in a tabular container.
+   */
+  index?: number;
+
+  /**
+   * When the place refers to a part of a slot, this property specifies which
+   * part of a slot the place refers to. Possible values are: left half
+   * (`left`), right half (`right`), upper half (`top`), lower half (`bottom`),
+   * tab bar of a panel (`header`) or the entire body of a panel (`body`).
+   */
+  segment?: "left" | "right" | "top" | "bottom" | "header" | "body";
+}
+
+/**
  * Interface specification for functions that can be used as an argument
  * to `traverseWorkbench()` and `Workbench.forEach()`. These functions take
  * the layout item (container or panel) being visited and must return true

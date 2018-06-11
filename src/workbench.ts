@@ -12,9 +12,11 @@ import { Environment, IEnvironmentMethods } from "./environment";
 import { LazyReactComponentHandler } from "./handlers";
 import { ComponentConstructor, DragSource, HigherOrderComponent,
          IItemConfigurationOptions, ItemConfigType,
-         ItemVisitor, WorkbenchState } from "./types";
-import { capitalizeEventName, getDisplayName, isReactSFC, onlyVisible,
-         traverseWorkbench, wrapInComponent } from "./utils";
+         ItemVisitor, IWorkbenchPlace, WorkbenchState } from "./types";
+import {
+  capitalizeEventName, getDisplayName, isReactSFC, onlyVisible,
+  proposePlaceForNewItemInLayout, traverseWorkbench, wrapInComponent
+} from "./utils";
 
 // Require golden-layout CSS and theme files so they get included in the bundle
 require("golden-layout/src/css/goldenlayout-base.css");
@@ -95,6 +97,57 @@ export class Workbench extends EventEmitter {
     this.addListener(capitalizeEventName(eventName), listener);
   }
 
+  /**
+   * Adds a new item to the workbench programmatically.
+   *
+   * @param  nameOrComponent  the name of the component constructor or the
+   *                          React component
+   * @param  options  additional options that can be used to tweak the
+   *                  configuration object
+   */
+  public addNewItem(
+    nameOrComponent: string | React.ComponentType<any>,
+    options?: Partial<IItemConfigurationOptions>
+  ): void {
+    const config = this.createItemConfigurationFor(nameOrComponent, options);
+    return this.addNewItemWithConfiguration(config);
+  }
+
+  /**
+   * Adds a new item to the workbench, given a configuration object that
+   * defines how the item should be added.
+   *
+   * This is a low-level function; you probably need `addNewItem()` instead.
+   *
+   * @param  config  the item configuration object
+   */
+  public addNewItemWithConfiguration(config: GoldenLayout.ItemConfigType): void {
+    if (this.layout === undefined) {
+      throw new Error("Cannot add new items to a workbench when it is " +
+                      "not mounted");
+    }
+
+    const { parent, index, segment } = this._proposePlaceForNewItem();
+    if (parent === undefined) {
+      throw new Error("No place was proposed for a new item in the workbench; " +
+                      "this is most likely a bug");
+    }
+
+    if (segment !== undefined) {
+      // We are using a private API here but this is still the best way
+      // of achieving what we want while messing around with private
+      // APIs as little as possible
+      const contentItem = (this.layout as any)._$normalizeContentItem(
+        { ...config }
+      );
+      (parent as any)._dropSegment = segment;
+      (parent as any)._$onDrop(contentItem);
+    } else if (index !== undefined) {
+      parent.addChild(config, index + 1);
+    } else {
+      parent.addChild(config);
+    }
+  }
   /**
    * Configures the workbench with the given configuration object. See the
    * documentation of <code>golden-layout</code> for more details.
@@ -579,6 +632,23 @@ export class Workbench extends EventEmitter {
    */
   private _onWorkbenchResized = (): void => {
     this.updateSize();
+  }
+
+  /**
+   * Proposes a location for a new item in the workbench.
+   *
+   * The function will find the largest visible panel in the workbench and then
+   * it will attempt to split the panel in half.
+   *
+   * @return  the place where a new item should be added in the workbench
+   */
+  private _proposePlaceForNewItem(): IWorkbenchPlace {
+    if (this.layout === undefined) {
+      throw new Error("Cannot propose place for a new item in a workbench " +
+                      "when it is not mounted");
+    }
+
+    return proposePlaceForNewItemInLayout(this.layout);
   }
 
   /**

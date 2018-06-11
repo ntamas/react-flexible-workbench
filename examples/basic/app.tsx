@@ -4,9 +4,11 @@ import * as PropTypes from "prop-types";
 import * as React from "react";
 import * as ReactDOM from "react-dom";
 
-import { Container, IPerspectiveStorage, ItemConfigType, Module, ModuleDrawer,
-         ModuleTray, PerspectiveBar, PerspectiveBuilder, PerspectiveStorage,
-         Workbench, WorkbenchBuilder, WorkbenchView } from "../../src/index";
+import {
+  Container, IPerspectiveStorage, ItemConfigType, IWorkbenchPanelProps,
+  Module, ModuleDrawer, ModuleTray, PerspectiveBar, PerspectiveBuilder,
+  PerspectiveStorage, Workbench, WorkbenchBuilder, WorkbenchView
+} from "../../src/index";
 
 require("../../themes/blue.css");
 
@@ -15,16 +17,18 @@ require("../../themes/blue.css");
 interface IMyComponentProps {
   label: string;
   message?: string;
+  button?: React.ReactNode;
 }
 
 interface IMyComponentState {
   counter: number;
 }
 
-const MyComponent = ({ label, message }: IMyComponentProps) => (
+const MyComponent = ({ button, label, message }: IMyComponentProps) => (
   <div className="panel">
     <div className="big-letter">{ label }</div>
     { message ? <div>{message}</div> : null}
+    { button }
   </div>
 );
 
@@ -83,7 +87,8 @@ const Footer = ({ workbench }: IFooterProps) => (
       </ModuleDrawer>
       <ModuleDrawer label="Forecast">
         <Module label="Panel E" component={MyComponent} props={{
-          label: "E", message: "This panel may have multiple instances"
+          button: <button>Duplicate</button>,
+          label: "E"
         }} />
       </ModuleDrawer>
       <ModuleDrawer label="Safety stock">
