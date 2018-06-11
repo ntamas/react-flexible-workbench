@@ -4,5 +4,6 @@ export { Environment, IEnvironmentMethods } from "./environment";
 export { IPerspective, IPerspectiveStorage, PerspectiveBar,
          PerspectiveStorage } from "./perspectives";
 export { wrapInComponent } from "./utils";
-export { Container, ItemConfigType, WorkbenchState } from "./types";
+export { Container, ItemConfigType, IWorkbenchPanelProps,
+         WorkbenchState } from "./types";
 export { Workbench } from "./workbench";

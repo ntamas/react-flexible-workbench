@@ -27,6 +27,15 @@ export interface IItemConfigurationOptions {
 }
 
 /**
+ * Props that are injected into a React component that is placed as a panel
+ * in a workbench.
+ */
+export interface IWorkbenchPanelProps {
+  glContainer: GoldenLayout.Container;
+  glEventHub: GoldenLayout.EventEmitter;
+}
+
+/**
  * Interface specification for functions that can be used as an argument
  * to `traverseWorkbench()` and `Workbench.forEach()`. These functions take
  * the layout item (container or panel) being visited and must return true
