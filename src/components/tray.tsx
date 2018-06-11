@@ -65,8 +65,8 @@ export class ModuleTray extends React.Component<IModuleTrayProps, IModuleTraySta
     this._setWorkbench(this.props.workbench);
   }
 
-  public componentWillReceiveProps(newProps: IModuleTrayProps) {
-    this._setWorkbench(newProps.workbench);
+  public componentDidUpdate() {
+    this._setWorkbench(this.props.workbench);
   }
 
   public componentWillUnmount() {
@@ -121,7 +121,6 @@ export class ModuleTray extends React.Component<IModuleTrayProps, IModuleTraySta
   /**
    * Finds a place for a new item in the workbench if the user decides to
    * click on a module in the tray instead of dragging it to the workbench.
-   * @type {[type]}
    */
   private _addNewItemToWorkbench = (props: IModuleProps): void => {
     const layout = this._workbench ? this._workbench.layout : undefined;

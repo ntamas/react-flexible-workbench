@@ -147,17 +147,17 @@ export class Module extends React.Component<IModuleProps, {}> {
     this._setWorkbench(this.props.workbench);
   }
 
-  public componentWillReceiveProps(newProps: IModuleProps) {
-    const disabledChanged = (!!newProps.disabled !== !!this.props.disabled);
+  public componentDidUpdate(oldProps: IModuleProps) {
+    const disabledChanged = (!!oldProps.disabled !== !!this.props.disabled);
 
     if (disabledChanged) {
-      this._removeDragSourceFromWorkbench(this.props.workbench);
+      this._removeDragSourceFromWorkbench(oldProps.workbench);
     }
 
-    this._setWorkbench(newProps.workbench);
+    this._setWorkbench(this.props.workbench);
 
     if (disabledChanged) {
-      this._updateDragSourceForProps( /* rootNodeChanged = */ false, newProps);
+      this._updateDragSourceForProps( /* rootNodeChanged = */ false);
     }
   }
 

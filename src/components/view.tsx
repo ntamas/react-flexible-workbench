@@ -50,8 +50,8 @@ export class WorkbenchView extends React.Component<IWorkbenchViewProps, {}> {
     this._renderOrDetachWorkbenchIfNeeded();
   }
 
-  public componentWillUpdate(newProps: IWorkbenchViewProps) {
-    this._setWorkbench(newProps.workbench);
+  public componentDidUpdate() {
+    this._setWorkbench(this.props.workbench);
   }
 
   public componentWillUnmount() {

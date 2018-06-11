@@ -163,4 +163,8 @@ const App = () => (
     <Footer workbench={workbench} />
   </div>
 );
-ReactDOM.render(<App />, document.getElementById("app-container"));
+
+ReactDOM.render(
+  <React.StrictMode><App /></React.StrictMode>,
+  document.getElementById("app-container")
+);

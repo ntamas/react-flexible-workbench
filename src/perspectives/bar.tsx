@@ -72,9 +72,9 @@ export class PerspectiveBar extends React.Component<IPerspectiveBarProps, IPersp
     this._setWorkbench(this.props.workbench);
   }
 
-  public componentWillReceiveProps(newProps: IPerspectiveBarProps) {
-    this._setStorage(newProps.storage);
-    this._setWorkbench(newProps.workbench);
+  public componentDidUpdate() {
+    this._setStorage(this.props.storage);
+    this._setWorkbench(this.props.workbench);
   }
 
   public componentWillUnmount() {
