@@ -1,15 +1,15 @@
 import * as GoldenLayout from "golden-layout";
+import isNil from "lodash-es/isNil";
 import pullAll from "lodash-es/pullAll";
 import uniq from "lodash-es/uniq";
-import * as PropTypes from "prop-types";
 import * as React from "react";
 
 import { IModuleDrawerProps, ModuleDrawer } from "./drawer";
 import { createItemConfigurationFromProps, IModuleProps, Module } from "./module";
-import { convertModuleInTray } from "./utils";
+import { convertModuleInTray, idOfModuleDrawer } from "./utils";
 
-import { extractIdsFromContentItem, isElementClassEqualTo,
-         proposePlaceForNewItemInLayout } from "../utils";
+import { ModuleDrawerId } from "../types";
+import { extractIdsFromContentItem, isElementClassEqualTo } from "../utils";
 import { Workbench } from "../workbench";
 
 /**
@@ -26,7 +26,7 @@ export interface IModuleTrayProps {
  * State of a module tray component.
  */
 export interface IModuleTrayState {
-  indexOfOpenDrawers: number[];
+  openDrawers: ModuleDrawerId[];
   visibleIds: string[];
 }
 
@@ -48,15 +48,15 @@ export class ModuleTray extends React.Component<IModuleTrayProps, IModuleTraySta
     this._visibleIds = [];
 
     this.state = {
-      indexOfOpenDrawers: React.Children.map(this.props.children,
+      openDrawers: React.Children.map(this.props.children,
         (child: React.ReactChild, index: number) => {
           if (isElementClassEqualTo(ModuleDrawer, child) && child.props.open) {
-            return index;
+            return idOfModuleDrawer(child, index);
           } else {
-            return -1;
+            return "";
           }
         }
-      ).filter(value => value >= 0),
+      ).filter(value => !isNil(value) && value !== ""),
       visibleIds: []
     };
   }
@@ -74,18 +74,19 @@ export class ModuleTray extends React.Component<IModuleTrayProps, IModuleTraySta
   }
 
   public render() {
-    const { allowMultipleSelection, children, style, vertical, workbench } = this.props;
-    const { indexOfOpenDrawers } = this.state;
+    const { allowMultipleSelection, style, vertical, workbench } = this.props;
+    const { openDrawers } = this.state;
     const isModuleEnabled = this._isModuleNotVisible;
 
     const drawers = React.Children.map(this.props.children,
       (child: React.ReactChild, index: number) => {
         if (isElementClassEqualTo(ModuleDrawer, child)) {
+          const id = idOfModuleDrawer(child, index);
           const newProps: Partial<IModuleDrawerProps> = {
             onClick: this._addNewItemToWorkbench,
-            onClose: this._onTrayClosed.bind(this, index),
-            onOpen: this._onTrayOpened.bind(this, index),
-            open: indexOfOpenDrawers.includes(index),
+            onClose: this._onTrayClosed.bind(this, id),
+            onOpen: this._onTrayOpened.bind(this, id),
+            open: openDrawers.includes(id),
             workbench
           };
           if (child.props.closeAfterDragging === undefined) {
@@ -205,18 +206,18 @@ export class ModuleTray extends React.Component<IModuleTrayProps, IModuleTraySta
     this._updateVisibleIds();
   }
 
-  private _onTrayOpened(index: number): void {
+  private _onTrayOpened(id: ModuleDrawerId): void {
     const { allowMultipleSelection } = this.props;
-    const indexOfOpenDrawers = allowMultipleSelection ? this.state.indexOfOpenDrawers.concat() : [];
-    indexOfOpenDrawers.push(index);
-    this.setState({ indexOfOpenDrawers });
+    const openDrawers = allowMultipleSelection ? this.state.openDrawers.concat() : [];
+    openDrawers.push(id);
+    this.setState({ openDrawers });
   }
 
-  private _onTrayClosed(index: number): void {
+  private _onTrayClosed(id: ModuleDrawerId): void {
     const { allowMultipleSelection } = this.props;
-    const indexOfOpenDrawers = allowMultipleSelection ?
-      this.state.indexOfOpenDrawers.filter(x => x !== index) : [];
-    this.setState({ indexOfOpenDrawers });
+    const openDrawers = allowMultipleSelection ?
+      this.state.openDrawers.filter(x => x !== id) : [];
+    this.setState({ openDrawers });
   }
 
   private _updateVisibleIds = (): void => {

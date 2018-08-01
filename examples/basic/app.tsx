@@ -1,13 +1,12 @@
 // tslint:disable:no-shadowed-variable
 
-import * as PropTypes from "prop-types";
 import * as React from "react";
 import * as ReactDOM from "react-dom";
 
 import {
-  Container, IPerspectiveStorage, ItemConfigType, IWorkbenchPanelProps,
-  Module, ModuleDrawer, ModuleTray, PerspectiveBar, PerspectiveBuilder,
-  PerspectiveStorage, Workbench, WorkbenchBuilder, WorkbenchView
+  IPerspectiveStorage, Module, ModuleDrawer, ModuleTray, PerspectiveBar,
+  PerspectiveBuilder, PerspectiveStorage, Workbench, WorkbenchBuilder,
+  WorkbenchView
 } from "../../src/index";
 
 require("../../themes/blue.css");
@@ -79,23 +78,23 @@ interface IFooterProps {
 const Footer = ({ workbench }: IFooterProps) => (
   <div id="footer">
     <ModuleTray workbench={workbench}>
-      <ModuleDrawer label="Generic">
+      <ModuleDrawer label="Generic" id="generic">
         <Module id="panel-a" label="Panel A" component={MyComponent} props={{ label: "A" }} />
         <Module id="panel-b" label="Panel B" component={MyComponent} props={{ label: "B" }} />
         <Module id="panel-c" label="Panel C" component={MyComponent} props={{ label: "C" }} />
         <Module id="panel-d" label="Panel D" component={MyComponent} props={{ label: "D" }} />
       </ModuleDrawer>
-      <ModuleDrawer label="Forecast">
+      <ModuleDrawer label="Forecast" id="forecast">
         <Module label="Panel E" component={MyComponent} props={{
           button: <button>Duplicate</button>,
           label: "E"
         }} />
       </ModuleDrawer>
-      <ModuleDrawer label="Safety stock">
+      <ModuleDrawer label="Safety stock" id="safety-stock">
       </ModuleDrawer>
-      <ModuleDrawer label="Import">
+      <ModuleDrawer label="Import" id="import">
       </ModuleDrawer>
-      <ModuleDrawer label="Master tables">
+      <ModuleDrawer label="Master tables" id="master-tables">
       </ModuleDrawer>
     </ModuleTray>
   </div>

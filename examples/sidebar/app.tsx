@@ -165,19 +165,19 @@ class App extends React.Component<{}, IAppState> {
             <Sidebar open={sidebarOpen}>
               <h1>Workbench</h1>
               <ModuleTray allowMultipleSelection vertical workbench={workbench}>
-                <ModuleDrawer icon={<icons.Generic />} label="Generic">
+                <ModuleDrawer id="generic" icon={<icons.Generic />} label="Generic">
                   <Module id="panel-a" label="Panel A" component={MyComponent} props={{ label: "A" }} />
                   <Module id="panel-b" label="Panel B" component={MyComponent} props={{ label: "B" }} />
                   <Module id="panel-c" label="Panel C" component={MyComponent} props={{ label: "C" }} />
                   <Module id="panel-d" label="Panel D" component={MyComponent} props={{ label: "D" }} />
                 </ModuleDrawer>
-                <ModuleDrawer icon={<icons.Chart />} label="Forecast">
+                <ModuleDrawer id="forecase" icon={<icons.Chart />} label="Forecast">
                 </ModuleDrawer>
-                <ModuleDrawer icon={<icons.Storage />} label="Safety stock">
+                <ModuleDrawer id="safety-stock" icon={<icons.Storage />} label="Safety stock">
                 </ModuleDrawer>
-                <ModuleDrawer badge={<Badge />} icon={<icons.Import />} label="Import">
+                <ModuleDrawer id="import" badge={<Badge />} icon={<icons.Import />} label="Import">
                 </ModuleDrawer>
-                <ModuleDrawer icon={<icons.Table />} label="Master tables">
+                <ModuleDrawer id="master-tables" icon={<icons.Table />} label="Master tables">
                 </ModuleDrawer>
               </ModuleTray>
             </Sidebar>

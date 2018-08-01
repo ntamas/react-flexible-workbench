@@ -28,6 +28,15 @@ export interface IModuleDrawerProps {
   closeAfterDragging?: boolean;
 
   /**
+   * Unique identifier of the module drawer that is used by module trays in
+   * which the drawers live to keep track of which drawers are open. When
+   * omitted, the index of the drawer within the tray will be used.
+   *
+   * Don't use nil values (i.e. null, undefined or empty string) as the ID.
+   */
+  id?: string;
+
+  /**
    * Function that decides whether a given module is enabled or not, based
    * on the props of the module.
    *

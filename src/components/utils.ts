@@ -1,8 +1,9 @@
 import * as React from "react";
 
-import { IModuleDrawerProps, ModuleDrawer } from "./drawer";
-import { IModuleProps, Module } from "./module";
+import { IModuleDrawerProps } from "./drawer";
+import { IModuleProps } from "./module";
 
+import { ModuleDrawerId } from "../types";
 import { Workbench } from "../workbench";
 
 export function convertModuleInTray(
@@ -25,4 +26,10 @@ export function convertModuleInTray(
     newProps.disabled = !isModuleEnabled(props);
   }
   return React.cloneElement(element, newProps);
+}
+
+export function idOfModuleDrawer(
+  drawer: React.ReactElement<IModuleDrawerProps>, index: number
+): ModuleDrawerId {
+  return drawer.props.id || index;
 }
