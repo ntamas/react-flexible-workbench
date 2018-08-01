@@ -1,6 +1,5 @@
 // tslint:disable:no-shadowed-variable
 
-import * as PropTypes from "prop-types";
 import * as React from "react";
 import Badge from "react-badger";
 import * as ReactDOM from "react-dom";
@@ -8,9 +7,11 @@ import Shapeshifter from "react-shapeshifter";
 
 import * as icons from "./icons";
 
-import { Container, IPerspectiveStorage, ItemConfigType, Module, ModuleDrawer,
-         ModuleTray, PerspectiveBar, PerspectiveBuilder, PerspectiveStorage,
-         Workbench, WorkbenchBuilder, WorkbenchView } from "../../src/index";
+import {
+  IPerspectiveStorage, Module, ModuleDrawer, ModuleTray, PerspectiveBar,
+  PerspectiveBuilder, PerspectiveStorage, Workbench, WorkbenchBuilder,
+  WorkbenchView
+} from "../../src/index";
 
 require("../../themes/dark.css");
 
