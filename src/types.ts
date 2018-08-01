@@ -83,9 +83,3 @@ export type ItemVisitor = (item: GoldenLayout.ContentItem) =>
  * Type specification for the state of the workbench.
  */
 export type WorkbenchState = any;
-
-/**
- * Type specification for the allowed types of a unique ID identifying a
- * module drawer.
- */
-export type ModuleDrawerId = string | number;

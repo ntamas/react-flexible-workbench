@@ -129,7 +129,7 @@ export class ModuleDrawer extends React.Component<IModuleDrawerProps, {}> {
     return (
       <div className={classes.join(" ")}>
         {contents}
-        <button onClick={open ? onClose : onOpen }>
+        <button onClick={open ? onClose : onOpen}>
           {iconAndBadge}
           {labelSpan}
         </button>

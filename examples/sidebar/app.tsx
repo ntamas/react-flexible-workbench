@@ -9,7 +9,7 @@ import * as icons from "./icons";
 
 import {
   IPerspectiveStorage, Module, ModuleDrawer, ModuleTray, PerspectiveBar,
-  PerspectiveBuilder, PerspectiveStorage, Workbench, WorkbenchBuilder,
+  PerspectiveBuilder, PerspectiveStorage, toggle, Workbench, WorkbenchBuilder,
   WorkbenchView
 } from "../../src/index";
 
@@ -142,6 +142,7 @@ const perspectives = PerspectiveStorage.fromArray([
 // =============================================================================
 
 interface IAppState {
+  openDrawers: string[];
   sidebarOpen: boolean;
 }
 
@@ -150,12 +151,13 @@ class App extends React.Component<{}, IAppState> {
   constructor(props: {}) {
     super(props);
     this.state = {
+      openDrawers: [],
       sidebarOpen: false
     };
   }
 
   public render() {
-    const { sidebarOpen } = this.state;
+    const { openDrawers, sidebarOpen } = this.state;
     return (
       <div id="app">
         <SidebarButton open={sidebarOpen} onClick={this.toggleSidebar} />
@@ -165,7 +167,7 @@ class App extends React.Component<{}, IAppState> {
           <div id="sidebar-container">
             <Sidebar open={sidebarOpen}>
               <h1>Workbench</h1>
-              <ModuleTray allowMultipleSelection vertical workbench={workbench}>
+              <ModuleTray openDrawers={openDrawers} onChange={this.toggleDrawer} vertical workbench={workbench}>
                 <ModuleDrawer id="generic" icon={<icons.Generic />} label="Generic">
                   <Module id="panel-a" label="Panel A" component={MyComponent} props={{ label: "A" }} />
                   <Module id="panel-b" label="Panel B" component={MyComponent} props={{ label: "B" }} />
@@ -198,6 +200,12 @@ class App extends React.Component<{}, IAppState> {
     }, () => {
       // This function gets rid of some minor flickering after the sidebar opens
       workbench.updateSize();
+    });
+  }
+
+  public toggleDrawer = (id: string) => {
+    this.setState({
+      openDrawers: toggle(this.state.openDrawers, id)
     });
   }
 

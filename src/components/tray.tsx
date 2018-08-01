@@ -8,7 +8,6 @@ import { IModuleDrawerProps, ModuleDrawer } from "./drawer";
 import { createItemConfigurationFromProps, IModuleProps, Module } from "./module";
 import { convertModuleInTray, idOfModuleDrawer } from "./utils";
 
-import { ModuleDrawerId } from "../types";
 import { extractIdsFromContentItem, isElementClassEqualTo } from "../utils";
 import { Workbench } from "../workbench";
 
@@ -17,6 +16,8 @@ import { Workbench } from "../workbench";
  */
 export interface IModuleTrayProps {
   allowMultipleSelection?: boolean;
+  onChange?: (id: string, open: boolean) => void;
+  openDrawers?: string[];
   style?: React.CSSProperties;
   vertical?: boolean;
   workbench: Workbench;
@@ -26,7 +27,7 @@ export interface IModuleTrayProps {
  * State of a module tray component.
  */
 export interface IModuleTrayState {
-  openDrawers: ModuleDrawerId[];
+  openDrawers: string[];
   visibleIds: string[];
 }
 
@@ -40,6 +41,14 @@ export class ModuleTray extends React.Component<IModuleTrayProps, IModuleTraySta
   private _draggedIds: string[];
   private _visibleIds: string[];
   private _workbench: Workbench | undefined;
+
+  public static getDerivedStateFromProps(props: IModuleTrayProps) {
+    const { openDrawers } = props;
+
+    // If the component is controlled, openDrawers in state should be copied
+    // from props
+    return (openDrawers !== undefined) ? { openDrawers } : null;
+  }
 
   public constructor(props: IModuleTrayProps) {
     super(props);
@@ -84,8 +93,8 @@ export class ModuleTray extends React.Component<IModuleTrayProps, IModuleTraySta
           const id = idOfModuleDrawer(child, index);
           const newProps: Partial<IModuleDrawerProps> = {
             onClick: this._addNewItemToWorkbench,
-            onClose: this._onTrayClosed.bind(this, id),
-            onOpen: this._onTrayOpened.bind(this, id),
+            onClose: this._onDrawerClosed.bind(this, id),
+            onOpen: this._onDrawerOpened.bind(this, id),
             open: openDrawers.includes(id),
             workbench
           };
@@ -181,6 +190,32 @@ export class ModuleTray extends React.Component<IModuleTrayProps, IModuleTraySta
     this._updateVisibleIds();
   }
 
+  private _onDrawerOpened(id: string): void {
+    const controlled = this.props.openDrawers !== undefined;
+    if (this.props.onChange) {
+      this.props.onChange(id, true);
+    }
+    if (!controlled) {
+      const { allowMultipleSelection } = this.props;
+      const openDrawers = allowMultipleSelection ? this.state.openDrawers.concat() : [];
+      openDrawers.push(id);
+      this.setState({ openDrawers });
+    }
+  }
+
+  private _onDrawerClosed(id: string): void {
+    const controlled = this.props.openDrawers !== undefined;
+    if (this.props.onChange) {
+      this.props.onChange(id, false);
+    }
+    if (!controlled) {
+      const { allowMultipleSelection } = this.props;
+      const openDrawers = allowMultipleSelection ?
+        this.state.openDrawers.filter(x => x !== id) : [];
+      this.setState({ openDrawers });
+    }
+  }
+
   private _onItemCreated = (item: GoldenLayout.ContentItem): void => {
     const ids = extractIdsFromContentItem(item);
     const isDragging = document.body.classList.contains("lm_dragging");
@@ -204,20 +239,6 @@ export class ModuleTray extends React.Component<IModuleTrayProps, IModuleTraySta
     this._visibleIds = uniq(this._visibleIds.concat(this._draggedIds));
     this._draggedIds = [];
     this._updateVisibleIds();
-  }
-
-  private _onTrayOpened(id: ModuleDrawerId): void {
-    const { allowMultipleSelection } = this.props;
-    const openDrawers = allowMultipleSelection ? this.state.openDrawers.concat() : [];
-    openDrawers.push(id);
-    this.setState({ openDrawers });
-  }
-
-  private _onTrayClosed(id: ModuleDrawerId): void {
-    const { allowMultipleSelection } = this.props;
-    const openDrawers = allowMultipleSelection ?
-      this.state.openDrawers.filter(x => x !== id) : [];
-    this.setState({ openDrawers });
   }
 
   private _updateVisibleIds = (): void => {

@@ -1,8 +1,8 @@
 import * as GoldenLayout from "golden-layout";
-import * as JQuery from "jquery";
 import isArray from "lodash-es/isArray";
 import isFunction from "lodash-es/isFunction";
 import reject from "lodash-es/reject";
+import without from "lodash-es/without";
 import * as React from "react";
 
 import { ItemVisitor, IWorkbenchPlace } from "./types";
@@ -216,6 +216,24 @@ export function proposePlaceForNewItemInLayout(tree: GoldenLayout): IWorkbenchPl
         parent
       };
     }
+  }
+}
+
+/**
+ * Given an array of items and a single item, creates a copy of the array
+ * and then adds the item to the copy if it is not in the array yet,
+ * removes the item otherwise.
+ *
+ * @param {T[]} items  the item array
+ * @param {T}   item   the single item to add to or remove from the array
+ * @return {T[]}  the modified array
+ */
+export function toggle<T>(items: T[], item: T): T[] {
+  const index = items.indexOf(item);
+  if (index < 0) {
+    return [...items, item];
+  } else {
+    return without(items, item);
   }
 }
 
