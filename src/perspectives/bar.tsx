@@ -13,6 +13,22 @@ import { Workbench } from "../workbench";
  */
 export interface IPerspectiveBarProps {
   /**
+   * Function to call when the selected perspective is about to be changed.
+   *
+   * The function will be called with the new perspective ID that is about
+   * to become active. The function must return true if it wishes to
+   * _prevent_ the default behaviour of the perspective bar, which is to
+   * load the perspective that the user has selected.
+   */
+  onChange?: (id: string) => boolean | void;
+
+  /**
+   * Prop that allows the user to control the selected perspective ID from
+   * the outside.
+   */
+  selectedPerspectiveId?: string | undefined;
+
+  /**
    * The perspective storage that the perspective bar uses to store
    * perspectives.
    */
@@ -34,7 +50,8 @@ export interface IPerspectiveBarState {
   counter: number;
 
   /**
-   * ID of the selected perspective that the user is currently editing.
+   * ID of the selected perspective that the user is currently editing if
+   * the component is not controlled from the outside via props.
    */
   selectedPerspectiveId: string | undefined;
 }
@@ -57,6 +74,16 @@ export class PerspectiveBar extends React.Component<IPerspectiveBarProps, IPersp
 
   private _storage: IPerspectiveStorage | undefined;
   private _workbench: Workbench | undefined;
+
+  public static getDerivedStateFromProps(props: IPerspectiveBarProps) {
+    if (props.hasOwnProperty("selectedPerspectiveId")) {
+      // If the component is controlled, selectedPerspectiveId in state should
+      // be copied from props
+      return { selectedPerspectiveId: props.selectedPerspectiveId };
+    } else {
+      return null;
+    }
+  }
 
   constructor(props: IPerspectiveBarProps) {
     super(props);
@@ -83,7 +110,7 @@ export class PerspectiveBar extends React.Component<IPerspectiveBarProps, IPersp
   }
 
   public render() {
-    const { storage, workbench } = this.props;
+    const { storage } = this.props;
     const { selectedPerspectiveId } = this.state;
     const buttons: React.ReactNode[] = [];
 
@@ -94,9 +121,7 @@ export class PerspectiveBar extends React.Component<IPerspectiveBarProps, IPersp
         );
         const selected = selectedPerspectiveId === id;
         const extraProps: Partial<ILoadPerspectiveButtonProps> = {
-          onClick: selected ?
-            this._revertModificationsOfCurrentPerspective.bind(this) :
-            this._loadPerspectiveById.bind(this, id),
+          onClick: this._onPerspectiveButtonClicked.bind(this, id),
           selected
         };
         buttons.push(React.cloneElement(element, extraProps));
@@ -129,9 +154,7 @@ export class PerspectiveBar extends React.Component<IPerspectiveBarProps, IPersp
       const { storage } = this.props;
       if (storage !== undefined) {
         const id = await storage.save(perspective);
-        this.setState({
-          selectedPerspectiveId: id
-        });
+        this._requestSelectedPerspectiveIdChange(id);
         this._lastState = perspective.state;
       } else {
         console.warn("No perspective storage while creating new perspective; this is probably a bug.");
@@ -178,6 +201,21 @@ export class PerspectiveBar extends React.Component<IPerspectiveBarProps, IPersp
     }
   }
 
+  private _onPerspectiveButtonClicked = (id: string): void => {
+    const { selectedPerspectiveId } = this.state;
+    if (selectedPerspectiveId === id) {
+      // Reverting modification of current perspective
+      this._revertModificationsOfCurrentPerspective();
+    } else {
+      // Call the onChange handler if any, and then load the perspective if
+      // the user did not prevent the default behaviour
+      const { onChange } = this.props;
+      if (!onChange || !onChange(id)) {
+        this._loadPerspectiveById(id);
+      }
+    }
+  }
+
   private _onStorageChanged = (): void => {
     this.setState({
       counter: 1 - this.state.counter
@@ -217,6 +255,33 @@ export class PerspectiveBar extends React.Component<IPerspectiveBarProps, IPersp
       }
     } else {
       console.warn("No perspective storage while reverting perspective by ID; this is probably a bug.");
+    }
+  }
+
+  /**
+   * Requests the component to change the selected perspective ID. If the
+   * component is uncontrolled, the change will happen immediately. If the
+   * component is controlled, the change is propagated to the parent via the
+   * `onChange()` handler, which has the opportunity to prevent the change
+   * by returning `true`.
+   *
+   * @param id  the new perspective ID
+   * @return true if the perspective ID is allowed to change, false otherwise
+   */
+  private _requestSelectedPerspectiveIdChange(id: string): boolean {
+    if (!this.props.hasOwnProperty("selectedPerspectiveId")) {
+      // Component is uncontrolled so we just change the state
+      this.setState({
+        selectedPerspectiveId: id
+      });
+      return true;
+    } else {
+      const { onChange } = this.props;
+      if (onChange) {
+        return !onChange(id);
+      } else {
+        return false;
+      }
     }
   }
 

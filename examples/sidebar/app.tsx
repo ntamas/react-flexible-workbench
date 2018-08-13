@@ -30,14 +30,19 @@ const MyComponent = ({ label }: IMyComponentProps) => (
 // =============================================================================
 
 interface IHeaderProps {
+  onSelectPerspective: (id: string) => void;
   perspectives: IPerspectiveStorage;
+  selectedPerspectiveId: string | undefined;
   workbench: Workbench;
 }
 
-const Header = ({ perspectives, workbench }: IHeaderProps) => (
+const Header = ({ onSelectPerspective, perspectives, selectedPerspectiveId, workbench }: IHeaderProps) => (
   <div id="header" style={{ display: "flex", alignItems: "center" }}>
     <div className="title"></div>
-    <PerspectiveBar storage={perspectives} workbench={workbench} />
+    <PerspectiveBar onChange={onSelectPerspective}
+      selectedPerspectiveId={selectedPerspectiveId}
+      storage={perspectives}
+      workbench={workbench} />
   </div>
 );
 
@@ -143,6 +148,7 @@ const perspectives = PerspectiveStorage.fromArray([
 
 interface IAppState {
   openDrawers: string[];
+  selectedPerspectiveId: string | undefined;
   sidebarOpen: boolean;
 }
 
@@ -152,16 +158,20 @@ class App extends React.Component<{}, IAppState> {
     super(props);
     this.state = {
       openDrawers: [],
+      selectedPerspectiveId: undefined,
       sidebarOpen: false
     };
   }
 
   public render() {
-    const { openDrawers, sidebarOpen } = this.state;
+    const { openDrawers, selectedPerspectiveId, sidebarOpen } = this.state;
     return (
       <div id="app">
         <SidebarButton open={sidebarOpen} onClick={this.toggleSidebar} />
-        <Header perspectives={perspectives} workbench={workbench} />
+        <Header perspectives={perspectives}
+          onSelectPerspective={this.selectPerspective}
+          selectedPerspectiveId={selectedPerspectiveId}
+          workbench={workbench} />
 
         <div id="main">
           <div id="sidebar-container">
@@ -191,6 +201,10 @@ class App extends React.Component<{}, IAppState> {
         </div>
       </div>
     );
+  }
+
+  public selectPerspective = (id: string): void => {
+    this.setState({ selectedPerspectiveId: id });
   }
 
   public toggleSidebar = () => {
