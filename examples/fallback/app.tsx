@@ -28,6 +28,19 @@ const MyComponent = ({ button, label, message }: IMyComponentProps) => (
 
 // =============================================================================
 
+interface IFallbackComponentProps {
+  message?: string;
+}
+
+const FallbackComponent = ({ message }: IFallbackComponentProps) => (
+  <div className="panel">
+    <div className="big-letter">?</div>
+    <div>{message || "No such component. We have handled this gracefully."}</div>
+  </div>
+);
+
+// =============================================================================
+
 const Header = () => (
   <div id="header" style={{ display: "flex", alignItems: "center" }}>
     <div className="title">Missing panels demo</div>
@@ -62,16 +75,18 @@ const workbench = new WorkbenchBuilder()
     .setRelativeHeight(66)
     .makeColumns()
       .makeStack()
-        .add("lm-lazy-react-component", {
+        .add(MyComponent, {
           props: { label: "B" },
           title: "Panel B",
         }, "panel-b")
-        .add("missing", {
+        .add("lm-react-component", {
           props: { label: "C" },
           title: "Missing panel 2",
         }, "panel-c")
       .finish()
   .build();
+
+workbench.fallback = () => <FallbackComponent />;
 
 // =============================================================================
 

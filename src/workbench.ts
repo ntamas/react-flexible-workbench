@@ -8,12 +8,14 @@ import * as React from "react";
 
 import { Environment, IEnvironmentMethods } from "./environment";
 import {
+  ComponentFactory, createHandlerWithFallback,
   EagerReactComponentHandler, LazyReactComponentHandler
 } from "./handlers";
 import {
-  ComponentConstructor, DragSource, HigherOrderComponent,
+  ComponentConstructor, DragSource, FallbackHandler, HigherOrderComponent,
   IItemConfigurationOptions, ItemConfigType, ItemVisitor, IWorkbenchPlace,
-  WorkbenchState } from "./types";
+  WorkbenchState
+} from "./types";
 import {
   capitalizeEventName, getDisplayName, isReactSFC, onlyVisible,
   proposePlaceForNewItemInLayout, traverseWorkbench, wrapInComponent
@@ -44,6 +46,21 @@ export class Workbench extends EventEmitter {
   };
 
   /**
+   * The environment that the workbench lives in. Methods of this object are
+   * used to communicate with the application that hosts the workbench.
+   */
+  public environment: IEnvironmentMethods = Environment.browser;
+
+  /**
+   * Fallback component or function that is used to resolve errors when the
+   * user tries to create a component that is not registered in the workbench.
+   * The function will be called with the registered name of the component that
+   * the user tried to create and its props, and it must return a React node
+   * to render as fallback.
+   */
+  public fallback: FallbackHandler | undefined;
+
+  /**
    * An optional React higher-order component that will be called with every
    * React component that is being registered in the workbench. You can use this
    * in conjunction with HOC libraries (e.g., `recompose`) to provide context
@@ -59,12 +76,6 @@ export class Workbench extends EventEmitter {
   public hoc: HigherOrderComponent<any, any> | undefined;
 
   /**
-   * The environment that the workbench lives in. Methods of this object are
-   * used to communicate with the application that hosts the workbench.
-   */
-  public environment: IEnvironmentMethods = Environment.browser;
-
-  /**
    * Constructor. Creates an empty workbench.
    */
   constructor() {
@@ -73,10 +84,14 @@ export class Workbench extends EventEmitter {
     this._blockedEvents = {};
     this._registry = {
       "lm-react-component": {
-        factory: EagerReactComponentHandler
+        factory: createHandlerWithFallback(
+          EagerReactComponentHandler, this._handleComponentCreationFailure
+        )
       },
       "lm-react-lazy-component": {
-        factory: LazyReactComponentHandler
+        factory: createHandlerWithFallback(
+          LazyReactComponentHandler, this._handleComponentCreationFailure
+        )
       }
     };
     this._configDefaults = {
@@ -632,6 +647,17 @@ export class Workbench extends EventEmitter {
       throw new Error("Workbench has not been rendered yet");
     }
     return this._layout;
+  }
+
+  /**
+   * Handles the case when a component in the workbench cannot be created
+   * for any reason (for instance, missing component registration).
+   */
+  private _handleComponentCreationFailure = (componentName: string): ComponentFactory | undefined => {
+    const { fallback } = this;
+    if (fallback) {
+      return props => fallback(componentName, props);
+    }
   }
 
   /**

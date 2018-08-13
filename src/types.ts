@@ -1,4 +1,5 @@
 import * as GoldenLayout from "golden-layout";
+import * as React from "react";
 
 export type ComponentConstructor<TState> = (
   ((node: GoldenLayout.Container, state: TState) => void) |
@@ -13,6 +14,14 @@ export type ItemConfigType = GoldenLayout.ItemConfigType;
 
 // Borrowed from @types/react, needed by IContextDefinition
 export type Validator<T> = (object: T, key: string, componentName: string, ...rest: any[]) => Error | null;
+
+/**
+ * Type specfiication for functions that can take the registered name of a
+ * workbench component and a set of props, and then return a React node to
+ * render as a fallback in place of the real component if the real component
+ * cannot be created for some reason.
+ */
+export type FallbackHandler = (name: string, props: any) => React.ReactElement<any>;
 
 /**
  * React higher-order component type specification.

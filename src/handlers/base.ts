@@ -4,6 +4,7 @@ import uniqueId from "lodash-es/uniqueId";
 import * as React from "react";
 import { render, unmountComponentAtNode } from "react-dom";
 
+import { ComponentFactory } from "./types";
 import { getComponentGracefully } from "./utils";
 
 // Polyfill MutationObserver for browsers that don't support it.
@@ -26,7 +27,7 @@ export class ReactComponentHandler {
   private _container: Container;
   private _isOpen: boolean;
   private _originalComponentDidUpdate: ((...args: any[]) => void) | undefined;
-  private _reactComponentFactory: (props: any) => React.ReactElement<any>;
+  private _reactComponentFactory: ComponentFactory;
   private _reactComponent: React.Component<any, any> | undefined;
   private _temporaryClassNameForContainer: string | undefined;
   private _waitingForContainerAddition: HTMLElement | undefined;
@@ -55,6 +56,21 @@ export class ReactComponentHandler {
    */
   protected get container(): Container {
     return this._container;
+  }
+
+  /**
+   * Handler that is called internally when we were not able to create
+   * the component factory from the data available to us in the layout
+   * configuration.
+   *
+   * @param componentName  name of the component that we have attempted to
+   *        create
+   * @return an alternative component factory that should be used in place of
+   *         the normal mechanism, or undefined if we should not provide a
+   *         component for the user and throw an error instead
+   */
+  protected handleComponentCreationFailure(_: string): ComponentFactory | undefined {
+    return undefined;
   }
 
   /**
@@ -131,8 +147,13 @@ export class ReactComponentHandler {
     if (reactClass) {
       return props => React.createElement(reactClass, props);
     } else {
-      // TODO: return fallback
-      throw new Error(message || "Unknown error while rendering component");
+      const factory = this.handleComponentCreationFailure(componentName);
+      if (factory !== undefined) {
+        return factory;
+      }
+      throw new Error(
+        message || `Unknown error while rendering component ${componentName}`
+      );
     }
   }
 
