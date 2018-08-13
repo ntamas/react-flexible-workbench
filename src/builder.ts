@@ -85,7 +85,7 @@ export class PerspectiveBuilder {
       this.finish();
     }
 
-    const workbench = this._assertHasWorkbench();
+    this._assertHasWorkbench();
     this._workbench = undefined;
 
     if (this._content.length !== 1) {

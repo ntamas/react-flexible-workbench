@@ -5,14 +5,15 @@ import isFunction from "lodash-es/isFunction";
 import merge from "lodash-es/merge";
 import pick from "lodash-es/pick";
 import * as React from "react";
-import { withContext } from "recompose";
 
-import { WorkbenchBuilder } from "./builder";
 import { Environment, IEnvironmentMethods } from "./environment";
-import { LazyReactComponentHandler } from "./handlers";
-import { ComponentConstructor, DragSource, HigherOrderComponent,
-         IItemConfigurationOptions, ItemConfigType,
-         ItemVisitor, IWorkbenchPlace, WorkbenchState } from "./types";
+import {
+  EagerReactComponentHandler, LazyReactComponentHandler
+} from "./handlers";
+import {
+  ComponentConstructor, DragSource, HigherOrderComponent,
+  IItemConfigurationOptions, ItemConfigType, ItemVisitor, IWorkbenchPlace,
+  WorkbenchState } from "./types";
 import {
   capitalizeEventName, getDisplayName, isReactSFC, onlyVisible,
   proposePlaceForNewItemInLayout, traverseWorkbench, wrapInComponent
@@ -26,7 +27,7 @@ require("golden-layout/src/css/goldenlayout-light-theme.css");
 require("./workbench.css");
 
 // Require javascript-detect-element-resize so it gets included in the bundle
-const foo = require("javascript-detect-element-resize");
+require("javascript-detect-element-resize");
 
 export class Workbench extends EventEmitter {
 
@@ -71,6 +72,9 @@ export class Workbench extends EventEmitter {
 
     this._blockedEvents = {};
     this._registry = {
+      "lm-react-component": {
+        factory: EagerReactComponentHandler
+      },
       "lm-react-lazy-component": {
         factory: LazyReactComponentHandler
       }
@@ -602,6 +606,10 @@ export class Workbench extends EventEmitter {
     );
 
     const layout: GoldenLayout = new GoldenLayout(effectiveConfig, this._domNode);
+
+    // HACK: Get rid of the default React component handler from GoldenLayout
+    (layout as any)._components = {};
+
     Object.keys(this._registry).forEach((key: string) => {
       let { component } = this._registry[key];
       const { factory } = this._registry[key];
