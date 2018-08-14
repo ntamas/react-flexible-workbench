@@ -167,14 +167,18 @@ export class Workbench extends EventEmitter {
       parent.addChild(config);
     }
   }
+
   /**
    * Configures the workbench with the given configuration object. See the
    * documentation of <code>golden-layout</code> for more details.
    *
+   * This function may be called multiple times. Subsequent calls will merge
+   * the new configuration values into the ones that were previously applied.
+   *
    * @param {GoldenLayout.Config} config  the configuration object
    */
   public configure(config: GoldenLayout.Config): void {
-    this._config = config;
+    this._config = merge({}, this._config, config);
   }
 
   /**
@@ -557,6 +561,7 @@ export class Workbench extends EventEmitter {
     }
 
     // Create the golden-layout object and set it
+    console.log(this._config);
     const layout = this._createLayoutFromConfig(this._config);
     this._setLayout(layout);
   }
