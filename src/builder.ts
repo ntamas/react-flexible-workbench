@@ -410,6 +410,14 @@ export class WorkbenchBuilder {
     return this;
   }
 
+  /**
+   * Specifies whether maximise icons should be shown in the workbench.
+   */
+  public showMaximiseIcon(value: boolean = true): this {
+    this._settings.showMaximiseIcon = value;
+    return this;
+  }
+
   public register<TState>(factory: ComponentConstructor<TState>): this;
   public register<TState>(name: string, factory: ComponentConstructor<TState>): this;
   public register<TState>(nameOrFactory: string | ComponentConstructor<TState>,
