@@ -44,6 +44,20 @@ function isNil(obj: any): boolean {
   return obj === undefined || obj === null;
 }
 
+interface ISavedStateDefaults {
+  header: any;
+  isClosable: boolean;
+  reorderEnabled: boolean;
+  title: string;
+}
+
+const defaults: ISavedStateDefaults = {
+  header: {},
+  isClosable: true,
+  reorderEnabled: true,
+  title: ""
+};
+
 function compareObjects(foo: any, bar: any): boolean {
   let i;
 
@@ -68,6 +82,17 @@ function compareObjects(foo: any, bar: any): boolean {
     return true;
   }
 
+  // golden-layout wraps components in single-item stacks if they are
+  // standing on their own in a row or column. We ignore these differences
+  // when comparing states.
+  if (isStackWithSingleItem(foo)) {
+    if (!isStackWithSingleItem(bar)) {
+      return compareObjects(foo.content[0], bar);
+    }
+  } else if (isStackWithSingleItem(bar)) {
+    return compareObjects(foo, bar.content[0]);
+  }
+
   let fooKeys: string[];
   let barKeys: string[];
 
@@ -76,6 +101,18 @@ function compareObjects(foo: any, bar: any): boolean {
     barKeys = Object.keys(bar).filter(acceptsKey);
   } catch (e) {
     return false;
+  }
+
+  // Ignore keys that are set to their default values in foo and bar
+  if (!Array.isArray(foo) && !Array.isArray(bar)) {
+    Object.keys(defaults).forEach((key: keyof ISavedStateDefaults) => {
+      if (foo.hasOwnProperty(key) && compareHelper(foo[key], defaults[key])) {
+        fooKeys.splice(fooKeys.indexOf(key), 1);
+      }
+      if (bar.hasOwnProperty(key) && compareHelper(bar[key], defaults[key])) {
+        barKeys.splice(barKeys.indexOf(key), 1);
+      }
+    });
   }
 
   if (fooKeys.length !== barKeys.length) {
@@ -103,4 +140,12 @@ function compareObjects(foo: any, bar: any): boolean {
 
 function acceptsKey(key: string): boolean {
   return key !== "activeItemIndex";
+}
+
+function isStackWithSingleItem(obj: any): boolean {
+  return (
+    obj.hasOwnProperty("type") && obj.type === "stack" &&
+    obj.hasOwnProperty("content") && Array.isArray(obj.content) &&
+    obj.content.length === 1
+  );
 }

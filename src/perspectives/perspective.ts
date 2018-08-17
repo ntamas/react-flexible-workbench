@@ -1,5 +1,3 @@
-import * as GoldenLayout from "golden-layout";
-
 import { WorkbenchState } from "../types";
 
 /**

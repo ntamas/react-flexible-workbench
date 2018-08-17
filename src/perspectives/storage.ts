@@ -1,3 +1,4 @@
+import { areWorkbenchStatesEqualIgnoringSelection } from "./compare";
 import { IPerspective } from "./perspective";
 
 /**
@@ -294,9 +295,15 @@ class ArrayBasedPerspectiveStorage extends PerspectiveStorageBase implements IPe
   /**
    * @inheritDoc
    */
-  public update = (id: string, state: string): Promise<void> => {
+  public update = (id: string, state: any): Promise<void> => {
     if (this._baseStates[id] === undefined) {
       return this._perspectiveNotFound(id);
+    }
+
+    if (areWorkbenchStatesEqualIgnoringSelection(
+      state, this._baseStates[id].state
+    )) {
+      return this.revertModifications(id);
     }
 
     if (this._modifiedStates[id] === undefined) {
@@ -312,10 +319,6 @@ class ArrayBasedPerspectiveStorage extends PerspectiveStorageBase implements IPe
 
   private _findById(id: string): IPerspective | undefined {
     return this._modifiedStates[id] || this._baseStates[id];
-  }
-
-  private _findIndexById(id: string): number {
-    return this._order.indexOf(id);
   }
 
   private _findUnusedId(): string {

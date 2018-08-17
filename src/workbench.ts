@@ -561,7 +561,6 @@ export class Workbench extends EventEmitter {
     }
 
     // Create the golden-layout object and set it
-    console.log(this._config);
     const layout = this._createLayoutFromConfig(this._config);
     this._setLayout(layout);
   }
