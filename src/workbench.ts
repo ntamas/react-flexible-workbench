@@ -38,6 +38,7 @@ export class Workbench extends EventEmitter {
   private _configDefaults: Partial<GoldenLayout.Config>;
   private _domNode: Element | undefined;
   private _layout: GoldenLayout | undefined;
+  private _nextUnblockId: number;
   private _registry: {
     [key: string]: {
       component?: React.ComponentType<any>;
@@ -82,6 +83,8 @@ export class Workbench extends EventEmitter {
     super();
 
     this._blockedEvents = {};
+    this._nextUnblockId = 1;
+
     this._registry = {
       "lm-react-component": {
         factory: createHandlerWithFallback(
@@ -586,7 +589,10 @@ export class Workbench extends EventEmitter {
    */
   public updateSize(width?: number, height?: number): void {
     if (this._layout) {
-      this._blockNextEvent("stateChanged");
+      // Block stateChanged events for the next 300 msec because
+      // this._layout.updateSize() would also dispatch a stateChanged event
+      // that we are not interested it (it is not really a state change)
+      this._blockNextEvent("stateChanged", 300);
       this._layout.updateSize(width, height);
     }
   }
@@ -594,9 +600,19 @@ export class Workbench extends EventEmitter {
   /**
    * Blocks the next event with the given name coming from the wrapped workbench
    * instance so it is not re-dispatched from this instance.
+   *
+   * @param  event     the name of the event to block
+   * @param  duration  the duration for which the event will be blocked, in
+   *                   milliseconds
    */
-  private _blockNextEvent(event: string): void {
-    this._blockedEvents[event] = (this._blockedEvents[event] || 0) + 1;
+  private _blockNextEvent(event: string, duration: number): void {
+    const unblockId: number = this._nextUnblockId++;
+    this._blockedEvents[event] = unblockId;
+    setTimeout(() => {
+      if (this._blockedEvents[event] === unblockId) {
+        delete this._blockedEvents[event];
+      }
+    }, duration);
   }
 
   /**
