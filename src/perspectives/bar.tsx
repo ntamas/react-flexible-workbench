@@ -323,7 +323,7 @@ export class PerspectiveBar extends React.Component<IPerspectiveBarProps, IPersp
   }
 
   private _updateCurrentPerspectiveWith = async (newState: WorkbenchState, persist: boolean = false): Promise<void> => {
-    const { storage, workbench } = this.props;
+    const { storage } = this.props;
     const { selectedPerspectiveId } = this.state;
 
     if (storage === undefined) {
