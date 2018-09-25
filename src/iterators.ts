@@ -20,6 +20,7 @@ export interface IIterationOptions {
 interface ITree<T> {
   getRoot: () => T | undefined;
   getChild: (item: T, index: number) => T | undefined;
+  replaceChild?: (item: T, index: number, child: T) => void;
 }
 
 /**
@@ -29,13 +30,31 @@ interface ITree<T> {
 function dfsReverseIterator<T>(tree: ITree<T>): Iterator<T> {
   const stack: Array<{ item: T, index: number }> = [];
   const root = tree.getRoot();
+  let parentOfLastEntry: { item: T, index: number } | undefined;
 
   if (root) {
     stack.push({ index: 0, item: root });
   }
 
   return {
-    next(): IteratorResult<T> {
+    next(received: T | undefined): IteratorResult<T> {
+      if (received !== undefined) {
+        if (tree.replaceChild !== undefined) {
+          if (parentOfLastEntry) {
+            tree.replaceChild(
+              parentOfLastEntry.item, parentOfLastEntry.index - 1,
+              received
+            );
+          } else {
+            throw new Error("cannot yield item into generator before " +
+                            "the generator is started or after it has " +
+                            "ended");
+          }
+        } else {
+          throw new Error("iteratee is immutable");
+        }
+      }
+
       while (stack.length > 0) {
         const entry = stack[stack.length - 1];
         const { item, index } = entry;
@@ -44,6 +63,7 @@ function dfsReverseIterator<T>(tree: ITree<T>): Iterator<T> {
         if (child === undefined) {
           // All children traversed; yield the item itself and pop it
           stack.pop();
+          parentOfLastEntry = stack.length > 0 ? stack[stack.length - 1] : undefined;
           return {
             done: stack.length === 0,
             value: item
@@ -55,7 +75,17 @@ function dfsReverseIterator<T>(tree: ITree<T>): Iterator<T> {
         }
       }
 
+      parentOfLastEntry = undefined;
       return { done: true } as any;
+    },
+
+    return(value: T): IteratorResult<T> {
+      stack.length = 0;
+      return { done: true, value };
+    },
+
+    throw(err: any): IteratorResult<T> {
+      throw err;
     }
   };
 }
@@ -70,27 +100,54 @@ function dfsReverseIterator<T>(tree: ITree<T>): Iterator<T> {
  *         condition
  */
 function filter<T>(iterator: Iterator<T>, condition: (item: T) => boolean): Iterator<T> {
-  return {
-    next(): IteratorResult<T> {
-      while (true) {
-        const entry = iterator.next();
-        if (entry.done) {
-          if (entry.hasOwnProperty("value")) {
-            const { value } = entry;
-            if (condition(value)) {
-              return { done: true, value };
-            } else {
-              return { done: true } as any;
-            }
-          } else {
-            return { done: true } as any;
-          }
+  const _handleEntry = (entry: IteratorResult<T>): IteratorResult<T> | undefined => {
+    if (entry.done) {
+      if (entry.hasOwnProperty("value")) {
+        const { value } = entry;
+        if (condition(value)) {
+          return { done: true, value };
         } else {
-          const { value } = entry;
-          if (condition(value)) {
-            return { done: false, value };
-          }
+          return { done: true } as any;
         }
+      } else {
+        return { done: true } as any;
+      }
+    } else {
+      const { value } = entry;
+      if (condition(value)) {
+        return { done: false, value };
+      } else {
+        return undefined;
+      }
+    }
+  };
+
+  return {
+    next(received: T | undefined): IteratorResult<T> {
+      while (true) {
+        const result = _handleEntry(iterator.next(received));
+        received = undefined;
+        if (result !== undefined) {
+          return result;
+        }
+      }
+    },
+
+    return(value: T): IteratorResult<T> {
+      const entry = iterator.return ? iterator.return(value) : { done: true } as any;
+      return _handleEntry(entry) || { done: true } as any;
+    },
+
+    throw(err: any): IteratorResult<T> {
+      if (iterator.throw === undefined) {
+        throw err;
+      }
+
+      const result = _handleEntry(iterator.throw(err));
+      if (result !== undefined) {
+        return result;
+      } else {
+        return this.next();
       }
     }
   };
@@ -131,7 +188,14 @@ function workbenchConfigurationAsTree(config: Config | WorkbenchState): ITree<It
           type: "stack"
         }
       ) : undefined
-    )
+    ),
+    replaceChild: (item: ItemConfigType, index: number, value: ItemConfigType) => {
+      if (item.content && index >= 0 && index < item.content.length) {
+        item.content[index] = value;
+      } else {
+        throw new Error("index out of bounds: " + index);
+      }
+    }
   };
 }
 
