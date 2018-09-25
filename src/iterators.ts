@@ -12,26 +12,35 @@ export interface IIterationOptions {
 }
 
 /**
- * Returns an iterator that will iterate over the content items of the given
- * workbench in reverse DFS order (deepest panels first).
+ * Interface specification for generic trees. Used to provide a common
+ * framework for iterating over the existing content items of a workbench
+ * and for iterating over the panel configuration of a workbench.
  */
-function dfsReverseIterator(workbench: Workbench): Iterator<ContentItem> {
-  const stack: Array<{
-    item: ContentItem,
-    index: 0
-  }> = [];
+interface ITree<T> {
+  getRoot: () => T | undefined;
+  getChild: (item: T, index: number) => T | undefined;
+}
 
-  if (workbench.layout) {
-    stack.push({ item: workbench.layout.root, index: 0 });
+/**
+ * Generic reverse depth-first iteration that iterates over a tree specified
+ * using an object satisfying ITree<T>.
+ */
+function dfsReverseIterator<T>(tree: ITree<T>): Iterator<T> {
+  const stack: Array<{ item: T, index: number }> = [];
+  const root = tree.getRoot();
+
+  if (root) {
+    stack.push({ index: 0, item: root });
   }
 
   return {
-    next(): IteratorResult<ContentItem> {
+    next(): IteratorResult<T> {
       while (stack.length > 0) {
         const entry = stack[stack.length - 1];
         const { item, index } = entry;
+        const child = tree.getChild(item, index);
 
-        if (index >= item.contentItems.length) {
+        if (child === undefined) {
           // All children traversed; yield the item itself and pop it
           stack.pop();
           return {
@@ -41,10 +50,7 @@ function dfsReverseIterator(workbench: Workbench): Iterator<ContentItem> {
         } else {
           // Put the appropriate child on the stack
           entry.index++;
-          stack.push({
-            index: 0,
-            item: item.contentItems[index],
-          });
+          stack.push({ index: 0, item: child });
         }
       }
 
@@ -90,6 +96,19 @@ function filter<T>(iterator: Iterator<T>, condition: (item: T) => boolean): Iter
 }
 
 /**
+ * Creates an ITree object that allows the traversal of the content items of a
+ * workbench.
+ *
+ * @param  workbench  the workbench to traverse
+ */
+function workbenchAsTree(workbench: Workbench): ITree<ContentItem> {
+  return {
+    getChild: (item: ContentItem, index: number) => item.contentItems[index],
+    getRoot: () => workbench.layout ? workbench.layout.root : undefined
+  };
+}
+
+/**
  * Iterates over the content items of the workbench according to some iteration
  * order.
  *
@@ -109,10 +128,11 @@ export function contentItemsIn(
     order: "dfsReverse",
     ...options
   };
+  const tree: ITree<ContentItem> = workbenchAsTree(workbench);
 
   switch (effectiveOptions.order) {
     case "dfsReverse":
-      return dfsReverseIterator(workbench);
+      return dfsReverseIterator(tree);
 
     default:
       throw new Error("unknown iteration order: " + effectiveOptions.order);
