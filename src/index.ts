@@ -1,7 +1,7 @@
 export { PerspectiveBuilder, WorkbenchBuilder } from "./builder";
 export { Module, ModuleDrawer, ModuleTray, WorkbenchView } from "./components";
 export { Environment, IEnvironmentMethods } from "./environment";
-export { containersIn, contentItemsIn, IIterationOptions, IterationOrder,
+export { containersIn, IIterationOptions, IterationOrder, itemsIn,
          panelsIn } from "./iterators";
 export { IPerspective, IPerspectiveStorage, PerspectiveBar,
          PerspectiveStorage } from "./perspectives";

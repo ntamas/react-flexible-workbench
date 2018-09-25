@@ -1,5 +1,6 @@
-import { ContentItem } from "golden-layout";
+import { Config, ContentItem, ItemConfigType } from "golden-layout";
 
+import { WorkbenchState } from "./types";
 import { Workbench } from "./workbench";
 
 /**
@@ -109,26 +110,62 @@ function workbenchAsTree(workbench: Workbench): ITree<ContentItem> {
 }
 
 /**
- * Iterates over the content items of the workbench according to some iteration
- * order.
+ * Creates an ITree object that allows the traversal of the items of a
+ * workbench configuration objet.
+ *
+ * @param  config  the workbench configuration to traverse
+ */
+function workbenchConfigurationAsTree(config: Config | WorkbenchState): ITree<ItemConfigType> {
+  return {
+    getChild: (item: ItemConfigType, index: number) =>
+      item.content ? item.content[index] : undefined,
+    getRoot: () => (
+      config.content ? (
+        Array.isArray(config.content) ? (
+          config.content.length > 1 ? {
+            content: config.content,
+            type: "stack"
+          } : config.content[0]
+        ) : {
+          content: config.content,
+          type: "stack"
+        }
+      ) : undefined
+    )
+  };
+}
+
+/**
+ * Iterates over the items of a workbench or workbench configuration
+ * according to some iteration order.
  *
  * Both panels (leaf nodes) and containers (rows, columns and stacks) will be
  * returned by the iterator. If you need the panels only, use `panelsIn()`.
  * If you need the containers only, use `containersIn()`.
  *
- * @param  workbench the workbench whose content items are to be iterated over
+ * @param  input    the workbench or workbench configuration whose items are
+ *                  to be iterated over
  * @param  options   additional options that influence the iterator behaviour
  * @return the iterator
  */
-export function contentItemsIn(
-  workbench: Workbench,
+export function itemsIn(
+  input: Workbench, options?: Partial<IIterationOptions>
+): Iterator<ContentItem>;
+export function itemsIn(
+  input: Config | WorkbenchState, options?: Partial<IIterationOptions>
+): Iterator<ItemConfigType>;
+export function itemsIn(
+  input: Workbench | Config | WorkbenchState,
   options?: Partial<IIterationOptions>
-): Iterator<ContentItem> {
+): Iterator<ContentItem | ItemConfigType> {
   const effectiveOptions: IIterationOptions = {
     order: "dfsReverse",
     ...options
   };
-  const tree: ITree<ContentItem> = workbenchAsTree(workbench);
+  const tree: ITree<ContentItem | ItemConfigType> =
+    (input instanceof Workbench)
+      ? workbenchAsTree(input)
+      : workbenchConfigurationAsTree(input);
 
   switch (effectiveOptions.order) {
     case "dfsReverse":
@@ -140,40 +177,69 @@ export function contentItemsIn(
 }
 
 /**
- * Iterates over the panels of the workbench according to some iteration order.
+ * Iterates over the panels of a workbench or a workbench configuration object
+ * according to some iteration order.
  *
  * Only panels will be returned by this iterator; containers will be ignored.
  *
- * @param  workbench the workbench whose panels are to be iterated over
- * @param  options   additional options that influence the iterator behaviour
+ * @param  input    the workbench or workbench configuration whose panels are
+ *                  to be iterated over
+ * @param  options  additional options that influence the iterator behaviour
  * @return the iterator
  */
 export function panelsIn(
-  workbench: Workbench,
+  input: Workbench, options?: Partial<IIterationOptions>
+): Iterator<ContentItem>;
+export function panelsIn(
+  input: Config | WorkbenchState, options?: Partial<IIterationOptions>
+): Iterator<ItemConfigType>;
+export function panelsIn(
+  input: Workbench | Config | WorkbenchState,
   options?: Partial<IIterationOptions>
-): Iterator<ContentItem> {
-  return filter(
-    contentItemsIn(workbench, options),
-    item => item.type === "component"
-  );
+): Iterator<ContentItem | ItemConfigType> {
+  if (input instanceof Workbench) {
+    return filter(
+      itemsIn(input, options),
+      item => item.isComponent
+    );
+  } else {
+    return filter(
+      itemsIn(input, options),
+      item => item.type !== "row" && item.type !== "column" && item.type !== "stack"
+    );
+  }
 }
 
 /**
- * Iterates over the containers of the workbench according to some iteration
- * order.
+ * Iterates over the containers of a workbench or a workbench configuration
+ * object according to some iteration order.
  *
  * Only containers will be returned by this iterator; panels will be ignored.
  *
- * @param  workbench the workbench whose containers are to be iterated over
+ * @param  input    the workbench or workbench configuration whose containers
+ *                  are to be iterated over
  * @param  options   additional options that influence the iterator behaviour
  * @return the iterator
  */
 export function containersIn(
-  workbench: Workbench,
+  input: Workbench, options?: Partial<IIterationOptions>
+): Iterator<ContentItem>;
+export function containersIn(
+  input: Config | WorkbenchState, options?: Partial<IIterationOptions>
+): Iterator<ItemConfigType>;
+export function containersIn(
+  input: Workbench | Config | WorkbenchState,
   options?: Partial<IIterationOptions>
-): Iterator<ContentItem> {
-  return filter(
-    contentItemsIn(workbench, options),
-    item => item.type !== "component"
-  );
+): Iterator<ContentItem | ItemConfigType> {
+  if (input instanceof Workbench) {
+    return filter(
+      itemsIn(input, options),
+      item => !item.isComponent
+    );
+  } else {
+    return filter(
+      itemsIn(input, options),
+      item => item.type === "row" || item.type === "column" || item.type === "stack"
+    );
+  }
 }
