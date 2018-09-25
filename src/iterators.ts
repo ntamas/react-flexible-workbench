@@ -75,6 +75,8 @@ function filter<T>(iterator: Iterator<T>, condition: (item: T) => boolean): Iter
             } else {
               return { done: true } as any;
             }
+          } else {
+            return { done: true } as any;
           }
         } else {
           const { value } = entry;
