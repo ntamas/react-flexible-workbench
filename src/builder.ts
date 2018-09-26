@@ -1,5 +1,8 @@
 import * as GoldenLayout from "golden-layout";
 
+import {
+  containersIn, filterConfiguration, panelsIn, transformConfiguration
+} from "./iterators";
 import { ComponentConstructor, ItemConfigType } from "./types";
 import { Workbench } from "./workbench";
 
@@ -18,6 +21,18 @@ export class PerspectiveBuilder {
    * The stack of content objects being manipulated by the builder.
    */
   private _contentStack: ItemConfigType[];
+
+  /**
+   * When undefined, it means that the perspective is not finalized yet and
+   * new panels may be added. When not undefined, it contains a GoldenLayout
+   * configuration object with the finalized set of panels. After finalization,
+   * no new panels may be added to the perspective; only filtering and
+   * transformation is allowed.
+   *
+   * The first call to `filter()` or `map()` will implicitly finalize the
+   * perspective and prevents the addition of any further panels.
+   */
+  private _finalizedConfiguration: GoldenLayout.Config | undefined;
 
   /**
    * The workbench being manipulated by this builder; <code>undefined</code>
@@ -53,6 +68,8 @@ export class PerspectiveBuilder {
     } = {},
     id?: string
   ): this {
+    this._assertNotFinalized();
+
     const workbench = this._assertHasWorkbench();
     const newItem = workbench.createItemConfigurationFor(
       nameOrComponent, { eager, props, title }
@@ -81,17 +98,10 @@ export class PerspectiveBuilder {
    * earlier in this call chain.
    */
   public build(): GoldenLayout.ItemConfigType[] {
-    while (this._contentStack.length > 0) {
-      this.finish();
-    }
+    this._finalize();
 
     this._assertHasWorkbench();
     this._workbench = undefined;
-
-    if (this._content.length !== 1) {
-      // Create an empty stack so we have something at the root
-      this.makeStack().finish();
-    }
 
     const result = this._content;
     this._content = [];
@@ -100,10 +110,48 @@ export class PerspectiveBuilder {
   }
 
   /**
+   * Iterates over each content item currently added to the perspective,
+   * including containers, and removes those for which the given filter
+   * predicate returns false.
+   *
+   * @param  pred  the filter predicate
+   */
+  public filter(pred: (item: ItemConfigType) => boolean): this {
+    filterConfiguration(this._finalize(), pred);
+    return this;
+  }
+
+  /**
+   * Iterates over each container currently added to the perspective,
+   * not including panels, and removes those for which the given filter
+   * predicate returns false.
+   *
+   * @param  pred  the filter predicate
+   */
+  public filterContainers(pred: (item: ItemConfigType) => boolean): this {
+    filterConfiguration(containersIn(this._finalize()), pred);
+    return this;
+  }
+
+  /**
+   * Iterates over each panel currently added to the perspective,
+   * not including containers, and removes those for which the given filter
+   * predicate returns false.
+   *
+   * @param  pred  the filter predicate
+   */
+  public filterPanels(pred: (item: ItemConfigType) => boolean): this {
+    filterConfiguration(panelsIn(this._finalize()), pred);
+    return this;
+  }
+
+  /**
    * Declares that the current subdivision (row, column or stack) being built
    * is finished and moves back to the parent element.
    */
   public finish(): this {
+    this._assertNotFinalized();
+
     if (this._contentStack.length === 0) {
       throw new Error("no panel is currently being built");
     }
@@ -141,6 +189,39 @@ export class PerspectiveBuilder {
    */
   public makeStack(): this {
     return this._makeNewPanel("stack");
+  }
+
+  /**
+   * Iterates over each content item currently added to the perspective,
+   * including containers, and transforms them via a mapping function.
+   *
+   * @param  func  the mapping function
+   */
+  public map(func: (item: ItemConfigType) => ItemConfigType): this {
+    transformConfiguration(this._finalize(), func);
+    return this;
+  }
+
+  /**
+   * Iterates over each container currently added to the perspective,
+   * not including panels, and transforms them via a mapping function.
+   *
+   * @param  func  the mapping function
+   */
+  public mapContainers(func: (item: ItemConfigType) => ItemConfigType): this {
+    transformConfiguration(containersIn(this._finalize()), func);
+    return this;
+  }
+
+  /**
+   * Iterates over each panel currently added to the perspective,
+   * not including containers, and transforms them via a mapping function.
+   *
+   * @param  func  the mapping function
+   */
+  public mapPanels(func: (item: ItemConfigType) => ItemConfigType): this {
+    transformConfiguration(panelsIn(this._finalize()), func);
+    return this;
   }
 
   /**
@@ -194,6 +275,12 @@ export class PerspectiveBuilder {
     return this;
   }
 
+  private _assertNotFinalized(): void {
+    if (this._finalizedConfiguration) {
+      throw new Error("no new panels may be added to the perspective any more");
+    }
+  }
+
   private _assertHasWorkbench(): Workbench {
     if (this._workbench === undefined) {
       throw new Error("builder has already built a workbench");
@@ -211,6 +298,25 @@ export class PerspectiveBuilder {
     return panel ? panel.content : undefined;
   }
 
+  private _finalize(): GoldenLayout.Config {
+    if (this._finalizedConfiguration === undefined) {
+      while (this._contentStack.length > 0) {
+        this.finish();
+      }
+
+      if (this._content.length !== 1) {
+        // Create an empty stack so we have something at the root
+        this.makeStack().finish();
+      }
+
+      this._finalizedConfiguration = {
+        content: this._content
+      };
+    }
+
+    return this._finalizedConfiguration;
+  }
+
   private get _lastAddedComponent(): ItemConfigType {
     const panel = this._currentPanel;
     const content = panel && panel.content && panel.content.length > 0 ?
@@ -222,6 +328,8 @@ export class PerspectiveBuilder {
   }
 
   private _makeNewPanel(type: string): this {
+    this._assertNotFinalized();
+
     const newPanel: GoldenLayout.ItemConfig = {
       content: [],
       type
@@ -294,12 +402,51 @@ export class WorkbenchBuilder {
    */
   public build(): Workbench {
     const workbench = this._assertHasWorkbench();
-    this._workbench = undefined;
-    workbench.configure({
+    const configuration: GoldenLayout.Config = {
       content: this._builder.build(),
       settings: this._settings
-    });
+    };
+
+    this._workbench = undefined;
+    workbench.configure(configuration);
+
     return workbench;
+  }
+
+  /**
+   * Iterates over each content item currently added to the perspective,
+   * including containers, and removes those for which the given filter
+   * predicate returns false.
+   *
+   * @param  pred  the filter predicate
+   */
+  public filter(pred: (item: ItemConfigType) => boolean): this {
+    this._builder.filter(pred);
+    return this;
+  }
+
+  /**
+   * Iterates over each container currently added to the perspective,
+   * not including panels, and removes those for which the given filter
+   * predicate returns false.
+   *
+   * @param  pred  the filter predicate
+   */
+  public filterContainers(pred: (item: ItemConfigType) => boolean): this {
+    this._builder.filterContainers(pred);
+    return this;
+  }
+
+  /**
+   * Iterates over each panel currently added to the perspective,
+   * not including containers, and removes those for which the given filter
+   * predicate returns false.
+   *
+   * @param  pred  the filter predicate
+   */
+  public filterPanels(pred: (item: ItemConfigType) => boolean): this {
+    this._builder.filterPanels(pred);
+    return this;
   }
 
   /**
@@ -345,6 +492,39 @@ export class WorkbenchBuilder {
    */
   public makeStack(): this {
     this._builder.makeStack();
+    return this;
+  }
+
+  /**
+   * Iterates over each content item currently added to the workbench,
+   * including containers, and transforms them via a mapping function.
+   *
+   * @param  func  the mapping function
+   */
+  public map(func: (item: ItemConfigType) => ItemConfigType): this {
+    this._builder.map(func);
+    return this;
+  }
+
+  /**
+   * Iterates over each container currently added to the workbench,
+   * not including panels, and transforms them via a mapping function.
+   *
+   * @param  func  the mapping function
+   */
+  public mapContainers(func: (item: ItemConfigType) => ItemConfigType): this {
+    this._builder.mapContainers(func);
+    return this;
+  }
+
+  /**
+   * Iterates over each panel currently added to the workbench,
+   * not including containers, and transforms them via a mapping function.
+   *
+   * @param  func  the mapping function
+   */
+  public mapPanels(func: (item: ItemConfigType) => ItemConfigType): this {
+    this._builder.mapPanels(func);
     return this;
   }
 

@@ -1,8 +1,8 @@
 export { PerspectiveBuilder, WorkbenchBuilder } from "./builder";
 export { Module, ModuleDrawer, ModuleTray, WorkbenchView } from "./components";
 export { Environment, IEnvironmentMethods } from "./environment";
-export { containersIn, IIterationOptions, IterationOrder, itemsIn,
-         panelsIn } from "./iterators";
+export { containersIn, filterConfiguration, IIterationOptions, IterationOrder,
+         itemsIn, panelsIn, transformConfiguration } from "./iterators";
 export { IPerspective, IPerspectiveStorage, PerspectiveBar,
          PerspectiveStorage } from "./perspectives";
 export { toggle, wrapInComponent } from "./utils";

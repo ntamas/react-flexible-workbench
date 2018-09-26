@@ -1,7 +1,14 @@
-import { Config, ContentItem, ItemConfigType } from "golden-layout";
+import { Config, ContentItem } from "golden-layout";
 
-import { WorkbenchState } from "./types";
+import { ItemConfigType, WorkbenchState } from "./types";
 import { Workbench } from "./workbench";
+
+/**
+ * Special symbol that can be fed into a generator that iterates over the
+ * content items of a workbench to indicate that the current content item
+ * should be removed.
+ */
+const REMOVE = Symbol("REMOVE");
 
 /**
  * String constants defining the known iteration orders.
@@ -21,6 +28,7 @@ interface ITree<T> {
   getRoot: () => T | undefined;
   getChild: (item: T, index: number) => T | undefined;
   replaceChild?: (item: T, index: number, child: T) => void;
+  removeChild?: (item: T, index: number) => void;
 }
 
 /**
@@ -29,31 +37,44 @@ interface ITree<T> {
  */
 function dfsReverseIterator<T>(tree: ITree<T>): Iterator<T> {
   const stack: Array<{ item: T, index: number }> = [];
+  let started: boolean = false;
   const root = tree.getRoot();
-  let parentOfLastEntry: { item: T, index: number } | undefined;
 
   if (root) {
     stack.push({ index: 0, item: root });
   }
 
   return {
-    next(received: T | undefined): IteratorResult<T> {
+    next(received: T | typeof REMOVE | undefined): IteratorResult<T> {
       if (received !== undefined) {
-        if (tree.replaceChild !== undefined) {
-          if (parentOfLastEntry) {
+        if (!started) {
+          throw new Error("not allowed before generator is started");
+        } else if (stack.length === 0) {
+          throw new Error("not allowed after generator has been exhausted");
+        }
+
+        const stackTop = stack[stack.length - 1];
+
+        if (received === REMOVE) {
+          if (tree.removeChild !== undefined) {
+            stackTop.index--;
+            tree.removeChild(stackTop.item, stackTop.index);
+          } else {
+            throw new Error("iteratee does not allow item removal");
+          }
+        } else {
+          if (tree.replaceChild !== undefined) {
             tree.replaceChild(
-              parentOfLastEntry.item, parentOfLastEntry.index - 1,
+              stackTop.item, stackTop.index - 1,
               received
             );
           } else {
-            throw new Error("cannot yield item into generator before " +
-                            "the generator is started or after it has " +
-                            "ended");
+            throw new Error("iteratee does not allow item replacement");
           }
-        } else {
-          throw new Error("iteratee is immutable");
         }
       }
+
+      started = true;
 
       while (stack.length > 0) {
         const entry = stack[stack.length - 1];
@@ -63,11 +84,7 @@ function dfsReverseIterator<T>(tree: ITree<T>): Iterator<T> {
         if (child === undefined) {
           // All children traversed; yield the item itself and pop it
           stack.pop();
-          parentOfLastEntry = stack.length > 0 ? stack[stack.length - 1] : undefined;
-          return {
-            done: stack.length === 0,
-            value: item
-          };
+          return { done: false, value: item };
         } else {
           // Put the appropriate child on the stack
           entry.index++;
@@ -75,7 +92,6 @@ function dfsReverseIterator<T>(tree: ITree<T>): Iterator<T> {
         }
       }
 
-      parentOfLastEntry = undefined;
       return { done: true } as any;
     },
 
@@ -91,15 +107,17 @@ function dfsReverseIterator<T>(tree: ITree<T>): Iterator<T> {
 }
 
 /**
- * Filters an iterator and returns only those items that match a given
- * condition.
+ * Filters an iterator and returns another iterator that yields only those
+ * items that match a given condition.
  *
  * @param  iterator  the iterator to filter
  * @param  condition the condition to test
  * @return another iterator that returns only those items that match the given
  *         condition
  */
-function filter<T>(iterator: Iterator<T>, condition: (item: T) => boolean): Iterator<T> {
+function filteredIterator<T>(
+  iterator: Iterator<T>, condition: (item: T) => boolean
+): Iterator<T> {
   const _handleEntry = (entry: IteratorResult<T>): IteratorResult<T> | undefined => {
     if (entry.done) {
       if (entry.hasOwnProperty("value")) {
@@ -189,6 +207,13 @@ function workbenchConfigurationAsTree(config: Config | WorkbenchState): ITree<It
         }
       ) : undefined
     ),
+    removeChild: (item: ItemConfigType, index: number) => {
+      if (item.content && index >= 0 && index < item.content.length) {
+        item.content.splice(index, 1);
+      } else {
+        throw new Error("index out of bounds: " + index);
+      }
+    },
     replaceChild: (item: ItemConfigType, index: number, value: ItemConfigType) => {
       if (item.content && index >= 0 && index < item.content.length) {
         item.content[index] = value;
@@ -262,12 +287,12 @@ export function panelsIn(
   options?: Partial<IIterationOptions>
 ): Iterator<ContentItem | ItemConfigType> {
   if (input instanceof Workbench) {
-    return filter(
+    return filteredIterator(
       itemsIn(input, options),
       item => item.isComponent
     );
   } else {
-    return filter(
+    return filteredIterator(
       itemsIn(input, options),
       item => item.type !== "row" && item.type !== "column" && item.type !== "stack"
     );
@@ -296,14 +321,70 @@ export function containersIn(
   options?: Partial<IIterationOptions>
 ): Iterator<ContentItem | ItemConfigType> {
   if (input instanceof Workbench) {
-    return filter(
+    return filteredIterator(
       itemsIn(input, options),
       item => !item.isComponent
     );
   } else {
-    return filter(
+    return filteredIterator(
       itemsIn(input, options),
       item => item.type === "row" || item.type === "column" || item.type === "stack"
     );
+  }
+}
+
+/**
+ * Filters the configuration of a workbench in-place by calling a predicate
+ * with each configuration item (panel or container) and removing it if the
+ * given predicate returns false.
+ *
+ * @param  input the workbench configuration or state to transform, or an
+ *               iterator that yields items from a workbench configuration
+ * @param  pred  the filter predicate
+ */
+export function filterConfiguration(
+  input: Config | WorkbenchState | Iterator<ItemConfigType>,
+  pred: (item: ItemConfigType) => boolean
+) {
+  const iterator: Iterator<ItemConfigType> =
+    (input.next !== undefined) ? input : itemsIn(input);
+  let replacement: undefined | typeof REMOVE;
+
+  while (true) {
+    const { done, value } = iterator.next(replacement);
+    if (done) {
+      break;
+    }
+    replacement = pred(value) ? undefined : REMOVE;
+  }
+}
+
+/**
+ * Transforms the configuration of a workbench in-place by calling a function
+ * with each configuration item (panel or container) and replacing the
+ * configuration item with whatever the mapping function returns.
+ *
+ * @param  input the workbench configuration or state to transform, or an
+ *               iterator that yields items from a workbench configuration
+ * @param  func  the mapper function
+ */
+export function transformConfiguration(
+  input: Config | WorkbenchState | Iterator<ItemConfigType>,
+  func: (item: ItemConfigType) => ItemConfigType
+) {
+  const iterator: Iterator<ItemConfigType> =
+    (input.next !== undefined) ? input : itemsIn(input);
+  let replacement: ItemConfigType | undefined;
+
+  while (true) {
+    const { done, value } = iterator.next(replacement);
+    if (done) {
+      break;
+    }
+
+    replacement = func(value);
+    if (replacement === value) {
+      replacement = undefined;         // no need to replace the item
+    }
   }
 }

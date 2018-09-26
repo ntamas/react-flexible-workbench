@@ -3,6 +3,8 @@
 import * as React from "react";
 import * as ReactDOM from "react-dom";
 
+import * as iterators from "../../src/iterators";
+
 import {
   IPerspectiveStorage, Module, ModuleDrawer, ModuleTray, PerspectiveBar,
   PerspectiveBuilder, PerspectiveStorage, Workbench, WorkbenchBuilder,
@@ -177,3 +179,7 @@ ReactDOM.render(
   <React.StrictMode><App /></React.StrictMode>,
   document.getElementById("app-container")
 );
+
+(window as any).workbench = workbench;
+(window as any).iterators = iterators;
+console.log("window.workbench now points to the main workbench object.");
