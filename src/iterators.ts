@@ -389,7 +389,7 @@ export function filteredPanels(
   state?: IWorkbenchState
 ): any {
   if (arguments.length === 1) {
-    return (newState: IWorkbenchState) => filteredState(pred, newState);
+    return (newState: IWorkbenchState) => filteredPanels(pred, newState);
   }
 
   if (state === undefined) {
