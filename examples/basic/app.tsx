@@ -6,9 +6,9 @@ import * as ReactDOM from "react-dom";
 import * as iterators from "../../src/iterators";
 
 import {
-  IPerspectiveStorage, Module, ModuleDrawer, ModuleTray, PerspectiveBar,
-  PerspectiveBuilder, PerspectiveStorage, Workbench, WorkbenchBuilder,
-  WorkbenchView
+  IPerspectiveStorage, Module, ModuleDrawer,
+  ModuleTray, PerspectiveBar, PerspectiveBuilder, PerspectiveStorage,
+  Workbench, WorkbenchBuilder, WorkbenchView
 } from "../../src/index";
 
 require("../../themes/blue.css");

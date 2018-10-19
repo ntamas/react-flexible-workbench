@@ -95,6 +95,15 @@ export function getDisplayName(component: React.ReactType): string | undefined {
   );
 }
 
+/**
+ * Returns whether the given content item is a container (and not a panel).
+ */
+export function isContainer(
+  item: GoldenLayout.ContentItem | GoldenLayout.ItemConfigType
+) {
+  return item.type === "row" || item.type === "column" || item.type === "stack";
+}
+
 export function isElementClassEqualTo<P>(
   cls: React.ComponentClass<P>, element: React.ReactElement<any> | React.ReactText | undefined
 ): element is React.ReactElement<P> {

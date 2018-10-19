@@ -89,6 +89,18 @@ export type ItemVisitor = (item: GoldenLayout.ContentItem) =>
   ((child: GoldenLayout.ContentItem) => boolean);
 
 /**
- * Type specification for the state of the workbench.
+ * Interface specification for the state of the workbench.
  */
-export type WorkbenchState = any;
+export interface IWorkbenchState {
+  content: GoldenLayout.ItemConfigType[];
+}
+
+/**
+ * State transformer function that takes a workbench state object and returns
+ * another one.
+ *
+ * These are typically used in the `stateGuard` property of the `Workbench`
+ * class to prevent the user from seeing certain panels when a previously
+ * saved state object is restored.
+ */
+export type WorkbenchStateTransformer = (state: IWorkbenchState) => IWorkbenchState;

@@ -1,4 +1,4 @@
-import { WorkbenchState } from "../types";
+import { IWorkbenchState } from "../types";
 
 /**
  * Interface specification for objects that represent a perspective, i.e.
@@ -13,9 +13,10 @@ export interface IPerspective {
   color?: string;
 
   /**
-   * The state of the saved perspective, in serialized form.
+   * The state of the saved perspective, in a form that is suitable for
+   * serialization.
    */
-  state: WorkbenchState;
+  state: IWorkbenchState;
 
   /**
    * A preferred icon to represent the perspective on the UI.

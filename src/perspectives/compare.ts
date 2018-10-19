@@ -1,4 +1,4 @@
-import { WorkbenchState } from "../types";
+import { IWorkbenchState } from "../types";
 
 /**
  * Compares two workbench state objects and returns whether they are identical,
@@ -10,7 +10,7 @@ import { WorkbenchState } from "../types";
  *         selected tabs, false otherwise
  */
 export function areWorkbenchStatesEqualIgnoringSelection(
-  foo: WorkbenchState, bar: WorkbenchState
+  foo: IWorkbenchState, bar: IWorkbenchState
 ): boolean {
   return compareHelper(foo, bar);
 }

@@ -1,6 +1,9 @@
 import { Config, ContentItem } from "golden-layout";
+import cloneDeep from "lodash-es/cloneDeep";
 
-import { ItemConfigType, WorkbenchState } from "./types";
+import {
+  ItemConfigType, IWorkbenchState, WorkbenchStateTransformer
+} from "./types";
 import { Workbench } from "./workbench";
 
 /**
@@ -190,7 +193,7 @@ function workbenchAsTree(workbench: Workbench): ITree<ContentItem> {
  *
  * @param  config  the workbench configuration to traverse
  */
-function workbenchConfigurationAsTree(config: Config | WorkbenchState): ITree<ItemConfigType> {
+function workbenchConfigurationAsTree(config: Config | IWorkbenchState): ITree<ItemConfigType> {
   return {
     getChild: (item: ItemConfigType, index: number) =>
       item.content ? item.content[index] : undefined,
@@ -241,10 +244,10 @@ export function itemsIn(
   input: Workbench, options?: Partial<IIterationOptions>
 ): Iterator<ContentItem>;
 export function itemsIn(
-  input: Config | WorkbenchState, options?: Partial<IIterationOptions>
+  input: Config | IWorkbenchState, options?: Partial<IIterationOptions>
 ): Iterator<ItemConfigType>;
 export function itemsIn(
-  input: Workbench | Config | WorkbenchState,
+  input: Workbench | Config | IWorkbenchState,
   options?: Partial<IIterationOptions>
 ): Iterator<ContentItem | ItemConfigType> {
   const effectiveOptions: IIterationOptions = {
@@ -280,10 +283,10 @@ export function panelsIn(
   input: Workbench, options?: Partial<IIterationOptions>
 ): Iterator<ContentItem>;
 export function panelsIn(
-  input: Config | WorkbenchState, options?: Partial<IIterationOptions>
+  input: Config | IWorkbenchState, options?: Partial<IIterationOptions>
 ): Iterator<ItemConfigType>;
 export function panelsIn(
-  input: Workbench | Config | WorkbenchState,
+  input: Workbench | Config | IWorkbenchState,
   options?: Partial<IIterationOptions>
 ): Iterator<ContentItem | ItemConfigType> {
   if (input instanceof Workbench) {
@@ -314,10 +317,10 @@ export function containersIn(
   input: Workbench, options?: Partial<IIterationOptions>
 ): Iterator<ContentItem>;
 export function containersIn(
-  input: Config | WorkbenchState, options?: Partial<IIterationOptions>
+  input: Config | IWorkbenchState, options?: Partial<IIterationOptions>
 ): Iterator<ItemConfigType>;
 export function containersIn(
-  input: Workbench | Config | WorkbenchState,
+  input: Workbench | Config | IWorkbenchState,
   options?: Partial<IIterationOptions>
 ): Iterator<ContentItem | ItemConfigType> {
   if (input instanceof Workbench) {
@@ -338,16 +341,22 @@ export function containersIn(
  * with each configuration item (panel or container) and removing it if the
  * given predicate returns false.
  *
+ * This is considered a low-level function; typically you can simply use
+ * `filteredState()` instead, which takes an IWorkbenchState and returns
+ * another, filtered one, without modifying the original one. It can also be
+ * used in curried form.
+ *
+ * @param  pred  the filter predicate
  * @param  input the workbench configuration or state to transform, or an
  *               iterator that yields items from a workbench configuration
- * @param  pred  the filter predicate
  */
-export function filterConfiguration(
-  input: Config | WorkbenchState | Iterator<ItemConfigType>,
-  pred: (item: ItemConfigType) => boolean
+export function filterState(
+  pred: (item: ItemConfigType) => boolean,
+  input: Config | IWorkbenchState | Iterator<ItemConfigType>
 ) {
   const iterator: Iterator<ItemConfigType> =
-    (input.next !== undefined) ? input : itemsIn(input);
+    ("next" in input && input.next !== undefined) ?
+      input : itemsIn(input as any);
   let replacement: undefined | typeof REMOVE;
 
   while (true) {
@@ -360,20 +369,96 @@ export function filterConfiguration(
 }
 
 /**
+ * Filters a workbench state object by calling a predicate with each
+ * panel in the state object (but not containers) and removing it if the given
+ * predicate returns false.
+ *
+ * @param  pred   the filter predicate
+ * @param  state  the state object to filter
+ * @return the filtered state object
+ */
+export function filteredPanels(
+  pred: (item: ItemConfigType) => boolean
+): WorkbenchStateTransformer;
+export function filteredPanels(
+  pred: (item: ItemConfigType) => boolean,
+  state: IWorkbenchState
+): IWorkbenchState;
+export function filteredPanels(
+  pred: (item: ItemConfigType) => boolean,
+  state?: IWorkbenchState
+): any {
+  if (arguments.length === 1) {
+    return (newState: IWorkbenchState) => filteredState(pred, newState);
+  }
+
+  if (state === undefined) {
+    throw new Error("state must not be undefined");
+  }
+
+  const result: IWorkbenchState = cloneDeep(state);
+  filterState(pred, panelsIn(result));
+  return result;
+}
+
+/**
+ * Filters a workbench state object by calling a predicate with each
+ * configuration item (panel or container) and removing it if the given
+ * predicate returns false.
+ *
+ * This function does not modify the original state object and returns a
+ * deep copy instead. The function can also be used in curried form by omitting
+ * the input.
+ *
+ * @param  pred   the filter predicate
+ * @param  state  the state object to filter
+ * @return the filtered state object
+ */
+export function filteredState(
+  pred: (item: ItemConfigType) => boolean
+): WorkbenchStateTransformer;
+export function filteredState(
+  pred: (item: ItemConfigType) => boolean,
+  state: IWorkbenchState
+): IWorkbenchState;
+export function filteredState(
+  pred: (item: ItemConfigType) => boolean,
+  state?: IWorkbenchState
+): any {
+  if (arguments.length === 1) {
+    return (newState: IWorkbenchState) => filteredState(pred, newState);
+  }
+
+  if (state === undefined) {
+    throw new Error("state must not be undefined");
+  }
+
+  const result: IWorkbenchState = cloneDeep(state);
+  filterState(pred, result);
+  return result;
+}
+
+/**
  * Transforms the configuration of a workbench in-place by calling a function
  * with each configuration item (panel or container) and replacing the
  * configuration item with whatever the mapping function returns.
  *
+ * This is considered a low-level function; typically you can simply use
+ * `transformedState()` instead, which takes an IWorkbenchState and returns
+ * another, transformed one, without modifying the original one. It can also be
+ * used in curried form.
+ *
+ * @param  func  the mapper function
  * @param  input the workbench configuration or state to transform, or an
  *               iterator that yields items from a workbench configuration
- * @param  func  the mapper function
  */
-export function transformConfiguration(
-  input: Config | WorkbenchState | Iterator<ItemConfigType>,
-  func: (item: ItemConfigType) => ItemConfigType
+export function transformState(
+  func: (item: ItemConfigType) => ItemConfigType,
+  input: Config | IWorkbenchState | Iterator<ItemConfigType>
 ) {
   const iterator: Iterator<ItemConfigType> =
-    (input.next !== undefined) ? input : itemsIn(input);
+    ("next" in input && input.next !== undefined) ?
+      input : itemsIn(input as any);
   let replacement: ItemConfigType | undefined;
 
   while (true) {
@@ -387,4 +472,41 @@ export function transformConfiguration(
       replacement = undefined;         // no need to replace the item
     }
   }
+}
+
+/**
+ * Transforms a workbench state object by calling a function with each
+ * configuration item (panel or container) and replacing the
+ * configuration item with whatever the mapping function returns.
+ *
+ * This function does not modify the original state object and returns a
+ * deep copy instead. The function can also be used in curried form by omitting
+ * the input.
+ *
+ * @param  func   the mapper function
+ * @param  state  the state object to transform
+ * @return the transformed state object
+ */
+export function transformedState(
+  func: (item: ItemConfigType) => ItemConfigType
+): WorkbenchStateTransformer;
+export function transformedState(
+  func: (item: ItemConfigType) => ItemConfigType,
+  state: IWorkbenchState
+): IWorkbenchState;
+export function transformedState(
+  func: (item: ItemConfigType) => ItemConfigType,
+  state?: IWorkbenchState
+): any {
+  if (arguments.length === 1) {
+    return (newState: IWorkbenchState) => transformedState(func, newState);
+  }
+
+  if (state === undefined) {
+    throw new Error("state must not be undefined");
+  }
+
+  const result: IWorkbenchState = cloneDeep(state);
+  transformState(func, result);
+  return result;
 }

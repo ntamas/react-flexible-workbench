@@ -1,7 +1,7 @@
 import * as GoldenLayout from "golden-layout";
 
 import {
-  containersIn, filterConfiguration, panelsIn, transformConfiguration
+  containersIn, filterState, panelsIn, transformState
 } from "./iterators";
 import { ComponentConstructor, ItemConfigType } from "./types";
 import { Workbench } from "./workbench";
@@ -117,7 +117,7 @@ export class PerspectiveBuilder {
    * @param  pred  the filter predicate
    */
   public filter(pred: (item: ItemConfigType) => boolean): this {
-    filterConfiguration(this._finalize(), pred);
+    filterState(pred, this._finalize());
     return this;
   }
 
@@ -129,7 +129,7 @@ export class PerspectiveBuilder {
    * @param  pred  the filter predicate
    */
   public filterContainers(pred: (item: ItemConfigType) => boolean): this {
-    filterConfiguration(containersIn(this._finalize()), pred);
+    filterState(pred, containersIn(this._finalize()));
     return this;
   }
 
@@ -141,7 +141,7 @@ export class PerspectiveBuilder {
    * @param  pred  the filter predicate
    */
   public filterPanels(pred: (item: ItemConfigType) => boolean): this {
-    filterConfiguration(panelsIn(this._finalize()), pred);
+    filterState(pred, panelsIn(this._finalize()));
     return this;
   }
 
@@ -198,7 +198,7 @@ export class PerspectiveBuilder {
    * @param  func  the mapping function
    */
   public map(func: (item: ItemConfigType) => ItemConfigType): this {
-    transformConfiguration(this._finalize(), func);
+    transformState(func, this._finalize());
     return this;
   }
 
@@ -209,7 +209,7 @@ export class PerspectiveBuilder {
    * @param  func  the mapping function
    */
   public mapContainers(func: (item: ItemConfigType) => ItemConfigType): this {
-    transformConfiguration(containersIn(this._finalize()), func);
+    transformState(func, containersIn(this._finalize()));
     return this;
   }
 
@@ -220,7 +220,7 @@ export class PerspectiveBuilder {
    * @param  func  the mapping function
    */
   public mapPanels(func: (item: ItemConfigType) => ItemConfigType): this {
-    transformConfiguration(panelsIn(this._finalize()), func);
+    transformState(func, panelsIn(this._finalize()));
     return this;
   }
 

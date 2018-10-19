@@ -5,7 +5,7 @@ import { areWorkbenchStatesEqualIgnoringSelection } from "./compare";
 import { IPerspective } from "./perspective";
 import { IPerspectiveStorage } from "./storage";
 
-import { WorkbenchState } from "../types";
+import { IWorkbenchState } from "../types";
 import { Workbench } from "../workbench";
 
 /**
@@ -70,7 +70,7 @@ export class PerspectiveBar extends React.Component<IPerspectiveBarProps, IPersp
   /**
    * The last known state of the workbench.
    */
-  private _lastState: WorkbenchState | undefined;
+  private _lastState: IWorkbenchState | undefined;
 
   private _storage: IPerspectiveStorage | undefined;
   private _workbench: Workbench | undefined;
@@ -176,8 +176,9 @@ export class PerspectiveBar extends React.Component<IPerspectiveBarProps, IPersp
    *         state of the current perspective in the perspective storage,
    *         ignoring selection changes
    */
-  private _currentPerspectiveNeedsSavingAfterChange(newState: IPerspective): boolean {
+  private _currentPerspectiveNeedsSavingAfterChange(newState: IWorkbenchState): boolean {
     return this.state.selectedPerspectiveId !== undefined &&
+      this._lastState !== undefined &&
       !areWorkbenchStatesEqualIgnoringSelection(this._lastState, newState);
   }
 
@@ -322,7 +323,9 @@ export class PerspectiveBar extends React.Component<IPerspectiveBarProps, IPersp
     return this._updateCurrentPerspectiveWith(workbench.getState(), persist);
   }
 
-  private _updateCurrentPerspectiveWith = async (newState: WorkbenchState, persist: boolean = false): Promise<void> => {
+  private _updateCurrentPerspectiveWith = async (
+    newState: IWorkbenchState, persist: boolean = false
+  ): Promise<void> => {
     const { storage } = this.props;
     const { selectedPerspectiveId } = this.state;
 

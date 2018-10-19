@@ -14,7 +14,7 @@ import {
 import {
   ComponentConstructor, DragSource, FallbackHandler, HigherOrderComponent,
   IItemConfigurationOptions, ItemConfigType, ItemVisitor, IWorkbenchPlace,
-  WorkbenchState
+  IWorkbenchState, WorkbenchStateTransformer
 } from "./types";
 import {
   capitalizeEventName, getDisplayName, isReactSFC, onlyVisible,
@@ -75,6 +75,15 @@ export class Workbench extends EventEmitter {
    * will not affect the workbench.
    */
   public hoc: HigherOrderComponent<any, any> | undefined;
+
+  /**
+   * Optional state transformer function that takes a workbench state object
+   * that is about to be applied to the workbench, and returns another one
+   * (or the same one after some modifications) that _will_ actually be loaded
+   * instead of the original one. This can be used to prevent the user from
+   * seeing certain panels when a previously saved state object is restored.
+   */
+  public stateGuard: WorkbenchStateTransformer | undefined;
 
   /**
    * Constructor. Creates an empty workbench.
@@ -351,8 +360,10 @@ export class Workbench extends EventEmitter {
    * workbench, only the part that encodes where the panels are and how they
    * are sized relative to each other.
    */
-  public getState(): WorkbenchState {
-    return pick(this._getLayout().toConfig(), ["content", "isClosable"]);
+  public getState(): IWorkbenchState {
+    return pick(
+      this._getLayout().toConfig(), ["content"]
+    );
   }
 
   /**
@@ -571,7 +582,7 @@ export class Workbench extends EventEmitter {
   /**
    * Restores a saved state previously obtained by <code>getState()</code>.
    */
-  public restoreState(state: WorkbenchState): void {
+  public restoreState(state: IWorkbenchState): void {
     if (this._domNode !== undefined) {
       // Create a completely new golden-layout object with the new configuration
       const layout = this._createLayoutFromConfig(state);
@@ -640,11 +651,20 @@ export class Workbench extends EventEmitter {
       {}, this._configDefaults, config
     );
 
+    // Filter the content of the configuration object if the user specified a
+    // state guard
+    if (this.stateGuard && effectiveConfig.content) {
+      effectiveConfig.content = this.stateGuard({
+        content: effectiveConfig.content
+      }).content;
+    }
+
     const layout: GoldenLayout = new GoldenLayout(effectiveConfig, this._domNode);
 
     // HACK: Get rid of the default React component handler from GoldenLayout
     (layout as any)._components = {};
 
+    // Register all the components that we don't know about
     Object.keys(this._registry).forEach((key: string) => {
       let { component } = this._registry[key];
       const { factory } = this._registry[key];
