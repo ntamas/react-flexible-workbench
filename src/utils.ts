@@ -169,6 +169,25 @@ export function onlyVisible(func: ItemVisitor): ItemVisitor {
 }
 
 /**
+ * Given a content item, returns any of its existing children if the content
+ * item is the root and it has some children, or the content item itself in
+ * any other case. The purpose of this function is to ensure that we have a
+ * content item for which we can add children. (We can only have one child for
+ * the root).
+ */
+function findAnyContainerIn(item: GoldenLayout.ContentItem): GoldenLayout.ContentItem {
+  if (item.isRoot) {
+    if (!item.contentItems || item.contentItems.length === 0) {
+      return item;
+    } else {
+      return item.contentItems[0];
+    }
+  } else {
+    return item;
+  }
+}
+
+/**
  * Proposes a location for a new item in the layout.
  *
  * The function will find the largest visible panel in the layout and then
@@ -177,18 +196,19 @@ export function onlyVisible(func: ItemVisitor): ItemVisitor {
 export function proposePlaceForNewItemInLayout(tree: GoldenLayout): IWorkbenchPlace {
   const largestPanel = findLargestVisiblePanel(tree);
   if (largestPanel === undefined) {
-    // There are no panels yet, so just add the new panel to the root
+    // There are no panels yet, so just add the new panel to the root, or any
+    // of its containers.
     return {
-      parent: tree.root
+      parent: findAnyContainerIn(tree.root)
     };
   } else {
     const parent = largestPanel.parent;
     if (parent === undefined) {
       // The largest panel has no parent. This should not really happen
       // under normal conditions, but anyway, let's just add new the panel
-      // to the root as a new child.
+      // to the root or any of its containers as a new child.
       return {
-        parent: tree.root
+        parent: findAnyContainerIn(tree.root)
       };
     } else if (parent.isStack) {
       // The parent of the largest panel is a stack, which is the typical
