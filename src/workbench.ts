@@ -1,24 +1,23 @@
 import { EventEmitter, ListenerFn } from "eventemitter3";
 import * as GoldenLayout from "golden-layout";
 import * as JQuery from "jquery";
+import identity from "lodash-es/identity";
+import isEqual from "lodash-es/isEqual";
 import isFunction from "lodash-es/isFunction";
 import merge from "lodash-es/merge";
 import pick from "lodash-es/pick";
 import * as React from "react";
 
 import { Environment, IEnvironmentMethods } from "./environment";
+import { ComponentRegistry } from "./registry";
 import {
-  ComponentFactory, createHandlerWithFallback,
-  EagerReactComponentHandler, LazyReactComponentHandler
-} from "./handlers";
-import {
-  ComponentConstructor, DragSource, FallbackHandler, HigherOrderComponent,
+  DragSource, FallbackHandler, HigherOrderComponent,
   IItemConfigurationOptions, ItemConfigType, ItemVisitor, IWorkbenchPlace,
   IWorkbenchState, WorkbenchStateTransformer
 } from "./types";
 import {
-  capitalizeEventName, getDisplayName, isReactSFC, onlyVisible,
-  proposePlaceForNewItemInLayout, traverseWorkbench, wrapInComponent
+  capitalizeEventName, onlyVisible,
+  proposePlaceForNewItemInLayout, traverseWorkbench
 } from "./utils";
 
 // Require golden-layout CSS and theme files so they get included in the bundle
@@ -39,27 +38,14 @@ export class Workbench extends EventEmitter {
   private _domNode: Element | undefined;
   private _layout: GoldenLayout | undefined;
   private _nextUnblockId: number;
-  private _registry: {
-    [key: string]: {
-      component?: React.ComponentType<any>;
-      factory?: ComponentConstructor<any>;
-    }
-  };
+  private _registry: ComponentRegistry;
+  private _stateGuard: WorkbenchStateTransformer;
 
   /**
    * The environment that the workbench lives in. Methods of this object are
    * used to communicate with the application that hosts the workbench.
    */
   public environment: IEnvironmentMethods = Environment.browser;
-
-  /**
-   * Fallback component or function that is used to resolve errors when the
-   * user tries to create a component that is not registered in the workbench.
-   * The function will be called with the registered name of the component that
-   * the user tried to create and its props, and it must return a React node
-   * to render as fallback.
-   */
-  public fallback: FallbackHandler | undefined;
 
   /**
    * An optional React higher-order component that will be called with every
@@ -77,15 +63,6 @@ export class Workbench extends EventEmitter {
   public hoc: HigherOrderComponent<any, any> | undefined;
 
   /**
-   * Optional state transformer function that takes a workbench state object
-   * that is about to be applied to the workbench, and returns another one
-   * (or the same one after some modifications) that _will_ actually be loaded
-   * instead of the original one. This can be used to prevent the user from
-   * seeing certain panels when a previously saved state object is restored.
-   */
-  public stateGuard: WorkbenchStateTransformer | undefined;
-
-  /**
    * Constructor. Creates an empty workbench.
    */
   constructor() {
@@ -93,19 +70,9 @@ export class Workbench extends EventEmitter {
 
     this._blockedEvents = {};
     this._nextUnblockId = 1;
+    this._stateGuard = identity;
 
-    this._registry = {
-      "lm-react-component": {
-        factory: createHandlerWithFallback(
-          EagerReactComponentHandler, this._handleComponentCreationFailure
-        )
-      },
-      "lm-react-lazy-component": {
-        factory: createHandlerWithFallback(
-          LazyReactComponentHandler, this._handleComponentCreationFailure
-        )
-      }
-    };
+    this._registry = new ComponentRegistry();
     this._configDefaults = {
       // Popouts are not nice so we take an opinionated override here
       settings: {
@@ -230,8 +197,7 @@ export class Workbench extends EventEmitter {
     let result: ItemConfigType;
     const { eager, props, title } = effectiveOptions;
 
-    if (this.isRegisteredAsReact(name)) {
-      // TODO: handle eager
+    if (this._registry.isRegisteredAsReact(name)) {
       result = {
         component: name,
         props: Object.assign({}, props),
@@ -292,37 +258,18 @@ export class Workbench extends EventEmitter {
     if (typeof nameOrComponent === "string") {
       name = nameOrComponent;
     } else {
-      name = this.findRegisteredNameFor(nameOrComponent);
+      name = this._registry.findRegisteredNameFor(nameOrComponent);
     }
 
     if (name === undefined) {
       if (typeof nameOrComponent === "string") {
         throw new Error("component is not registered in workbench yet");
       } else {
-        name = this.registerComponent(nameOrComponent);
+        name = this._registry.registerComponent(nameOrComponent);
       }
     }
 
     return name;
-  }
-
-  /**
-   * Returns the registered name of the given function or React component in
-   * the workbench.
-   *
-   * @param  factory  the factory function or React component whose registered
-   *         name is to be retrieved
-   * @return the name corresponding to the input or <code>undefined</code> if
-   *         there is no such function or React component
-   */
-  public findRegisteredNameFor(
-    factory: ComponentConstructor<any> | React.ComponentType<any>
-  ): string | undefined {
-    return Object.keys(this._registry).find(key => {
-      const value = this._registry[key];
-      return value.component === factory || value.factory === factory ||
-        (value.component !== undefined && (value.component as any).wrappedComponent === factory);
-    });
   }
 
   /**
@@ -347,10 +294,32 @@ export class Workbench extends EventEmitter {
   }
 
   /**
+   * Fallback component or function that is used to resolve errors when the
+   * user tries to create a component that is not registered in the workbench.
+   * The function will be called with the registered name of the component that
+   * the user tried to create and its props, and it must return a React node
+   * to render as fallback.
+   */
+  public get fallback(): FallbackHandler | undefined {
+    return this._registry.fallback;
+  }
+  public set fallback(value: FallbackHandler | undefined) {
+    this._registry.fallback = value;
+  }
+
+  /**
    * Returns the raw Golden-Layout object behind this workbench.
    */
   public get layout(): GoldenLayout | undefined {
     return this._layout;
+  }
+
+  /**
+   * Registry that keeps track of the association between component names
+   * (strings) and the corresponding React components or component factories.
+   */
+  public get registry(): ComponentRegistry {
+    return this._registry;
   }
 
   /**
@@ -367,154 +336,10 @@ export class Workbench extends EventEmitter {
   }
 
   /**
-   * Returns whether a plain component factory or a React component is registered
-   * with the given name.
-   */
-  public isRegistered(name: string): boolean {
-    return this._registry[name] !== undefined;
-  }
-
-  /**
-   * Returns whether a React component is registered with the given name.
-   */
-  public isRegisteredAsReact(name: string): boolean {
-    return this.isRegistered(name) && this._registry[name].component !== undefined;
-  }
-
-  /**
    * Returns whether the workbench is currently attached to a DOM node.
    */
   public get isRendered(): boolean {
     return this._layout !== undefined;
-  }
-
-  /**
-   * Registers a new plain component factory for the workbench with the given
-   * name.
-   *
-   * Chances are that you need this function only if you are not using React.
-   * For React components, use <code>registerComponent()</code> instead.
-   *
-   * In case you wonder: the two functions cannot be unified because React
-   * functional components cannot be distinguished from factory functions.
-   *
-   * @param  name     the name of the factory to register. Can be omitted.
-   * @param  factory  the factory function to register. It will be invoked with
-   *                  the layout container and the state object of the component
-   *                  and must update the contents of the container.
-   * @return the name that the factory function was registered for
-   */
-  public register<TState>(name: string, factory?: undefined):
-    (newFactory: ComponentConstructor<TState>) => void;
-  public register<TState>(factory: ComponentConstructor<TState>): string;
-  public register<TState>(name: string, factory: ComponentConstructor<TState>): string;
-  public register<TState>(nameOrFactory: string | ComponentConstructor<TState>,
-                          maybeFactory?: ComponentConstructor<TState>): any {
-    let name: string;
-    let factory: ComponentConstructor<TState>;
-
-    // Check whether we have a name for the component.
-    if (typeof nameOrFactory === "string") {
-      name = nameOrFactory;
-      if (maybeFactory === undefined) {
-        return (newFactory: ComponentConstructor<TState>) => this.register(name, newFactory);
-      } else {
-        factory = maybeFactory;
-      }
-    } else {
-      factory = nameOrFactory;
-      name = factory.name;
-      if (maybeFactory !== undefined) {
-        throw new Error("the second argument cannot be a factory function if " +
-                        "the first one is not a string");
-      }
-      if (name === undefined) {
-        throw new Error("cannot register unnamed functions without specifying " +
-                        "a name explicitly");
-      }
-    }
-
-    // Okay, at this point we have a sensible value for both 'name' and
-    // 'factory'.
-
-    // If 'factory' is a bound or arrow function, it cannot be used as a
-    // constructor and golden-layout will freak out. We fix it by wrapping it
-    // in another function that is not bound.
-    if (!factory.hasOwnProperty("prototype")) {
-      const oldFactory = factory as any;
-      factory = function(node: GoldenLayout.Container, state: TState): void {
-        oldFactory(node, state);
-        return this;
-      };
-    }
-
-    this._registry[name] = { factory };
-
-    return name;
-  }
-
-  /**
-   * Registers a new React component for the workbench with the given name.
-   *
-   * @param  name  the name of the component that the React component will be
-   *               known as. This can be omitted; defaults to the actual name
-   *               of the component.
-   * @param  component  the React component class or stateless functional
-   *                    component to register. Its props will be set to the
-   *                    props specified in the <code>golden-layout</code>
-   *                    configuration object.
-   * @return the name that the component was registered for
-   */
-  public registerComponent<TProps>(name: string, component?: undefined):
-    (newComponent: React.ComponentType<TProps>) => string;
-  public registerComponent<TProps>(component: React.ComponentType<TProps>): string;
-  public registerComponent<TProps>(name: string, component: React.ComponentType<TProps>): string;
-  public registerComponent<TProps>(
-    nameOrComponent: string | React.ComponentType<TProps>,
-    maybeComponent?: React.ComponentType<TProps>
-  ): any {
-    let name: string;
-    let component: React.ComponentType<TProps>;
-
-    // Check whether we have a name for the component.
-    if (typeof nameOrComponent === "string") {
-      name = nameOrComponent;
-      if (maybeComponent === undefined) {
-        return (newComponent: React.ComponentType<TProps>) =>
-          this.registerComponent(name, newComponent);
-      } else {
-        component = maybeComponent;
-      }
-    } else {
-      component = nameOrComponent;
-      name = getDisplayName(component) || "";
-      if (maybeComponent !== undefined) {
-        throw new Error("the second argument cannot be a component if " +
-                        "the first one is not a string");
-      }
-      if (name.length === 0) {
-        throw new Error("cannot register unnamed components without specifying " +
-                        "a name explicitly");
-      }
-      if (isReactSFC(component)) {
-        // Component is a stateless functional component. These are currently
-        // not allowed in golden-layout as of 1.5.9. I have already submitted a
-        // pull request to address this issue:
-        //
-        // https://github.com/deepstreamIO/golden-layout/pull/334
-        //
-        // Until the PR is resolved, we need to wrap the component in a React
-        // component class.
-        component = wrapInComponent(component as React.StatelessComponent<TProps>);
-      }
-    }
-
-    // Okay, at this point we have a sensible value for both 'name' and
-    // 'component'.
-
-    this._registry[name] = { component };
-
-    return name;
   }
 
   /**
@@ -594,6 +419,33 @@ export class Workbench extends EventEmitter {
   }
 
   /**
+   * Sets the state transformer function that takes a workbench state object
+   * that is about to be applied to the workbench, and returns another one
+   * (or the same one after some modifications) that _will_ actually be loaded
+   * instead of the original one. This can be used to prevent the user from
+   * seeing certain panels when a previously saved state object is restored.
+   *
+   * The default state transformer function is the identity function.
+   */
+  public setStateGuard(func: WorkbenchStateTransformer) {
+    if (this._stateGuard === func) {
+      return;
+    }
+
+    this._stateGuard = func;
+
+    if (this._domNode !== undefined) {
+      // Layout is already mounted, so we need to pass the current state
+      // through the state guard
+      const state: IWorkbenchState = this.getState();
+      const newState: IWorkbenchState = this._stateGuard(state);
+      if (!isEqual(state, newState)) {
+        this.restoreState(newState);
+      }
+    }
+  }
+
+  /**
    * Updates the size of the workbench to the given values. If no values
    * are given, the workbench will measure the DOM node it is attached to
    * and adjusts its own size to the size of that node.
@@ -653,27 +505,14 @@ export class Workbench extends EventEmitter {
 
     // Filter the content of the configuration object if the user specified a
     // state guard
-    if (this.stateGuard && effectiveConfig.content) {
-      effectiveConfig.content = this.stateGuard({
+    if (effectiveConfig.content) {
+      effectiveConfig.content = this._stateGuard({
         content: effectiveConfig.content
       }).content;
     }
 
     const layout: GoldenLayout = new GoldenLayout(effectiveConfig, this._domNode);
-
-    // HACK: Get rid of the default React component handler from GoldenLayout
-    (layout as any)._components = {};
-
-    // Register all the components that we don't know about
-    Object.keys(this._registry).forEach((key: string) => {
-      let { component } = this._registry[key];
-      const { factory } = this._registry[key];
-      if (component !== undefined && this.hoc !== undefined) {
-        component = this.hoc(component);
-      }
-      layout.registerComponent(key, component || factory);
-    });
-
+    this._registry.prepareLayout(layout, this.hoc);
     return layout;
   }
 
@@ -687,17 +526,6 @@ export class Workbench extends EventEmitter {
       throw new Error("Workbench has not been rendered yet");
     }
     return this._layout;
-  }
-
-  /**
-   * Handles the case when a component in the workbench cannot be created
-   * for any reason (for instance, missing component registration).
-   */
-  private _handleComponentCreationFailure = (componentName: string): ComponentFactory | undefined => {
-    const { fallback } = this;
-    if (fallback) {
-      return props => fallback(componentName, props);
-    }
   }
 
   /**
