@@ -71,7 +71,7 @@ const workbench = new WorkbenchBuilder()
     .add("lm-react-component", {
       props: { label: "A" },
       title: "Missing panel 1",
-    }, "panel-a")
+    }, "panel-x")
     .setRelativeHeight(66)
     .makeColumns()
       .makeStack()
