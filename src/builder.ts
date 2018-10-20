@@ -602,9 +602,8 @@ export class WorkbenchBuilder {
   public register<TState>(name: string, factory: ComponentConstructor<TState>): this;
   public register<TState>(nameOrFactory: string | ComponentConstructor<TState>,
                           maybeFactory?: ComponentConstructor<TState>): this {
-    this._assertHasWorkbench().register.apply(
-      this._workbench, arguments
-    );
+    const { registry } = this._assertHasWorkbench();
+    registry.register.apply(registry, arguments);
     return this;
   }
 
@@ -614,9 +613,8 @@ export class WorkbenchBuilder {
     nameOrComponent: string | React.ComponentType<TProps>,
     maybeComponent?: React.ComponentType<TProps>
   ): any {
-    this._assertHasWorkbench().registerComponent.apply(
-      this._workbench, arguments
-    );
+    const { registry } = this._assertHasWorkbench();
+    registry.registerComponent.apply(registry, arguments);
     return this;
   }
 
