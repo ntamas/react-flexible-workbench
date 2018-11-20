@@ -1,5 +1,4 @@
 import * as React from "react";
-import { findDOMNode } from "react-dom";
 
 import { Workbench } from "../workbench";
 
@@ -13,6 +12,12 @@ export interface IWorkbenchViewProps {
  * React component that shows a prepared and configured Workbench object.
  */
 export class WorkbenchView extends React.Component<IWorkbenchViewProps, {}> {
+
+  /**
+   * State variable storing the DOM node of the internal div that the workbench
+   * should be rendered into.
+   */
+  private _divRef: React.RefObject<HTMLDivElement>;
 
   /**
    * Flag to store whether the workbench *is* currently attached to
@@ -38,6 +43,8 @@ export class WorkbenchView extends React.Component<IWorkbenchViewProps, {}> {
 
   constructor(props: IWorkbenchViewProps) {
     super(props);
+
+    this._divRef = React.createRef();
     this._isAttached = false;
     this._isMounted = false;
     this._shouldBeAttached = false;
@@ -68,7 +75,7 @@ export class WorkbenchView extends React.Component<IWorkbenchViewProps, {}> {
       overflow: "hidden",
       position: "relative"
     };
-    return <div id={this.props.id} style={effectiveStyle}></div>;
+    return <div id={this.props.id} ref={this._divRef} style={effectiveStyle}></div>;
   }
 
   private _renderOrDetachWorkbenchIfNeeded(): void {
@@ -76,7 +83,7 @@ export class WorkbenchView extends React.Component<IWorkbenchViewProps, {}> {
       this._shouldBeAttached && this._isMounted;
 
     if (shouldBeAttached && !this._isAttached) {
-      const node = findDOMNode(this);
+      const node = this._divRef.current;
       if (node === null) {
         throw new Error("No DOM node found for WorkbenchView. " +
                         "This is most likely a bug.");
