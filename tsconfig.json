@@ -19,7 +19,7 @@
         "sourceMap": true,
         "strictNullChecks": true,
         "target": "es5",
-        "types": ["jasmine", "node"]
+        "types": ["node"]
     },
 
     "include": [
