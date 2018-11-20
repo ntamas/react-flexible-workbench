@@ -34,8 +34,13 @@ export interface IPerspectiveStorage {
    * Iterates over all the perspectives stored in the storage backend, and
    * invokes a function for each of them. Perspectives with pending modifications
    * will present the modified state and not the base state.
+   *
+   * @param func a function that will be called with each of the perspectives in
+   *        the storage backend
+   * @return a promise that resolves when all the perspectives have been
+   *         iterated over
    */
-  forEach: (func: PerspectiveIteratorCallback) => void;
+  forEach: (func: PerspectiveIteratorCallback) => Promise<void>;
 
   /**
    * Returns whether the perspective with the given ID has modifications that
@@ -220,10 +225,11 @@ class ArrayBasedPerspectiveStorage extends PerspectiveStorageBase implements IPe
   /**
    * @inheritDoc
    */
-  public forEach(func: PerspectiveIteratorCallback): void {
-    return this._order.forEach(id =>
+  public forEach(func: PerspectiveIteratorCallback): Promise<void> {
+    this._order.forEach(id =>
       func(this._findById(id) as IPerspective, id, this)
     );
+    return Promise.resolve();
   }
 
   /**
