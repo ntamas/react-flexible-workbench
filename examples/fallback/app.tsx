@@ -3,28 +3,14 @@
 import * as React from "react";
 import * as ReactDOM from "react-dom";
 
+import { Header, MyComponent } from "../common";
+
 import {
   Module, ModuleDrawer, ModuleTray, Workbench, WorkbenchBuilder,
   WorkbenchView
 } from "../../src/index";
 
 require("../../themes/blue.css");
-
-// =============================================================================
-
-interface IMyComponentProps {
-  label: string;
-  message?: string;
-  button?: React.ReactNode;
-}
-
-const MyComponent = ({ button, label, message }: IMyComponentProps) => (
-  <div className="panel">
-    <div className="big-letter">{ label }</div>
-    { message ? <div>{message}</div> : null}
-    { button }
-  </div>
-);
 
 // =============================================================================
 
@@ -36,14 +22,6 @@ const FallbackComponent = ({ message }: IFallbackComponentProps) => (
   <div className="panel">
     <div className="big-letter">?</div>
     <div>{message || "No such component. We have handled this gracefully."}</div>
-  </div>
-);
-
-// =============================================================================
-
-const Header = () => (
-  <div id="header" style={{ display: "flex", alignItems: "center" }}>
-    <div className="title">Missing panels demo</div>
   </div>
 );
 
@@ -92,7 +70,7 @@ workbench.fallback = () => <FallbackComponent />;
 
 const App = () => (
   <div id="app">
-    <Header />
+    <Header title="Missing panels demo" />
     <WorkbenchView id="root" workbench={workbench} />
     <Footer workbench={workbench} />
   </div>

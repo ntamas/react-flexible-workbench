@@ -3,6 +3,8 @@
 import * as React from "react";
 import * as ReactDOM from "react-dom";
 
+import { Header } from "../common";
+
 import {
   ItemConfigType, WorkbenchBuilder, WorkbenchView
 } from "../../src/index";
@@ -36,14 +38,6 @@ const FallbackComponent = ({ message }: IFallbackComponentProps) => (
   <div className="panel">
     <div className="big-letter">!!!</div>
     <div>{message || "You have no permissions to see this panel."}</div>
-  </div>
-);
-
-// =============================================================================
-
-const Header = () => (
-  <div id="header" style={{ display: "flex", alignItems: "center" }}>
-    <div className="title">Configuration transformation demo</div>
   </div>
 );
 
@@ -89,7 +83,7 @@ workbench.fallback = () => <FallbackComponent />;
 
 const App = () => (
   <div id="app">
-    <Header />
+    <Header title="Configuration transformation demo" />
     <WorkbenchView id="root" workbench={workbench} />
   </div>
 );

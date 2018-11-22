@@ -5,8 +5,8 @@ import { IPerspective } from "./perspective";
  * Iterator function that is invoked for each of the perspectives in a
  * perspective storage.
  */
-export type PerspectiveIteratorCallback =
-    (perspective: IPerspective, id: string, storage: IPerspectiveStorage) => void;
+export type PerspectiveIteratorCallback<T> =
+    (perspective: IPerspective, id: string, storage: IPerspectiveStorage) => T;
 
 /**
  * Object that maps string keys to IPerspective objects.
@@ -40,7 +40,7 @@ export interface IPerspectiveStorage {
    * @return a promise that resolves when all the perspectives have been
    *         iterated over
    */
-  forEach: (func: PerspectiveIteratorCallback) => Promise<void>;
+  forEach: (func: PerspectiveIteratorCallback<void>) => Promise<void>;
 
   /**
    * Returns whether the perspective with the given ID has modifications that
@@ -57,6 +57,21 @@ export interface IPerspectiveStorage {
    * retrieved perspective.
    */
   load: (id: string) => Promise<IPerspective>;
+
+  /**
+   * Iterates over all the perspectives stored in the storage backend, and
+   * invokes a function for each of them. Collects the return values of the
+   * function in an array and returns a promise that resolves to the array.
+   *
+   * Perspectives with pending modifications will present the modified state
+   * and not the base state when the function is invoked.
+   *
+   * @param func a function that will be called with each of the perspectives in
+   *        the storage backend
+   * @return a promise that resolves to the return values of the invoked
+   *         function for each perspective.
+   */
+  map: <T>(func: PerspectiveIteratorCallback<T>) => Promise<T[]>;
 
   /**
    * Copies the modified state of the perspective with the given ID over to the
@@ -141,7 +156,7 @@ export class PerspectiveStorage {
 /**
  * Base class for perspective storage objects.
  */
-class PerspectiveStorageBase {
+abstract class PerspectiveStorageBase {
   /**
    * List of subscribers to notify when the perspective storage changes.
    */
@@ -152,6 +167,17 @@ class PerspectiveStorageBase {
    */
   constructor() {
     this._subscribers = [];
+  }
+
+  public abstract forEach(func: PerspectiveIteratorCallback<any>): Promise<void>;
+
+  public map = <T>(func: PerspectiveIteratorCallback<T>): Promise<T[]> => {
+    const result: T[] = [];
+    return this.forEach(
+      (perspective: IPerspective, id: string, storage: IPerspectiveStorage) => {
+        result.push(func(perspective, id, storage));
+      }
+    ).then(() => result);
   }
 
   /**
@@ -225,7 +251,7 @@ class ArrayBasedPerspectiveStorage extends PerspectiveStorageBase implements IPe
   /**
    * @inheritDoc
    */
-  public forEach(func: PerspectiveIteratorCallback): Promise<void> {
+  public forEach(func: PerspectiveIteratorCallback<void>): Promise<void> {
     this._order.forEach(id =>
       func(this._findById(id) as IPerspective, id, this)
     );

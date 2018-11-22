@@ -74,3 +74,12 @@
 .wb-perspective-bar button.wb-perspective-bar-new-button:active {
   background: #fc6;
 }
+.wb-perspective-bar button.wb-perspective-bar-reload-button {
+  background: #e22;
+}
+.wb-perspective-bar button.wb-perspective-bar-reload-button:hover {
+  background: #f44;
+}
+.wb-perspective-bar button.wb-perspective-bar-reload-button:active {
+  background: #f44;
+}

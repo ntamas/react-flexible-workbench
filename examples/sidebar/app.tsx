@@ -7,6 +7,8 @@ import Shapeshifter from "react-shapeshifter";
 
 import * as icons from "./icons";
 
+import { MyComponent } from "../common";
+
 import {
   IPerspectiveStorage, Module, ModuleDrawer, ModuleTray, PerspectiveBar,
   PerspectiveBuilder, PerspectiveStorage, toggle, Workbench, WorkbenchBuilder,
@@ -14,18 +16,6 @@ import {
 } from "../../src/index";
 
 require("../../themes/dark.css");
-
-// =============================================================================
-
-interface IMyComponentProps {
-  label: string;
-}
-
-const MyComponent = ({ label }: IMyComponentProps) => (
-  <div className="panel">
-    <div className="big-letter">{ label }</div>
-  </div>
-);
 
 // =============================================================================
 

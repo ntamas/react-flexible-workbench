@@ -13,6 +13,12 @@ import { Workbench } from "../workbench";
  */
 export interface IPerspectiveBarProps {
   /**
+   * Error message to show on the perspective bar when the perspectives cannot
+   * be loaded from the storage.
+   */
+  errorMessage?: string;
+
+  /**
    * Function to call when the selected perspective is about to be changed.
    *
    * The function will be called with the new perspective ID that is about
@@ -48,6 +54,25 @@ export interface IPerspectiveBarState {
    * Dummy counter that can be used to force updates to the perspective bar.
    */
   counter: number;
+
+  /**
+   * Whether the last loading attempt ended with an error.
+   */
+  error: boolean;
+
+  /**
+   * Array containing all the perspectives that were loaded by the previous
+   * attempt. undefined if the perspectives have not been loaded yet or if the
+   * loading attempt ended with an error.
+   */
+  perspectives: Array<[string, IPerspective]> | undefined;
+
+  /**
+   * A promise that will eventually resolve to the list of perspectives in the
+   * perspective bar. When undefined, the perspective bar is not loading
+   * anything.
+   */
+  promise: Promise<Array<[string, IPerspective]>> | undefined;
 
   /**
    * ID of the selected perspective that the user is currently editing if
@@ -90,6 +115,9 @@ export class PerspectiveBar extends React.Component<IPerspectiveBarProps, IPersp
     this._ignoreStateChangeCounter = 0;
     this.state = {
       counter: 0,
+      error: false,
+      perspectives: undefined,
+      promise: undefined,
       selectedPerspectiveId: undefined
     };
   }
@@ -97,27 +125,32 @@ export class PerspectiveBar extends React.Component<IPerspectiveBarProps, IPersp
   public componentDidMount() {
     this._setStorage(this.props.storage);
     this._setWorkbench(this.props.workbench);
+    this._startLoadingIfNeeded();
   }
 
   public componentDidUpdate() {
     this._setStorage(this.props.storage);
     this._setWorkbench(this.props.workbench);
+    this._startLoadingIfNeeded();
   }
 
   public componentWillUnmount() {
     this._setStorage(undefined);
     this._setWorkbench(undefined);
+    this._cancelLoading();
   }
 
   public render() {
-    const { storage } = this.props;
-    const { selectedPerspectiveId } = this.state;
+    const { errorMessage, storage } = this.props;
+    const { error, perspectives, promise, selectedPerspectiveId } = this.state;
     const buttons: React.ReactNode[] = [];
+    const loading = promise !== undefined;
 
-    if (storage !== undefined) {
-      storage.forEach((perspective, id) => {
+    if (perspectives !== undefined) {
+      perspectives.forEach(pair => {
+        const [id, perspective] = pair;
         const element = this._createLoadButtonFromStoredPerspective(
-          perspective, id, storage.isModified(id)
+          perspective, id, storage ? storage.isModified(id) : false
         );
         const selected = selectedPerspectiveId === id;
         const extraProps: Partial<ILoadPerspectiveButtonProps> = {
@@ -128,10 +161,29 @@ export class PerspectiveBar extends React.Component<IPerspectiveBarProps, IPersp
       });
       buttons.push(<NewPerspectiveButton key="__new" onClick={this._createNewPerspective} />);
       buttons.push(<SavePerspectiveButton key="__save" onClick={this._persistModificationsOfCurrentPerspective}
-                                          disabled={!storage.isModified(selectedPerspectiveId)} />);
+                                          disabled={storage ? !storage.isModified(selectedPerspectiveId) : true} />);
+    } else if (error) {
+      buttons.push(
+        <ReloadPerspectivesButton key="__reload"
+          label={errorMessage}
+          onClick={() => this._forceReload()} />
+        );
+    }
+
+    if (buttons.length === 0 && loading) {
+      buttons.push(<span key="__loading">Loading...</span>);
     }
 
     return <div className="wb-perspective-bar">{buttons}</div>;
+  }
+
+  /**
+   * Cancels the current attempt to load the list of perspectives.
+   */
+  private _cancelLoading = () => {
+    this.setState({
+      promise: undefined
+    });
   }
 
   private _createLoadButtonFromStoredPerspective =
@@ -180,6 +232,19 @@ export class PerspectiveBar extends React.Component<IPerspectiveBarProps, IPersp
     return this.state.selectedPerspectiveId !== undefined &&
       this._lastState !== undefined &&
       !areWorkbenchStatesEqualIgnoringSelection(this._lastState, newState);
+  }
+
+  /**
+   * Forces the component to reload the current list of perspectives from
+   * the storage backend.
+   */
+  private _forceReload = () => {
+    this.setState({
+      counter: 1 - this.state.counter,
+      error: false,
+      perspectives: undefined,
+      promise: undefined
+    });
   }
 
   private _loadPerspectiveById = async (id: string): Promise<void> => {
@@ -296,6 +361,7 @@ export class PerspectiveBar extends React.Component<IPerspectiveBarProps, IPersp
     }
 
     this._storage = value;
+    this._forceReload();
 
     if (this._storage !== undefined) {
       this._storage.subscribe(this._onStorageChanged);
@@ -315,6 +381,41 @@ export class PerspectiveBar extends React.Component<IPerspectiveBarProps, IPersp
 
     if (this._workbench !== undefined) {
       this._workbench.on("stateChanged", this._onWorkbenchChanged);
+    }
+  }
+
+  /**
+   * Starts loading the list of perspectives if needed.
+   */
+  private _startLoadingIfNeeded = () => {
+    const { storage } = this.props;
+    const { perspectives, promise } = this.state;
+
+    if (storage && promise === undefined && perspectives === undefined) {
+      const loadingPromise = storage.map(
+        (perspective: IPerspective, id: string): [string, IPerspective] => (
+          [id, perspective]
+        )
+      ).then(newPerspectives => {
+        this.setState({
+          error: false,
+          perspectives: newPerspectives,
+          promise: undefined
+        });
+        return newPerspectives;
+      }, (err: any) => {
+        // Don't forget the previous set of perspectives if there was an
+        // error -- it would be a bad UX
+        this.setState({
+          error: true,
+          promise: undefined
+        });
+        throw err;
+      });
+
+      this.setState({
+        promise: loadingPromise
+      });
     }
   }
 
@@ -412,6 +513,37 @@ const NewPerspectiveButton = ({ onClick }: INewPerspectiveButtonProps) => {
     <div className="wb-perspective-bar-item">
       <button className="wb-perspective-bar-new-button"
               onClick={onClick}>+ New</button>
+    </div>
+  );
+};
+
+/**
+ * Props for the button that allows the user to reload the list of perspectives
+ * in case of an error.
+ */
+export interface IReloadPerspectivesButtonProps {
+  /**
+   * Label to use on the button.
+   */
+  label?: string;
+  /**
+   * Handler to call when the user clicks on the button in order to reload the
+   * list of perspectives.
+   */
+  onClick?: (event: React.SyntheticEvent<any>) => void;
+}
+
+/**
+ * Stateless component that renders a button that can be clicked by the user
+ * to reload the list of perspectives.
+ */
+const ReloadPerspectivesButton = ({ label, onClick }: IReloadPerspectivesButtonProps) => {
+  return (
+    <div className="wb-perspective-bar-item">
+      <button className="wb-perspective-bar-reload-button"
+              onClick={onClick}>
+        {label !== undefined ? label : "Error while loading \u2014 click to reload"}
+      </button>
     </div>
   );
 };

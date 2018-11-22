@@ -13,6 +13,8 @@ import {
 
 import { Header, MyComponent, MyStatefulComponent } from "../common";
 
+const delay = require("delay");
+
 require("../../themes/blue.css");
 
 // =============================================================================
@@ -108,6 +110,12 @@ const perspectives = PerspectiveStorage.fromArray([
     }
   }
 ]);
+
+// Simulate delays in the perspective loading process
+const oldForEach: any = perspectives.forEach.bind(perspectives);
+perspectives.forEach = ((...args: any[]) => {
+  return delay(2000).then(() => oldForEach(...args));
+}) as any;
 
 // =============================================================================
 
