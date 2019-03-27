@@ -19,10 +19,6 @@
    * justify-content: center */
   justify-content: center;
 }
-.wb-module-tray.wb-module-tray-vertical {
-  flex-flow: column nowrap;
-  justify-content: normal;
-}
 
 .wb-module-tray .wb-module-drawer {
   padding: 0 2px;
@@ -31,7 +27,9 @@
   min-width: 32px;
   text-overflow: ellipsis;
 }
+
 .wb-module-tray.wb-module-tray-vertical {
+  display: block;
   overflow-x: hidden;
   overflow-y: auto;
 }
