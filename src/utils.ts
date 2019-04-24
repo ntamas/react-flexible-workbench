@@ -105,14 +105,14 @@ export function isContainer(
 }
 
 export function isElementClassEqualTo<P>(
-  cls: React.ComponentClass<P>, element: React.ReactElement<any> | React.ReactText | undefined
+  cls: React.ComponentClass<P>, element: React.ReactNode
 ): element is React.ReactElement<P> {
-  if (element === undefined ||
+  if (element === undefined || element === null ||
       typeof element === "string" || typeof element === "number") {
     return false;
   }
-  if (element.hasOwnProperty("props") &&
-      element.hasOwnProperty("type") && element.type === cls) {
+  if (typeof element === "object" && "props" in element &&
+      "type" in element && element.type === cls) {
       return true;
   } else {
     return false;

@@ -100,7 +100,7 @@ export class ModuleDrawer extends React.Component<IModuleDrawerProps, {}> {
     classes.push(open ? "wb-module-drawer-open" : "wb-module-drawer-closed");
 
     const items = React.Children.map(children, child => {
-      if (isElementClassEqualTo(Module, child)) {
+      if (isElementClassEqualTo<IModuleProps>(Module, child)) {
         return convertModuleInTray(
           {
             isModuleEnabled,
