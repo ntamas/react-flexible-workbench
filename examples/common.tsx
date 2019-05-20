@@ -54,16 +54,17 @@ export class MyStatefulComponent extends React.Component<IMyComponentProps, IMyC
 // =============================================================================
 
 interface IHeaderProps {
+  fallback?: React.ReactNode;
   perspectives?: IPerspectiveStorage;
   title?: string;
   workbench?: Workbench;
 }
 
-export const Header = ({ perspectives, title, workbench }: IHeaderProps) => (
+export const Header = ({ fallback, perspectives, title, workbench }: IHeaderProps) => (
   <div id="header" style={{ display: "flex", alignItems: "center" }}>
     <div className="title">{title || "Workbench demo"}</div>
     { (perspectives && workbench) ? (
-      <PerspectiveBar storage={perspectives} workbench={workbench} />
+      <PerspectiveBar storage={perspectives} workbench={workbench} fallback={fallback} />
     ) : null}
   </div>
 );

@@ -19,6 +19,12 @@ export interface IPerspectiveBarProps {
   errorMessage?: string;
 
   /**
+   * Fallback component to show in the perspective bar when the perspectives
+   * are being loaded.
+   */
+  fallback?: React.ReactNode;
+
+  /**
    * Function to call when the selected perspective is about to be changed.
    *
    * The function will be called with the new perspective ID that is about
@@ -141,7 +147,7 @@ export class PerspectiveBar extends React.Component<IPerspectiveBarProps, IPersp
   }
 
   public render() {
-    const { errorMessage, storage } = this.props;
+    const { errorMessage, fallback, storage } = this.props;
     const { error, perspectives, promise, selectedPerspectiveId } = this.state;
     const buttons: React.ReactNode[] = [];
     const loading = promise !== undefined;
@@ -171,10 +177,17 @@ export class PerspectiveBar extends React.Component<IPerspectiveBarProps, IPersp
     }
 
     if (buttons.length === 0 && loading) {
-      buttons.push(<span key="__loading">Loading...</span>);
+      buttons.push();
     }
 
-    return <div className="wb-perspective-bar">{buttons}</div>;
+    return (
+      <div className="wb-perspective-bar">
+        {buttons}
+        {buttons.length === 0 && loading
+          ? fallback || <span key="__loading">Loading...</span>
+          : null}
+      </div>
+    );
   }
 
   /**

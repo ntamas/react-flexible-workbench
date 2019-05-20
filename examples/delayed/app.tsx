@@ -2,6 +2,7 @@
 
 import * as React from "react";
 import * as ReactDOM from "react-dom";
+import { BarLoader } from "react-spinners";
 
 import * as iterators from "../../src/iterators";
 
@@ -121,7 +122,7 @@ perspectives.forEach = ((...args: any[]) => {
 
 const App = () => (
   <div id="app">
-    <Header perspectives={perspectives} workbench={workbench} />
+    <Header perspectives={perspectives} workbench={workbench} fallback={<BarLoader color="#8ce" />} />
     <WorkbenchView id="root" workbench={workbench} />
     <Footer workbench={workbench} />
   </div>

@@ -39,6 +39,7 @@
     "react": "^16.7.0",
     "react-dom": "^16.7.0",
     "react-shapeshifter": "^1.0.2",
+    "react-spinners": "^0.5.4",
     "rimraf": "^2.6.3",
     "source-map-loader": "^0.2.4",
     "style-loader": "^0.23.1",
