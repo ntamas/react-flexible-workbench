@@ -83,6 +83,7 @@ export class ModuleTray extends React.Component<IModuleTrayProps, IModuleTraySta
   }
 
   public render() {
+    const controlled = this._isControlled();
     const { allowMultipleSelection, style, vertical, workbench } = this.props;
     const { openDrawers } = this.state;
     const isModuleEnabled = this._isModuleNotVisible;
@@ -99,7 +100,7 @@ export class ModuleTray extends React.Component<IModuleTrayProps, IModuleTraySta
             workbench
           };
           if (child.props.closeAfterDragging === undefined) {
-            newProps.closeAfterDragging = !allowMultipleSelection;
+            newProps.closeAfterDragging = !this._isControlled() && !allowMultipleSelection;
           }
           if (child.props.isModuleEnabled === undefined) {
             newProps.isModuleEnabled = isModuleEnabled;
@@ -147,6 +148,11 @@ export class ModuleTray extends React.Component<IModuleTrayProps, IModuleTraySta
   }
 
   /**
+   * Returns whether the tray is controlled.
+   */
+  private _isControlled = (): boolean => this.props.openDrawers !== undefined;
+
+  /**
    * Returns whether the module with the given props is not visible in
    * the workbench corresponding to the tray.
    */
@@ -191,11 +197,10 @@ export class ModuleTray extends React.Component<IModuleTrayProps, IModuleTraySta
   }
 
   private _onDrawerOpened(id: string): void {
-    const controlled = this.props.openDrawers !== undefined;
     if (this.props.onChange) {
       this.props.onChange(id, true);
     }
-    if (!controlled) {
+    if (!this._isControlled()) {
       const { allowMultipleSelection } = this.props;
       const openDrawers = allowMultipleSelection ? this.state.openDrawers.concat() : [];
       openDrawers.push(id);
@@ -204,11 +209,10 @@ export class ModuleTray extends React.Component<IModuleTrayProps, IModuleTraySta
   }
 
   private _onDrawerClosed(id: string): void {
-    const controlled = this.props.openDrawers !== undefined;
     if (this.props.onChange) {
       this.props.onChange(id, false);
     }
-    if (!controlled) {
+    if (!this._isControlled()) {
       const { allowMultipleSelection } = this.props;
       const openDrawers = allowMultipleSelection ?
         this.state.openDrawers.filter(x => x !== id) : [];
