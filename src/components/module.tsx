@@ -1,6 +1,5 @@
 import * as GoldenLayout from "golden-layout";
 import isFunction from "lodash-es/isFunction";
-import * as PropTypes from "prop-types";
 import * as React from "react";
 
 import { DragSource, ItemConfigType } from "../types";

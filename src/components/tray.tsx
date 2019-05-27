@@ -1,7 +1,6 @@
 import * as GoldenLayout from "golden-layout";
 import isNil from "lodash-es/isNil";
 import pullAll from "lodash-es/pullAll";
-import uniq from "lodash-es/uniq";
 import * as React from "react";
 
 import { IModuleDrawerProps, ModuleDrawer } from "./drawer";
@@ -38,7 +37,6 @@ export interface IModuleTrayState {
  */
 export class ModuleTray extends React.Component<IModuleTrayProps, IModuleTrayState> {
 
-  private _draggedIds: string[];
   private _visibleIds: string[];
   private _workbench: Workbench | undefined;
 
@@ -53,7 +51,6 @@ export class ModuleTray extends React.Component<IModuleTrayProps, IModuleTraySta
   public constructor(props: IModuleTrayProps) {
     super(props);
 
-    this._draggedIds = [];
     this._visibleIds = [];
 
     this.state = {
@@ -83,7 +80,6 @@ export class ModuleTray extends React.Component<IModuleTrayProps, IModuleTraySta
   }
 
   public render() {
-    const controlled = this._isControlled();
     const { allowMultipleSelection, style, vertical, workbench } = this.props;
     const { openDrawers } = this.state;
     const isModuleEnabled = this._isModuleNotVisible;
@@ -148,6 +144,16 @@ export class ModuleTray extends React.Component<IModuleTrayProps, IModuleTraySta
   }
 
   /**
+   * Commits the list of item IDs visible in the workbench to the state of
+   * this component from the corresponding local variable.
+   */
+  private _commitVisibleIdsToState = (): void => {
+    this.setState({
+      visibleIds: this._visibleIds.concat()
+    });
+  }
+
+  /**
    * Returns whether the tray is controlled.
    */
   private _isControlled = (): boolean => this.props.openDrawers !== undefined;
@@ -179,7 +185,6 @@ export class ModuleTray extends React.Component<IModuleTrayProps, IModuleTraySta
     }
 
     this._workbench = value;
-    this._draggedIds = [];
     this._visibleIds = [];
 
     if (this._workbench !== undefined) {
@@ -187,13 +192,10 @@ export class ModuleTray extends React.Component<IModuleTrayProps, IModuleTraySta
       this._workbench.on("itemDestroyed", this._onItemDestroyed);
       this._workbench.on("itemDropped", this._onItemDropped);
 
-      this._workbench.forEach(item => {
-        this._visibleIds.push.apply(this._visibleIds,
-          extractIdsFromContentItem(item));
-      });
+      this._updateVisibleIds();
     }
 
-    this._updateVisibleIds();
+    this._commitVisibleIdsToState();
   }
 
   private _onDrawerOpened(id: string): void {
@@ -223,11 +225,9 @@ export class ModuleTray extends React.Component<IModuleTrayProps, IModuleTraySta
   private _onItemCreated = (item: GoldenLayout.ContentItem): void => {
     const ids = extractIdsFromContentItem(item);
     const isDragging = document.body.classList.contains("lm_dragging");
-    if (isDragging) {
-      this._draggedIds = ids;
-    } else {
-      Array.prototype.push.apply(this._visibleIds, ids);
-      this._updateVisibleIds();
+    if (!isDragging) {
+      this._visibleIds.push(...ids);
+      this._commitVisibleIdsToState();
     }
   }
 
@@ -235,19 +235,29 @@ export class ModuleTray extends React.Component<IModuleTrayProps, IModuleTraySta
     const ids = extractIdsFromContentItem(item);
     if (ids.length > 0) {
       pullAll(this._visibleIds, ids);
-      this._updateVisibleIds();
+      this._commitVisibleIdsToState();
     }
   }
 
   private _onItemDropped = (): void => {
-    this._visibleIds = uniq(this._visibleIds.concat(this._draggedIds));
-    this._draggedIds = [];
     this._updateVisibleIds();
+    this._commitVisibleIdsToState();
   }
 
+  /**
+   * Updates the list of visible IDs by scanning the workbench.
+   *
+   * Note that this only updates the _visibleIds private variable but it does
+   * not commit it ot the state yet.
+   */
   private _updateVisibleIds = (): void => {
-    this.setState({
-      visibleIds: this._visibleIds.concat()
-    });
+    this._visibleIds.length = 0;
+
+    if (this._workbench !== undefined) {
+      this._workbench.forEach(item => {
+        this._visibleIds.push.apply(this._visibleIds,
+          extractIdsFromContentItem(item));
+      });
+    }
   }
 }
