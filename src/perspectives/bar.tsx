@@ -13,6 +13,14 @@ import { Workbench } from "../workbench";
  */
 export interface IPerspectiveBarProps {
   /**
+   * Whether the perspective bar is editable. Editable bars show buttons for
+   * adding a new perspective or saving the current one. Non-editable bars
+   * do not show these buttons, but of course you may still modify the
+   * perspectives from other components.
+   */
+  editable?: boolean;
+
+  /**
    * Error message to show on the perspective bar when the perspectives cannot
    * be loaded from the storage.
    */
@@ -147,10 +155,11 @@ export class PerspectiveBar extends React.Component<IPerspectiveBarProps, IPersp
   }
 
   public render() {
-    const { errorMessage, fallback, storage } = this.props;
+    const { editable, errorMessage, fallback, storage } = this.props;
     const { error, perspectives, promise, selectedPerspectiveId } = this.state;
     const buttons: React.ReactNode[] = [];
     const loading = promise !== undefined;
+    const isEditable = (editable === undefined || !!editable);
 
     if (perspectives !== undefined) {
       perspectives.forEach(pair => {
@@ -165,9 +174,12 @@ export class PerspectiveBar extends React.Component<IPerspectiveBarProps, IPersp
         };
         buttons.push(React.cloneElement(element, extraProps));
       });
-      buttons.push(<NewPerspectiveButton key="__new" onClick={this._createNewPerspective} />);
-      buttons.push(<SavePerspectiveButton key="__save" onClick={this._persistModificationsOfCurrentPerspective}
-                                          disabled={storage ? !storage.isModified(selectedPerspectiveId) : true} />);
+
+      if (isEditable) {
+        buttons.push(<NewPerspectiveButton key="__new" onClick={this._createNewPerspective} />);
+        buttons.push(<SavePerspectiveButton key="__save" onClick={this._persistModificationsOfCurrentPerspective}
+                                            disabled={storage ? !storage.isModified(selectedPerspectiveId) : true} />);
+      }
     } else if (error) {
       buttons.push(
         <ReloadPerspectivesButton key="__reload"
