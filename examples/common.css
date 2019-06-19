@@ -76,6 +76,11 @@ button:disabled {
   font-size: 800%;
   font-weight: bold;
   color: #aaa;
+
+  -webkit-user-select: none;
+  -moz-user-select: none;
+  -ms-user-select: none;
+  user-select: none;
 }
 
 .panel button {
@@ -85,4 +90,16 @@ button:disabled {
 
 .title {
   flex-grow: 1;
+
+  -webkit-user-select: none;
+  -moz-user-select: none;
+  -ms-user-select: none;
+  user-select: none;
+}
+
+.sidebar h1 {
+  -webkit-user-select: none;
+  -moz-user-select: none;
+  -ms-user-select: none;
+  user-select: none;
 }

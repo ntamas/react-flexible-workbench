@@ -62,6 +62,13 @@
   opacity: 0;
 }
 
+.wb-module-label {
+  -webkit-user-select: none;
+  -moz-user-select: none;
+  -ms-user-select: none;
+  user-select: none;
+}
+
 .wb-perspective-bar button.wb-perspective-bar-save-button,
 .wb-perspective-bar button.wb-perspective-bar-new-button {
   background: #fa4;

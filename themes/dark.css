@@ -44,6 +44,13 @@
   padding-bottom: 2px;
 }
 
+.wb-module-label {
+  -webkit-user-select: none;
+  -moz-user-select: none;
+  -ms-user-select: none;
+  user-select: none;
+}
+
 .wb-perspective-bar-item.wb-perspective-selected button {
   background: #25a;
   box-shadow: inset 0 1px 2px rgba(0, 0, 0, 0.65);
