@@ -6,7 +6,8 @@ export {
   IterationOrder, itemsIn, panelsIn, transformState, transformedState
 } from "./iterators";
 export {
-  IPerspective, IPerspectiveStorage, PerspectiveBar, PerspectiveStorage
+  IPerspective, IPerspectiveStorage, IPerspectiveVisualStyle,
+  PerspectiveBar, PerspectiveStorage
 } from "./perspectives";
 export { isContainer, toggle, wrapInComponent } from "./utils";
 export {

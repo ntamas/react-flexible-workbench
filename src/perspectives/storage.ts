@@ -1,5 +1,5 @@
 import { areWorkbenchStatesEqualIgnoringSelection } from "./compare";
-import { IPerspective } from "./perspective";
+import { IPerspective, IPerspectiveVisualStyle } from "./perspective";
 
 /**
  * Iterator function that is invoked for each of the perspectives in a
@@ -84,6 +84,18 @@ export interface IPerspectiveStorage {
   persistModifications: (id: string) => Promise<void>;
 
   /**
+   * Renames the perspective with the given ID.
+   *
+   * The operation may be asynchronous for certain storage backends,
+   * therefore the function will return a promise that resolves when the
+   * operation was successful.
+   *
+   * @param  id     the ID of the perspective
+   * @param  label  the new label of the perspective
+   */
+  rename: (id: string, label: string) => Promise<void>;
+
+  /**
    * Clears the modified state of the perspective with the given ID.
    *
    * The operation may be asynchronous for certain storage backends,
@@ -136,6 +148,19 @@ export interface IPerspectiveStorage {
    * @param  state  the new state object to store in the perspective
    */
   update: (id: string, state: any) => Promise<void>;
+
+  /**
+   * Renames a perspective or performs a modification of its visual style.
+   *
+   * The operation may be asynchronous for certain storage backends,
+   * therefore the function will return a promise that resolves when the
+   * operation was successful.
+   *
+   * @param  id     the ID of the perspective
+   * @param  updates  the new visual styles of the perspective
+   */
+  updateVisualStyle: (id: string, updates: Partial<IPerspectiveVisualStyle>) => Promise<void>;
+
 }
 
 /**
@@ -170,6 +195,7 @@ abstract class PerspectiveStorageBase {
   }
 
   public abstract forEach(func: PerspectiveIteratorCallback<any>): Promise<void>;
+  public abstract updateVisualStyle(id: string, updates: Partial<IPerspectiveVisualStyle>): Promise<void>;
 
   public map = <T>(func: PerspectiveIteratorCallback<T>): Promise<T[]> => {
     const result: T[] = [];
@@ -179,6 +205,9 @@ abstract class PerspectiveStorageBase {
       }
     ).then(() => result);
   }
+
+  public rename = (id: string, label: string): Promise<void> =>
+    this.updateVisualStyle(id, { label })
 
   /**
    * Notifies all subscribers that the perspective storage has changed.
@@ -343,6 +372,27 @@ class ArrayBasedPerspectiveStorage extends PerspectiveStorageBase implements IPe
     }
 
     this._modifiedStates[id].state = state;
+
+    this.notifySubscribers();
+
+    return Promise.resolve();
+  }
+
+  /**
+   * @inheritDoc
+   */
+  public updateVisualStyle = (id: string, updates: Partial<IPerspectiveVisualStyle>): Promise<void> => {
+    if (this._baseStates[id] === undefined) {
+      return this._perspectiveNotFound(id);
+    }
+
+    console.log(id, updates);
+
+    this._baseStates[id] = Object.assign(this._baseStates[id], updates);
+
+    if (this._modifiedStates[id] !== undefined) {
+      this._modifiedStates[id] = Object.assign(this._modifiedStates[id], updates);
+    }
 
     this.notifySubscribers();
 

@@ -593,11 +593,9 @@ export interface ISavePerspectiveButtonProps {
  * Stateless component that renders a button that can be clicked by the user
  * to load a perspective.
  */
-const SavePerspectiveButton = ({ disabled, onClick }: ISavePerspectiveButtonProps) => {
-  return (
-    <div className="wb-perspective-bar-item">
-      <button className="wb-perspective-bar-save-button"
-              disabled={disabled} onClick={onClick}>Save</button>
-    </div>
-  );
-};
+const SavePerspectiveButton = ({ disabled, onClick }: ISavePerspectiveButtonProps) => (
+  <div className="wb-perspective-bar-item">
+    <button className="wb-perspective-bar-save-button"
+            disabled={disabled} onClick={onClick}>Save</button>
+  </div>
+);
