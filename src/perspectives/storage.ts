@@ -16,6 +16,17 @@ export interface IPerspectiveMapping {
 }
 
 /**
+ * Object that specifies the position of a perspective in the perspective
+ * storage backend during a move operation.
+ */
+export type PerspectivePosition = "first" | "last" | { before: string } | { after: string } | { at: number };
+
+/**
+ * Feature constants that a perspective storage backend may support.
+ */
+export type PerspectiveStorageFeature = "reordering";
+
+/**
  * Interface specification for objects that know how to store perspectives
  * in some storage backend.
  *
@@ -74,6 +85,15 @@ export interface IPerspectiveStorage {
   map: <T>(func: PerspectiveIteratorCallback<T>) => Promise<T[]>;
 
   /**
+   * Moves a perspective to a new position in the order in which the storage
+   * presents the list of perspectives when iterated over.
+   *
+   * May throw an Error if the perspective storage does not implement
+   * reordering. Call `supports()` to test whether reordering is supported.
+   */
+  move: (id: string, position: PerspectivePosition) => Promise<void>;
+
+  /**
    * Copies the modified state of the perspective with the given ID over to the
    * base state of the perspective.
    *
@@ -127,6 +147,11 @@ export interface IPerspectiveStorage {
    * Adds a function to be called whenever the perspective storage is modified.
    */
   subscribe: (callback: () => void) => void;
+
+  /**
+   * Tests whether the perspective storage supports a given feature.
+   */
+  supports: (feature: PerspectiveStorageFeature) => boolean;
 
   /**
    * Removes a function to be called whenever the perspective storage is modified.
@@ -309,6 +334,14 @@ class ArrayBasedPerspectiveStorage extends PerspectiveStorageBase implements IPe
   /**
    * @inheritDoc
    */
+  public move(id: string, position: PerspectivePosition): Promise<void> {
+    console.log(id, position);
+    return Promise.reject(new Error("Not supported"));
+  }
+
+  /**
+   * @inheritDoc
+   */
   public persistModifications(id: string): Promise<void> {
     if (this._modifiedStates[id]) {
       this._baseStates[id] = this._modifiedStates[id];
@@ -351,6 +384,19 @@ class ArrayBasedPerspectiveStorage extends PerspectiveStorageBase implements IPe
     this.notifySubscribers();
 
     return Promise.resolve(id);
+  }
+
+  /**
+   * @inheritDoc
+   */
+  public supports(feature: PerspectiveStorageFeature): boolean {
+    switch (feature) {
+      case "reordering":
+        return true;
+
+      default:
+        return false;
+    }
   }
 
   /**

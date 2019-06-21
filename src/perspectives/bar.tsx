@@ -1,5 +1,8 @@
 import * as React from "react";
 import { Badge } from "react-badger";
+import {
+  DragDropContext, Draggable, DraggableProvided, Droppable, DropResult
+} from "react-beautiful-dnd";
 
 import { areWorkbenchStatesEqualIgnoringSelection } from "./compare";
 import { IPerspective } from "./perspective";
@@ -12,6 +15,12 @@ import { Workbench } from "../workbench";
  * Props of the perspective bar component.
  */
 export interface IPerspectiveBarProps {
+  /**
+   * Whether reordering of perspectives is allowed within the perspective bar
+   * by dragging and dropping.
+   */
+  allowReordering?: boolean;
+
   /**
    * Whether the perspective bar is editable. Editable bars show buttons for
    * adding a new perspective or saving the current one. Non-editable bars
@@ -157,48 +166,70 @@ export class PerspectiveBar extends React.Component<IPerspectiveBarProps, IPersp
   public render() {
     const { editable, errorMessage, fallback, storage } = this.props;
     const { error, perspectives, promise, selectedPerspectiveId } = this.state;
-    const buttons: React.ReactNode[] = [];
+
+    const perspectiveButtonFactories: any[] = [];
+    const keys: string[] = [];
+    const extraButtons: React.ReactNode[] = [];
+    let loadingIndicator: React.ReactNode = null;
+
+    const canReorder = this._canReorder();
     const loading = promise !== undefined;
     const isEditable = (editable === undefined || !!editable);
 
     if (perspectives !== undefined) {
       perspectives.forEach(pair => {
         const [id, perspective] = pair;
-        const element = this._createLoadButtonFromStoredPerspective(
-          perspective, id, storage ? storage.isModified(id) : false
-        );
+        const modified = storage ? storage.isModified(id) : false;
         const selected = selectedPerspectiveId === id;
-        const extraProps: Partial<ILoadPerspectiveButtonProps> = {
-          onClick: this._onPerspectiveButtonClicked.bind(this, id),
-          selected
-        };
-        buttons.push(React.cloneElement(element, extraProps));
+        const perspectiveButtonFactory = (provided: DraggableProvided) => (
+          <LoadPerspectiveButton key={id} label={perspective.label}
+            modified={modified} selected={selected}
+            onClick={this._onPerspectiveButtonClicked.bind(this, id)}
+            ref={provided.innerRef}
+            {...provided.draggableProps}
+            {...provided.dragHandleProps}
+          />
+        );
+        perspectiveButtonFactories.push(perspectiveButtonFactory);
+        keys.push(id);
       });
 
       if (isEditable) {
-        buttons.push(<NewPerspectiveButton key="__new" onClick={this._createNewPerspective} />);
-        buttons.push(<SavePerspectiveButton key="__save" onClick={this._persistModificationsOfCurrentPerspective}
+        extraButtons.push(<NewPerspectiveButton key="__new" onClick={this._createNewPerspective} />);
+        extraButtons.push(<SavePerspectiveButton key="__save" onClick={this._persistModificationsOfCurrentPerspective}
                                             disabled={storage ? !storage.isModified(selectedPerspectiveId) : true} />);
       }
     } else if (error) {
-      buttons.push(
+      extraButtons.push(
         <ReloadPerspectivesButton key="__reload"
           label={errorMessage}
           onClick={() => this._forceReload()} />
         );
     }
 
-    if (buttons.length === 0 && loading) {
-      buttons.push();
+    if (perspectiveButtonFactories.length === 0 && loading) {
+      loadingIndicator = (fallback || <span>Loading...</span>);
     }
 
     return (
-      <div className="wb-perspective-bar">
-        {buttons}
-        {buttons.length === 0 && loading
-          ? fallback || <span key="__loading">Loading...</span>
-          : null}
-      </div>
+      <DragDropContext onDragEnd={this._onPerspectiveButtonDragged}>
+        <Droppable droppableId="bar" direction="horizontal">
+          {provided => (
+            <div className="wb-perspective-bar" ref={provided.innerRef} {...provided.droppableProps}>
+              {loadingIndicator}
+              {perspectiveButtonFactories.map((factory, index) => (
+                <Draggable disableInteractiveElementBlocking
+                  key={keys[index]} isDragDisabled={!canReorder}
+                  draggableId={keys[index]} index={index}>
+                  {factory}
+                </Draggable>
+              ))}
+              {provided.placeholder}
+              {extraButtons}
+            </div>
+          )}
+        </Droppable>
+      </DragDropContext>
     );
   }
 
@@ -211,13 +242,15 @@ export class PerspectiveBar extends React.Component<IPerspectiveBarProps, IPersp
     });
   }
 
-  private _createLoadButtonFromStoredPerspective =
-    (perspective: IPerspective, id: string, modified: boolean): React.ReactElement<ILoadPerspectiveButtonProps> => {
-    const { label } = perspective;
-    return (
-      <LoadPerspectiveButton key={id} label={label} modified={modified} />
-    );
-  }
+  /**
+   * Returns whether the buttons in the perspective bar can be reordered by
+   * dragging and dropping.
+   */
+  private _canReorder = () => (
+    this.props.allowReordering &&
+    this.props.storage &&
+    this.props.storage.supports("reordering")
+  )
 
   private _createNewPerspective = async (): Promise<void> => {
     const { workbench } = this.props;
@@ -304,6 +337,18 @@ export class PerspectiveBar extends React.Component<IPerspectiveBarProps, IPersp
       if (!onChange || !onChange(id)) {
         this._loadPerspectiveById(id);
       }
+    }
+  }
+
+  private _onPerspectiveButtonDragged = async (result: DropResult): Promise<void> => {
+    const { storage } = this.props;
+    if (storage !== undefined) {
+      const { destination, draggableId } = result;
+      if (destination) {
+        return storage.move(draggableId, { at: destination.index });
+      }
+    } else {
+      console.warn("No perspective storage while dragging a perspective button; this is probably a bug.");
     }
   }
 
@@ -501,22 +546,24 @@ const badgeOffset = [-3, -3];
  * Stateless component that renders a button that can be clicked by the user
  * to load a perspective.
  */
-const LoadPerspectiveButton = (props: ILoadPerspectiveButtonProps) => {
-  const { label, modified, onClick, selected } = props;
-  const classes = ["wb-perspective-bar-item"];
-  if (selected) {
-    classes.push("wb-perspective-selected");
+const LoadPerspectiveButton = React.forwardRef(
+  (props: ILoadPerspectiveButtonProps, ref: React.Ref<HTMLDivElement>) => {
+    const { label, modified, onClick, selected, ...rest } = props;
+    const classes = ["wb-perspective-bar-item"];
+    if (selected) {
+      classes.push("wb-perspective-selected");
+    }
+    if (modified) {
+      classes.push("wb-perspective-modified");
+    }
+    return (
+      <div className={classes.join(" ")} ref={ref} {...rest}>
+        <button className="wb-perspective-bar-load-button" onClick={onClick}>{label}</button>
+        <Badge className="wb-badge" visible={modified} offset={badgeOffset} />
+      </div>
+    );
   }
-  if (modified) {
-    classes.push("wb-perspective-modified");
-  }
-  return (
-    <div className={classes.join(" ")}>
-      <button className="wb-perspective-bar-load-button" onClick={onClick}>{label}</button>
-      <Badge className="wb-badge" visible={modified} offset={badgeOffset} />
-    </div>
-  );
-};
+);
 
 /**
  * Props for the button that allows the user to create a new perspective.
