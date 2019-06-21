@@ -19,7 +19,7 @@ export interface IPerspectiveMapping {
  * Object that specifies the position of a perspective in the perspective
  * storage backend during a move operation.
  */
-export type PerspectivePosition = "first" | "last" | { before: string } | { after: string } | { at: number };
+export type PerspectivePosition = "first" | "last" | number | { before: string } | { after: string } | { at: number };
 
 /**
  * Feature constants that a perspective storage backend may support.
@@ -235,6 +235,34 @@ abstract class PerspectiveStorageBase {
     this.updateVisualStyle(id, { label })
 
   /**
+   * Helper function to convert a PerspectivePosition instance into an array
+   * index if we can provide an array that contains the IDs of the perspectives
+   * in order.
+   */
+  protected static convertPerspectivePositionIntoIndexInArray(
+    array: string[], position: PerspectivePosition
+  ): number {
+    const length = array.length;
+
+    if (position === "first") {
+      return 0;
+    } else if (position === "last") {
+      return length;
+    } else if (typeof position === "number") {
+      return Math.max(Math.min(length, Math.round(position)), 0);
+    } else if ("at" in position) {
+      return Math.max(Math.min(length, Math.round(position.at)), 0);
+    } else if ("before" in position) {
+      return array.indexOf(position.before);
+    } else if ("after" in position) {
+      const index = array.indexOf(position.after);
+      return index >= 0 ? (index + 1) : -1;
+    } else {
+      return -1;
+    }
+  }
+
+  /**
    * Notifies all subscribers that the perspective storage has changed.
    */
   protected notifySubscribers(): void {
@@ -335,8 +363,20 @@ class ArrayBasedPerspectiveStorage extends PerspectiveStorageBase implements IPe
    * @inheritDoc
    */
   public move(id: string, position: PerspectivePosition): Promise<void> {
-    console.log(id, position);
-    return Promise.reject(new Error("Not supported"));
+    const currentIndex = this._order.indexOf(id);
+    if (currentIndex >= 0) {
+      const convert = PerspectiveStorageBase.convertPerspectivePositionIntoIndexInArray;
+      let desiredIndex = convert(this._order, position);
+      if (desiredIndex > currentIndex) {
+        desiredIndex--;
+      }
+      if (desiredIndex >= 0 && desiredIndex !== currentIndex) {
+        this._order.splice(currentIndex, 1);
+        this._order.splice(desiredIndex, 0, id);
+        this.notifySubscribers();
+      }
+    }
+    return Promise.resolve();
   }
 
   /**

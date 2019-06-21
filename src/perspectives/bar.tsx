@@ -353,9 +353,7 @@ export class PerspectiveBar extends React.Component<IPerspectiveBarProps, IPersp
   }
 
   private _onStorageChanged = (): void => {
-    this.setState({
-      counter: 1 - this.state.counter
-    });
+    this._forceReload();
   }
 
   private _onWorkbenchChanged = (): void => {

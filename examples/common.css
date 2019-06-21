@@ -103,3 +103,7 @@ button:disabled {
   -ms-user-select: none;
   user-select: none;
 }
+
+.wb-perspective-bar {
+  margin-left: 100px;     /* for friendlier drag-and-drop */
+}
