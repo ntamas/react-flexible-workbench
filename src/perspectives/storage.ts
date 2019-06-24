@@ -54,6 +54,16 @@ export interface IPerspectiveStorage {
   forEach: (func: PerspectiveIteratorCallback<void>) => Promise<void>;
 
   /**
+   * Retrieves the perspective object with the given ID and returns a promise
+   * that resolves to the retrieved perspective or undefined if there is no
+   * such perspective.
+   *
+   * For modified perspectives, this function will return the modified state
+   * and not the base state.
+   */
+  get: (id: string) => Promise<IPerspective | undefined>;
+
+  /**
    * Returns whether the perspective with the given ID has modifications that
    * are not persisted yet.
    *
@@ -349,6 +359,13 @@ class ArrayBasedPerspectiveStorage extends PerspectiveStorageBase implements IPe
       func(this._findById(id) as IPerspective, id, this)
     );
     return Promise.resolve();
+  }
+
+  /**
+   * @inheritDoc
+   */
+  public get = (id: string): Promise<IPerspective> => {
+    return Promise.resolve(this._modifiedStates[id] || this._baseStates[id]);
   }
 
   /**

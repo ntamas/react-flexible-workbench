@@ -33,6 +33,18 @@ export interface IEnvironmentMethods {
    */
   onCreatingNewPerspective(perspective: IPerspective): Promise<boolean>;
 
+  /**
+   * Asks the application to display a dialog box that allows the user to confirm
+   * his intention to remove a perspective.
+   *
+   * @param  id  the ID of the perspective that is about to be removed
+   * @param  perspective  the perspective that is about to be removed
+   * @return a promise that resolves to true if the user confirmed the
+   *         removal of the perspective or false if the user cancelled
+   *         the removal of the perspective
+   */
+  onRemovingPerspective(id: string, perspective: IPerspective): Promise<boolean>;
+
 }
 
 const BrowserEnvironment: IEnvironmentMethods = {
@@ -49,6 +61,11 @@ const BrowserEnvironment: IEnvironmentMethods = {
     } else {
       return Promise.resolve(false);
     }
+  },
+
+  onRemovingPerspective: (): Promise<boolean> => {
+    const confirmed = window.confirm("Are you sure you want to remove this perspective?");
+    return Promise.resolve(confirmed);
   }
 };
 

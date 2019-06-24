@@ -104,7 +104,18 @@ export interface IPerspectiveBarState {
   selectedPerspectiveId: string | undefined;
 }
 
+/**
+ * Private counter to generate unique droppable IDs for perspective
+ * bars so you cannot drag a button from one perspective bar into another.
+ */
+let nextDroppableIndex: number = 0;
+
 export class PerspectiveBar extends React.Component<IPerspectiveBarProps, IPerspectiveBarState> {
+
+  /**
+   * Unique identifier for the droppable area of the current perspective bar.
+   */
+  private _droppableId: string;
 
   /**
    * When this variable is positive, the next state change event from the
@@ -135,6 +146,8 @@ export class PerspectiveBar extends React.Component<IPerspectiveBarProps, IPersp
 
   constructor(props: IPerspectiveBarProps) {
     super(props);
+
+    this._droppableId = "__bar_notMounted__";
     this._ignoreStateChangeCounter = 0;
     this.state = {
       counter: 0,
@@ -161,6 +174,7 @@ export class PerspectiveBar extends React.Component<IPerspectiveBarProps, IPersp
     this._setStorage(undefined);
     this._setWorkbench(undefined);
     this._cancelLoading();
+    this._droppableId = "__bar_unmounted__";
   }
 
   public render() {
@@ -175,6 +189,15 @@ export class PerspectiveBar extends React.Component<IPerspectiveBarProps, IPersp
     const canReorder = this._canReorder();
     const loading = promise !== undefined;
     const isEditable = (editable === undefined || !!editable);
+
+    if (this._droppableId === "__bar_notMounted__") {
+      /* Generate a droppableId for the component now. This is a side effect
+       * but it does not change the internal semantics of the component so
+       * from the outside the render() function still behaves as pure; we are
+       * just trying to defer the increment of the nexDroppableIndex as much
+       * as possible */
+      this._droppableId = `__bar${nextDroppableIndex++}__`;
+    }
 
     if (perspectives !== undefined) {
       perspectives.forEach(pair => {
@@ -213,7 +236,7 @@ export class PerspectiveBar extends React.Component<IPerspectiveBarProps, IPersp
 
     return (
       <DragDropContext onDragEnd={this._onPerspectiveButtonDragged}>
-        <Droppable droppableId="bar" direction="horizontal">
+        <Droppable droppableId={this._droppableId} direction="horizontal">
           {provided => (
             <div className="wb-perspective-bar" ref={provided.innerRef} {...provided.droppableProps}>
               {loadingIndicator}
@@ -341,11 +364,27 @@ export class PerspectiveBar extends React.Component<IPerspectiveBarProps, IPersp
   }
 
   private _onPerspectiveButtonDragged = async (result: DropResult): Promise<void> => {
-    const { storage } = this.props;
+    const { storage, workbench } = this.props;
     if (storage !== undefined) {
-      const { destination, draggableId } = result;
+      const { destination, draggableId, source } = result;
       if (destination) {
-        return storage.move(draggableId, { at: destination.index });
+        if (source.droppableId === destination.droppableId) {
+          return storage.move(draggableId, { at: destination.index });
+        } else {
+          /* drag from another component; ignore it */
+        }
+      } else {
+        /* dragged off the bar; we should remove the perspective here */
+        const perspective = await storage.get(draggableId);
+        if (perspective) {
+          const { environment } = workbench;
+          const confirmation = await environment.onRemovingPerspective(draggableId, perspective);
+          if (confirmation) {
+            return storage.remove(draggableId);
+          }
+        } else {
+          console.warn("No such perspective: " + draggableId);
+        }
       }
     } else {
       console.warn("No perspective storage while dragging a perspective button; this is probably a bug.");
