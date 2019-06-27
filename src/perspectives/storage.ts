@@ -54,14 +54,36 @@ export interface IPerspectiveStorage {
   forEach: (func: PerspectiveIteratorCallback<void>) => Promise<void>;
 
   /**
+   * Iterates over all the perspectives stored in the storage backend, and
+   * invokes a function for the _original_ state of each of them, even if they
+   * are modified.
+   *
+   * @param func a function that will be called with each of the perspectives in
+   *        the storage backend
+   * @return a promise that resolves when all the perspectives have been
+   *         iterated over
+   */
+  forEachOriginal: (func: PerspectiveIteratorCallback<void>) => Promise<void>;
+
+  /**
    * Retrieves the perspective object with the given ID and returns a promise
    * that resolves to the retrieved perspective or undefined if there is no
    * such perspective.
    *
-   * For modified perspectives, this function will return the modified state
-   * and not the base state.
+   * Perspectives with pending modifications will present the modified state
+   * and not the base state when the function is invoked.
    */
   get: (id: string) => Promise<IPerspective | undefined>;
+
+  /**
+   * Retrieves the perspective object with the given ID and returns a promise
+   * that resolves to the retrieved perspective or undefined if there is no
+   * such perspective.
+   *
+   * Perspectives with pending modifications will present their _original_
+   * base state and not the modified state when the function is invoked.
+   */
+  getOriginal: (id: string) => Promise<IPerspective | undefined>;
 
   /**
    * Returns whether the perspective with the given ID has modifications that
@@ -93,6 +115,21 @@ export interface IPerspectiveStorage {
    *         function for each perspective.
    */
   map: <T>(func: PerspectiveIteratorCallback<T>) => Promise<T[]>;
+
+  /**
+   * Iterates over all the perspectives stored in the storage backend, and
+   * invokes a function for each of them. Collects the return values of the
+   * function in an array and returns a promise that resolves to the array.
+   *
+   * Perspectives with pending modifications will present their _original_
+   * base state and not the modified state when the function is invoked.
+   *
+   * @param func a function that will be called with each of the perspectives in
+   *        the storage backend
+   * @return a promise that resolves to the return values of the invoked
+   *         function for each perspective.
+   */
+  mapOriginal: <T>(func: PerspectiveIteratorCallback<T>) => Promise<T[]>;
 
   /**
    * Moves a perspective to a new position in the order in which the storage
@@ -241,11 +278,21 @@ abstract class PerspectiveStorageBase {
   }
 
   public abstract forEach(func: PerspectiveIteratorCallback<any>): Promise<void>;
+  public abstract forEachOriginal(func: PerspectiveIteratorCallback<any>): Promise<void>;
   public abstract updateVisualStyle(id: string, updates: Partial<IPerspectiveVisualStyle>): Promise<void>;
 
   public map = <T>(func: PerspectiveIteratorCallback<T>): Promise<T[]> => {
     const result: T[] = [];
     return this.forEach(
+      (perspective: IPerspective, id: string, storage: IPerspectiveStorage) => {
+        result.push(func(perspective, id, storage));
+      }
+    ).then(() => result);
+  }
+
+  public mapOriginal = <T>(func: PerspectiveIteratorCallback<T>): Promise<T[]> => {
+    const result: T[] = [];
+    return this.forEachOriginal(
       (perspective: IPerspective, id: string, storage: IPerspectiveStorage) => {
         result.push(func(perspective, id, storage));
       }
@@ -364,8 +411,25 @@ class ArrayBasedPerspectiveStorage extends PerspectiveStorageBase implements IPe
   /**
    * @inheritDoc
    */
-  public get = (id: string): Promise<IPerspective> => {
-    return Promise.resolve(this._modifiedStates[id] || this._baseStates[id]);
+  public forEachOriginal(func: PerspectiveIteratorCallback<void>): Promise<void> {
+    this._order.forEach(id =>
+      func(this._findOriginalById(id) as IPerspective, id, this)
+    );
+    return Promise.resolve();
+  }
+
+  /**
+   * @inheritDoc
+   */
+  public get = (id: string): Promise<IPerspective | undefined> => {
+    return Promise.resolve(this._findById(id));
+  }
+
+  /**
+   * @inheritDoc
+   */
+  public getOriginal = (id: string): Promise<IPerspective | undefined> => {
+    return Promise.resolve(this._findOriginalById(id));
   }
 
   /**
@@ -541,6 +605,10 @@ class ArrayBasedPerspectiveStorage extends PerspectiveStorageBase implements IPe
 
   private _findById(id: string): IPerspective | undefined {
     return this._modifiedStates[id] || this._baseStates[id];
+  }
+
+  private _findOriginalById(id: string): IPerspective | undefined {
+    return this._baseStates[id];
   }
 
   private _findUnusedId(): string {
