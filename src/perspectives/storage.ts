@@ -590,8 +590,6 @@ class ArrayBasedPerspectiveStorage extends PerspectiveStorageBase implements IPe
       return this._perspectiveNotFound(id);
     }
 
-    console.log(id, updates);
-
     this._baseStates[id] = Object.assign(this._baseStates[id], updates);
 
     if (this._modifiedStates[id] !== undefined) {
