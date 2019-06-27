@@ -394,10 +394,7 @@ class ArrayBasedPerspectiveStorage extends PerspectiveStorageBase implements IPe
     const currentIndex = this._order.indexOf(id);
     if (currentIndex >= 0) {
       const convert = PerspectiveStorageBase.convertPerspectivePositionIntoIndexInArray;
-      let desiredIndex = convert(this._order, position);
-      if (desiredIndex > currentIndex) {
-        desiredIndex--;
-      }
+      const desiredIndex = convert(this._order, position);
       if (desiredIndex >= 0 && desiredIndex !== currentIndex) {
         this._order.splice(currentIndex, 1);
         this._order.splice(desiredIndex, 0, id);
