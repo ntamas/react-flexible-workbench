@@ -39,7 +39,7 @@
     "jquery": "^3.4.1",
     "react": "^16.8.6",
     "react-dom": "^16.8.6",
-    "react-shapeshifter": "^1.0.2",
+    "react-shapeshifter": "^1.0.3",
     "react-spinners": "^0.5.8",
     "rimraf": "^2.6.3",
     "source-map-loader": "^0.2.4",
@@ -58,7 +58,7 @@
     "lodash-es": "^4.17.11",
     "mutation-observer": "^1.0.3",
     "prop-types": "^15.7.2",
-    "react-badger": "^2.0.0",
+    "react-badger": "^2.0.1",
     "react-beautiful-dnd": "^11.0.4"
   },
   "peerDependencies": {
