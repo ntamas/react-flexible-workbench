@@ -38,7 +38,7 @@ interface ITree<T> {
  * Generic reverse depth-first iteration that iterates over a tree specified
  * using an object satisfying ITree<T>.
  */
-function dfsReverseIterator<T>(tree: ITree<T>): Iterator<T> {
+function dfsReverseIterator<T>(tree: ITree<T>): Iterator<T, any, T | typeof REMOVE> {
   const stack: Array<{ item: T, index: number }> = [];
   let started: boolean = false;
   const root = tree.getRoot();
@@ -48,7 +48,8 @@ function dfsReverseIterator<T>(tree: ITree<T>): Iterator<T> {
   }
 
   return {
-    next(received: T | typeof REMOVE | undefined): IteratorResult<T> {
+    next(...args: [] | Array<T | typeof REMOVE>): IteratorResult<T> {
+      const received = args[0];
       if (received !== undefined) {
         if (!started) {
           throw new Error("not allowed before generator is started");
@@ -118,10 +119,10 @@ function dfsReverseIterator<T>(tree: ITree<T>): Iterator<T> {
  * @return another iterator that returns only those items that match the given
  *         condition
  */
-function filteredIterator<T>(
-  iterator: Iterator<T>, condition: (item: T) => boolean
-): Iterator<T> {
-  const _handleEntry = (entry: IteratorResult<T>): IteratorResult<T> | undefined => {
+function filteredIterator<T, TReturn, TNext>(
+  iterator: Iterator<T, TReturn, TNext>, condition: (item: T | TReturn) => boolean
+): Iterator<T, TReturn, TNext> {
+  const _handleEntry = (entry: IteratorResult<T, TReturn>): IteratorResult<T, TReturn> | undefined => {
     if (entry.done) {
       if (entry.hasOwnProperty("value")) {
         const { value } = entry;
@@ -144,22 +145,23 @@ function filteredIterator<T>(
   };
 
   return {
-    next(received: T | undefined): IteratorResult<T> {
+    next(...args: [] | [TNext]): IteratorResult<T, TReturn> {
+      let first = true;
       while (true) {
-        const result = _handleEntry(iterator.next(received));
-        received = undefined;
+        const result = _handleEntry(first ? iterator.next(...args) : iterator.next());
+        first = false;
         if (result !== undefined) {
           return result;
         }
       }
     },
 
-    return(value: T): IteratorResult<T> {
+    return(value: TReturn): IteratorResult<T, TReturn> {
       const entry = iterator.return ? iterator.return(value) : { done: true } as any;
       return _handleEntry(entry) || { done: true } as any;
     },
 
-    throw(err: any): IteratorResult<T> {
+    throw(err: any): IteratorResult<T, TReturn> {
       if (iterator.throw === undefined) {
         throw err;
       }
@@ -242,14 +244,14 @@ function workbenchConfigurationAsTree(config: Config | IWorkbenchState): ITree<I
  */
 export function itemsIn(
   input: Workbench, options?: Partial<IIterationOptions>
-): Iterator<ContentItem>;
+): Iterator<ContentItem, ContentItem, ContentItem | typeof REMOVE>;
 export function itemsIn(
   input: Config | IWorkbenchState, options?: Partial<IIterationOptions>
-): Iterator<ItemConfigType>;
+): Iterator<ItemConfigType, ItemConfigType, ItemConfigType | typeof REMOVE>;
 export function itemsIn(
   input: Workbench | Config | IWorkbenchState,
   options?: Partial<IIterationOptions>
-): Iterator<ContentItem | ItemConfigType> {
+): Iterator<ContentItem | ItemConfigType, ContentItem | ItemConfigType, ContentItem | ItemConfigType | typeof REMOVE> {
   const effectiveOptions: IIterationOptions = {
     order: "dfsReverse",
     ...options
@@ -281,14 +283,14 @@ export function itemsIn(
  */
 export function panelsIn(
   input: Workbench, options?: Partial<IIterationOptions>
-): Iterator<ContentItem>;
+): Iterator<ContentItem, ContentItem, ContentItem | typeof REMOVE>;
 export function panelsIn(
   input: Config | IWorkbenchState, options?: Partial<IIterationOptions>
-): Iterator<ItemConfigType>;
+): Iterator<ItemConfigType, ItemConfigType, ItemConfigType | typeof REMOVE>;
 export function panelsIn(
   input: Workbench | Config | IWorkbenchState,
   options?: Partial<IIterationOptions>
-): Iterator<ContentItem | ItemConfigType> {
+): Iterator<ContentItem | ItemConfigType, ContentItem | ItemConfigType, ContentItem | ItemConfigType | typeof REMOVE> {
   if (input instanceof Workbench) {
     return filteredIterator(
       itemsIn(input, options),
@@ -315,14 +317,14 @@ export function panelsIn(
  */
 export function containersIn(
   input: Workbench, options?: Partial<IIterationOptions>
-): Iterator<ContentItem>;
+): Iterator<ContentItem, ContentItem, ContentItem | typeof REMOVE>;
 export function containersIn(
   input: Config | IWorkbenchState, options?: Partial<IIterationOptions>
-): Iterator<ItemConfigType>;
+): Iterator<ItemConfigType, ItemConfigType, ItemConfigType | typeof REMOVE>;
 export function containersIn(
   input: Workbench | Config | IWorkbenchState,
   options?: Partial<IIterationOptions>
-): Iterator<ContentItem | ItemConfigType> {
+): Iterator<ContentItem | ItemConfigType, ContentItem | ItemConfigType, ContentItem | ItemConfigType | typeof REMOVE> {
   if (input instanceof Workbench) {
     return filteredIterator(
       itemsIn(input, options),
@@ -352,15 +354,15 @@ export function containersIn(
  */
 export function filterState(
   pred: (item: ItemConfigType) => boolean,
-  input: Config | IWorkbenchState | Iterator<ItemConfigType>
+  input: Config | IWorkbenchState | Iterator<ItemConfigType, ItemConfigType, ItemConfigType | typeof REMOVE>
 ) {
-  const iterator: Iterator<ItemConfigType> =
+  const iterator: Iterator<ItemConfigType, ItemConfigType, ItemConfigType | typeof REMOVE> =
     ("next" in input && input.next !== undefined) ?
       input : itemsIn(input as any);
   let replacement: undefined | typeof REMOVE;
 
   while (true) {
-    const { done, value } = iterator.next(replacement);
+    const { done, value } = replacement !== undefined ? iterator.next(replacement) : iterator.next();
     if (done) {
       break;
     }
@@ -454,15 +456,15 @@ export function filteredState(
  */
 export function transformState(
   func: (item: ItemConfigType) => ItemConfigType,
-  input: Config | IWorkbenchState | Iterator<ItemConfigType>
+  input: Config | IWorkbenchState | Iterator<ItemConfigType, ItemConfigType, ItemConfigType | typeof REMOVE>
 ) {
-  const iterator: Iterator<ItemConfigType> =
+  const iterator: Iterator<ItemConfigType, ItemConfigType, ItemConfigType | typeof REMOVE> =
     ("next" in input && input.next !== undefined) ?
       input : itemsIn(input as any);
   let replacement: ItemConfigType | undefined;
 
   while (true) {
-    const { done, value } = iterator.next(replacement);
+    const { done, value } = replacement !== undefined ? iterator.next(replacement) : iterator.next();
     if (done) {
       break;
     }
