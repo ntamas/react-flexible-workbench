@@ -261,17 +261,18 @@ export class ComponentRegistry {
         throw new Error("cannot register unnamed components without specifying " +
                         "a name explicitly");
       }
-      if (isReactSFC(component)) {
-        // Component is a stateless functional component. These are currently
-        // not allowed in golden-layout as of 1.5.9. I have already submitted a
-        // pull request to address this issue:
-        //
-        // https://github.com/deepstreamIO/golden-layout/pull/334
-        //
-        // Until the PR is resolved, we need to wrap the component in a React
-        // component class.
-        component = wrapInComponent(component as React.StatelessComponent<TProps>);
-      }
+    }
+
+    if (isReactSFC(component)) {
+      // Component is a stateless functional component. These are currently
+      // not allowed in golden-layout as of 1.5.9. I have already submitted a
+      // pull request to address this issue:
+      //
+      // https://github.com/deepstreamIO/golden-layout/pull/334
+      //
+      // Until the PR is resolved, we need to wrap the component in a React
+      // component class.
+      component = wrapInComponent(component as React.StatelessComponent<TProps>);
     }
 
     // Okay, at this point we have a sensible value for both 'name' and
