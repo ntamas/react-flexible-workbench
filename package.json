@@ -59,7 +59,7 @@
     "mutation-observer": "^1.0.3",
     "prop-types": "^15.7.2",
     "react-badger": "^2.0.2",
-    "react-beautiful-dnd": "^11.0.5"
+    "react-beautiful-dnd": "^12.2.0"
   },
   "peerDependencies": {
     "jquery": "^3.4.0",
