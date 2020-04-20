@@ -30,9 +30,9 @@ export function getComponentGracefully(layout: GoldenLayout, name: string): any 
  * @return         [description]
  */
 export function createHandlerWithFallback(
-  handler: { new (...args: any[]): ReactComponentHandler },
+  handler: new (...args: any[]) => ReactComponentHandler,
   fallback: (componentName: string) => ComponentFactory | undefined
-): { new (...args: any[]): ReactComponentHandler } {
+): new (...args: any[]) => ReactComponentHandler {
   return class FallbackComponentHandler extends handler {
     protected handleComponentCreationFailure(componentName: string) {
       return fallback(componentName);
