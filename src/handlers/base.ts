@@ -108,10 +108,22 @@ export class ReactComponentHandler {
    * @returns the React component instance that will be shown in the layout
    */
   private _createReactComponent(ref: (component: any) => any) {
+    const isDragging = this._container.tab === undefined;
     const defaultProps = {
       glContainer: this._container,
+      glDragging: isDragging,
       glEventHub: this._container.layoutManager.eventHub,
     };
+
+    if (isDragging) {
+      // When the component is not dragged any more, it will dispatch
+      // a "tab" event
+      this._container.on("tab", () => {
+        this._container.off("tab");
+        this._render();
+      });
+    }
+
     const configProps = (this._container as any)._config.props;
     const props = Object.assign(defaultProps, configProps, { ref });
     return this._reactComponentFactory(props);
@@ -168,6 +180,17 @@ export class ReactComponentHandler {
       // DOM tree and try mounting again if it is finally added
       this._waitForContainerAddition(firstElement);
     } else {
+      this._render();
+    }
+  }
+
+  /**
+   * Renders the component in the DOM tree or forces a re-rendering.
+   * Does nothing if the container is not in the DOM tree.
+   */
+  private _render(): void {
+    const firstElement = this._container.getElement()[0];
+    if (document.body.contains(firstElement)) {
       render(
         this._createReactComponent(this._setReactComponent), firstElement
       );

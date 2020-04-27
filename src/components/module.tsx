@@ -26,7 +26,7 @@ export function createItemConfigurationFromProps(props: IModuleProps): (() => It
       result = workbench.createItemConfigurationFor(component, {
         eager,
         props: props.props,
-        reorderEnabled,
+        reorderEnabled: !!reorderEnabled || (typeof reorderEnabled === "undefined"),
         title: title || (typeof label === "string" ? label : "Untitled")
       }) as GoldenLayout.ReactComponentConfig;
     } else {
