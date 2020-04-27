@@ -32,6 +32,7 @@ export type HigherOrderComponent<SProps, TProps> =
 export interface IItemConfigurationOptions {
   eager: boolean;
   props: any;
+  reorderEnabled: boolean;
   title: string | (() => string);
 }
 

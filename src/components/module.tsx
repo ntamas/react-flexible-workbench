@@ -7,7 +7,7 @@ import { Workbench } from "../workbench";
 
 export function createItemConfigurationFromProps(props: IModuleProps): (() => ItemConfigType) {
   return () => {
-    const { component, eager, id, itemConfiguration, onStartDrag } = props;
+    const { component, eager, id, itemConfiguration, onStartDrag, reorderEnabled } = props;
     let result;
 
     if (onStartDrag) {
@@ -26,6 +26,7 @@ export function createItemConfigurationFromProps(props: IModuleProps): (() => It
       result = workbench.createItemConfigurationFor(component, {
         eager,
         props: props.props,
+        reorderEnabled,
         title: title || (typeof label === "string" ? label : "Untitled")
       }) as GoldenLayout.ReactComponentConfig;
     } else {
@@ -117,6 +118,11 @@ export interface IModuleProps {
    * over this prop if both are given.
    */
   props?: any;
+
+  /**
+   * Whether the item can be reordered on the workbench by dragging it around.
+   */
+  reorderEnabled?: boolean;
 
   /**
    * The title of the panel that is created for the module, or a function that

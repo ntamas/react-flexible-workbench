@@ -225,6 +225,14 @@ export class PerspectiveBuilder {
   }
 
   /**
+   * Prevents the reordering of the component that was added to the
+   * workbench most recently.
+   */
+  public preventReorder(): this {
+    return this.setReorderEnabled(false);
+  }
+
+  /**
    * Sets the identifier of the component that was added to the workbench
    * most recently.
    */
@@ -256,6 +264,17 @@ export class PerspectiveBuilder {
    */
   public setRelativeWidth(value: number): this {
     return this.setProperties({ width: value });
+  }
+
+  /**
+   * Sets whether the component that was added to the workbench most recently
+   * can be rearranged on the workbench by dragging it around.
+   */
+  public setReorderEnabled(value: boolean = true): this {
+    /* cast needed to "any" because reorderEnabled is not included in the
+     * typing of the item configuration even though golden-layout
+     * understands it */
+    return this.setProperties({ reorderEnabled: value } as any);
   }
 
   /**
@@ -529,6 +548,15 @@ export class WorkbenchBuilder {
   }
 
   /**
+   * Prevents the reordering of the component that was added to the
+   * workbench most recently.
+   */
+  public preventReorder(): this {
+    this._builder.preventReorder();
+    return this;
+  }
+
+  /**
    * Sets the identifier of the component that was added to the workbench
    * most recently.
    */
@@ -561,6 +589,15 @@ export class WorkbenchBuilder {
    */
   public setRelativeWidth(value: number): this {
     this._builder.setRelativeWidth(value);
+    return this;
+  }
+
+  /**
+   * Sets whether the component that was added to the workbench most recently
+   * can be rearranged on the workbench by dragging it around.
+   */
+  public setReorderEnabled(value: boolean = true): this {
+    this._builder.setReorderEnabled(value);
     return this;
   }
 

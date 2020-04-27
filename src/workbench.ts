@@ -192,10 +192,11 @@ export class Workbench extends EventEmitter {
     const effectiveOptions = Object.assign({
       eager: false,
       props: {},
+      reorderEnabled: true,
       title: ""
     }, options);
     let result: ItemConfigType;
-    const { eager, props, title } = effectiveOptions;
+    const { eager, props, reorderEnabled, title } = effectiveOptions;
 
     if (this._registry.isRegisteredAsReact(name)) {
       result = {
@@ -219,6 +220,7 @@ export class Workbench extends EventEmitter {
     }
 
     result.title = isFunction(title) ? title() : title;
+    (result as any).reorderEnabled = Boolean(reorderEnabled);
 
     return result;
   }
