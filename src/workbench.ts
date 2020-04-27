@@ -155,9 +155,15 @@ export class Workbench extends EventEmitter {
    * the new configuration values into the ones that were previously applied.
    *
    * @param {GoldenLayout.Config} config  the configuration object
+   * @param clean  whether the merging should be performed with a clean slate,
+   *        i.e. not reusing the existing configuration
    */
-  public configure(config: GoldenLayout.Config): void {
-    this._config = merge({}, this._config, config);
+  public configure(config: GoldenLayout.Config, { clean }: { clean?: boolean } = {}): void {
+    if (clean) {
+      this._config = merge({}, config);
+    } else {
+      this._config = merge({}, this._config, config);
+    }
   }
 
   /**
@@ -416,7 +422,7 @@ export class Workbench extends EventEmitter {
       this._setLayout(layout);
     } else {
       // Just pretend that this was a call to configure()
-      this.configure(state);
+      this.configure(state, { clean: true });
     }
   }
 
