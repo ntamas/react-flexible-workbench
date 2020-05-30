@@ -13,7 +13,7 @@ import { ComponentRegistry } from "./registry";
 import {
   DragSource, FallbackHandler, HigherOrderComponent,
   IItemConfigurationOptions, ItemConfigType, ItemVisitor, IWorkbenchPlace,
-  IWorkbenchState, WorkbenchStateTransformer
+  IWorkbenchState, PanelPredicate, WorkbenchStateTransformer
 } from "./types";
 import {
   capitalizeEventName, onlyVisible,
@@ -148,6 +148,31 @@ export class Workbench extends EventEmitter {
   }
 
   /**
+   * Brings the given panel to the front in a workbench if the panel is
+   * participating in a stack.
+   *
+   * @param  panel  the panel to bring to the front or its ID
+   * @return whether the panel was found and brought to the front successfully
+   */
+  public bringToFront(panel: string | GoldenLayout.ContentItem): boolean {
+    let currentPanel = typeof panel === "string" ? this.findPanelById(panel) : panel;
+    let success = false;
+
+    while (currentPanel) {
+      const parent = currentPanel.parent;
+
+      if (parent && parent.isStack) {
+        parent.setActiveContentItem(currentPanel);
+        success = true;
+      }
+
+      currentPanel = parent;
+    }
+
+    return success;
+  }
+
+  /**
    * Configures the workbench with the given configuration object. See the
    * documentation of <code>golden-layout</code> for more details.
    *
@@ -278,6 +303,37 @@ export class Workbench extends EventEmitter {
     }
 
     return name;
+  }
+
+  /**
+   * Iterates over all panels in the workbench and finds the first one that
+   * matches the given predicate.
+   *
+   * @param pred  the predicate
+   */
+  public findFirstPanelMatching(pred: PanelPredicate): GoldenLayout.ContentItem | undefined {
+    let result;
+
+    this.forEach((item: GoldenLayout.ContentItem) => {
+      if (pred(item, this)) {
+        result = item;
+        return true;
+      }
+    });
+
+    return result;
+  }
+
+  /**
+   * Iterates over all panels in the workbench and finds the one that has the
+   * given ID.
+   *
+   * @param id  the ID of the panel to look for
+   * @param func [description]
+   */
+  public findPanelById(id: string): GoldenLayout.ContentItem | undefined {
+    const predicate = (item: GoldenLayout.ContentItem) => (item.config && item.config.id === id);
+    return this.findFirstPanelMatching(predicate);
   }
 
   /**

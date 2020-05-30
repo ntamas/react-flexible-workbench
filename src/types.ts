@@ -1,11 +1,11 @@
 import * as GoldenLayout from "golden-layout";
 import * as React from "react";
 
+import type { Workbench } from "./workbench";
+
 export type ComponentConstructor<TState> = (
   ((node: GoldenLayout.Container, state: TState) => void) |
-  {
-    new(node: GoldenLayout.Container, state: TState): {};
-  }
+  (new (node: GoldenLayout.Container, state: TState) => {})
 );
 
 export type Container = GoldenLayout.Container;
@@ -95,6 +95,13 @@ export type ItemVisitor = (item: GoldenLayout.ContentItem) =>
 export interface IWorkbenchState {
   content: GoldenLayout.ItemConfigType[];
 }
+
+/**
+ * Type specification for functions that take a panel and its workbench
+ * as an argument, and return a Boolean value; typically used for finding
+ * panels in a workbench.
+ */
+export type PanelPredicate = (item: GoldenLayout.ContentItem, workbench: Workbench) => boolean;
 
 /**
  * State transformer function that takes a workbench state object and returns
