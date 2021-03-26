@@ -28,8 +28,7 @@ module.exports = {
   mode: "development",
 
   output: {
-    filename: '[name].js',
-    chunkFilename: '[id].chunk.js',
+    chunkFilename: '[id].js',
     path: path.resolve(EXAMPLES_DIR + '/__build__'),
     publicPath: '/__build__/'
   },
@@ -61,7 +60,7 @@ module.exports = {
       // Process .ts and .tsx files via the TypeScript compiler
       {
         test: /\.[jt]sx?$/,
-        loader: "awesome-typescript-loader",
+        loader: "ts-loader",
         exclude: /node_modules/,
         options: { silent: true }
       },

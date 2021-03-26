@@ -9,12 +9,15 @@ function getPackageMain() {
 }
 
 if (process.env.MINIFY) {
+/*
   var UglifyJsPlugin = require('uglifyjs-webpack-plugin');
   plugins.push(
     new UglifyJsPlugin()
   );
+*/
   COMPONENT_NAME += '.min';
 }
+
 module.exports = {
   entry: path.resolve(getPackageMain()),
   mode: "development",
