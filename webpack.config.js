@@ -33,6 +33,12 @@ module.exports = {
     publicPath: '/__build__/'
   },
 
+  devServer: {
+    static: {
+      directory: './examples'
+    }
+  },
+
   optimization: {
     splitChunks: {
       chunks: "all",
