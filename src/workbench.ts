@@ -667,7 +667,7 @@ export class Workbench extends EventEmitter {
         throw new Error("Cannot find DOM node: " + node);
       }
     } else if (node instanceof JQuery) {
-      return (node as JQuery<HTMLElement>).get(0);
+      return (node as JQuery<HTMLElement>).get(0)!;
     } else {
       return node as HTMLElement;
     }
