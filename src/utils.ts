@@ -87,7 +87,7 @@ export function findLargestVisiblePanel(tree: GoldenLayout): GoldenLayout.Conten
   return result;
 }
 
-export function getDisplayName(component: React.ReactType): string | undefined {
+export function getDisplayName(component: React.ElementType): string | undefined {
   return (typeof component === "string") ? (
     component.length > 0 ? component : undefined
   ) : (
@@ -307,7 +307,7 @@ export interface IWrappedComponent<T> {
  * @param  {React.SFC<T>} func  the stateless functional component to wrap
  * @return {WrappedSFC<T>} the wrapped React component
  */
-export function wrapInComponent<T>(func: React.SFC<T>): React.ComponentClass<T> & IWrappedComponent<T> {
+export function wrapInComponent<T>(func: (props: T, context?: any) => JSX.Element): React.ComponentClass<T> & IWrappedComponent<T> {
   const result: React.ComponentClass<T> & IWrappedComponent<T> =
     class extends React.Component<T, {}> {
       public static wrappedComponent = func;

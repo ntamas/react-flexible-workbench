@@ -272,7 +272,7 @@ export class ComponentRegistry {
       //
       // Until the PR is resolved, we need to wrap the component in a React
       // component class.
-      component = wrapInComponent(component as React.StatelessComponent<TProps>);
+      component = wrapInComponent(component as any);
     }
 
     // Okay, at this point we have a sensible value for both 'name' and

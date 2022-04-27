@@ -47,7 +47,7 @@ export class PerspectiveBuilder {
    * belonging to a given workbench.
    *
    * @param  workbench  the workbench that the perspective builder will
-   *         manipulate when it registers new components
+   * manipulate when it registers new components
    */
   constructor(workbench: Workbench) {
     this._workbench = workbench;
@@ -246,7 +246,7 @@ export class PerspectiveBuilder {
    * Sets whether the component that was added to the workbench most recently
    * is closable or not.
    */
-  public setClosable(value: boolean = true): this {
+  public setClosable(value = true): this {
     return this.setProperties({ isClosable: value });
   }
 
@@ -270,7 +270,7 @@ export class PerspectiveBuilder {
    * Sets whether the component that was added to the workbench most recently
    * can be rearranged on the workbench by dragging it around.
    */
-  public setReorderEnabled(value: boolean = true): this {
+  public setReorderEnabled(value = true): this {
     /* cast needed to "any" because reorderEnabled is not included in the
      * typing of the item configuration even though golden-layout
      * understands it */
@@ -390,8 +390,8 @@ export class WorkbenchBuilder {
    * Creates a new workbench builder that can build new Workbench instances.
    *
    * @param  factory   a factory function that returns a new Workbench instance
-   *         when invoked with no arguments. When omitted, it defaults to simply
-   *         calling <code>new Workbench()</code>.
+   * when invoked with no arguments. When omitted, it defaults to simply
+   * calling <code>new Workbench()</code>.
    */
   constructor(factory?: () => Workbench) {
     this._workbench = factory ? factory() : new Workbench();
@@ -569,7 +569,7 @@ export class WorkbenchBuilder {
    * Sets whether the component that was added to the workbench most recently
    * is closable or not.
    */
-  public setClosable(value: boolean = true): this {
+  public setClosable(value = true): this {
     this._builder.setClosable(value);
     return this;
   }
@@ -596,7 +596,7 @@ export class WorkbenchBuilder {
    * Sets whether the component that was added to the workbench most recently
    * can be rearranged on the workbench by dragging it around.
    */
-  public setReorderEnabled(value: boolean = true): this {
+  public setReorderEnabled(value = true): this {
     this._builder.setReorderEnabled(value);
     return this;
   }
@@ -622,7 +622,7 @@ export class WorkbenchBuilder {
   /**
    * Specifies whether panel headers should be shown in the workbench.
    */
-  public showHeaders(value: boolean = true): this {
+  public showHeaders(value = true): this {
     this._settings.hasHeaders = value;
     return this;
   }
@@ -630,7 +630,7 @@ export class WorkbenchBuilder {
   /**
    * Specifies whether maximise icons should be shown in the workbench.
    */
-  public showMaximiseIcon(value: boolean = true): this {
+  public showMaximiseIcon(value = true): this {
     this._settings.showMaximiseIcon = value;
     return this;
   }

@@ -21,6 +21,8 @@ export interface IModuleDrawerProps {
    */
   badge?: React.ReactNode;
 
+  children?: React.ReactNode;
+
   /**
    * Decides whether the module drawer should be closed when a module is
    * dragged out of it to the workbench.
@@ -91,9 +93,9 @@ export interface IModuleDrawerProps {
  * A single module drawer that can be opened to reveal a set of draggable
  * placeholders that can be used to place new components in a workbench.
  */
-export class ModuleDrawer extends React.Component<IModuleDrawerProps, {}> {
+export class ModuleDrawer extends React.Component<IModuleDrawerProps> {
 
-  public render() {
+  public render(): JSX.Element {
     const { badge, children, closeAfterDragging, icon, isModuleEnabled, label,
             onClick, onClose, onOpen, open, workbench } = this.props;
     const classes = ["wb-module-drawer"];

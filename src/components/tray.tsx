@@ -15,6 +15,7 @@ import { Workbench } from "../workbench";
  */
 export interface IModuleTrayProps {
   allowMultipleSelection?: boolean;
+  children?: React.ReactNode;
   onChange?: (id: string, open: boolean) => void;
   openDrawers?: string[];
   style?: React.CSSProperties;
@@ -54,7 +55,7 @@ export class ModuleTray extends React.Component<IModuleTrayProps, IModuleTraySta
     this._visibleIds = [];
 
     this.state = {
-      openDrawers: React.Children.map(this.props.children || [],
+      openDrawers: (React.Children.map(this.props.children || [],
         (child: React.ReactChild, index: number) => {
           if (isElementClassEqualTo(ModuleDrawer, child) && child.props.open) {
             return idOfModuleDrawer(child, index);
@@ -62,7 +63,7 @@ export class ModuleTray extends React.Component<IModuleTrayProps, IModuleTraySta
             return "";
           }
         }
-      ).filter(value => !isNil(value) && value !== ""),
+      ) || []).filter(value => !isNil(value) && value !== ""),
       visibleIds: []
     };
   }
