@@ -15,7 +15,7 @@ require("../../themes/blue.css");
 
 interface IMyComponentProps {
   label: string;
-  hidden: boolean;
+  hidden?: boolean;
   message?: string;
   button?: React.ReactNode;
 }
