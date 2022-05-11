@@ -309,13 +309,13 @@ export interface IWrappedComponent<T> {
  */
 export function wrapInComponent<T>(func: (props: T, context?: any) => JSX.Element): React.ComponentClass<T> & IWrappedComponent<T> {
   const result: React.ComponentClass<T> & IWrappedComponent<T> =
-    class extends React.Component<T, {}> {
+    class extends React.Component<T> {
       public static wrappedComponent = func;
 
       public render() {
         return func(this.props, this.context);
       }
     };
-  result.displayName = `wrapInComponent(${getDisplayName(func)})`;
+  result.displayName = `wrapInComponent(${getDisplayName(func) || ""})`;
   return result;
 }

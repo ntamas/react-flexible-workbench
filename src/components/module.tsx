@@ -137,7 +137,7 @@ export interface IModuleProps {
   workbench?: Workbench;
 }
 
-export class Module extends React.Component<IModuleProps, {}> {
+export class Module extends React.Component<IModuleProps> {
 
   private _dragSource?: DragSource;
   private _rootNode: HTMLElement | null;
@@ -148,11 +148,11 @@ export class Module extends React.Component<IModuleProps, {}> {
     this._rootNode = null;
   }
 
-  public componentDidMount() {
+  public componentDidMount(): void {
     this._setWorkbench(this.props.workbench);
   }
 
-  public componentDidUpdate(oldProps: IModuleProps) {
+  public componentDidUpdate(oldProps: IModuleProps): void {
     const disabledChanged = (!!oldProps.disabled !== !!this.props.disabled);
 
     if (disabledChanged) {
@@ -166,11 +166,11 @@ export class Module extends React.Component<IModuleProps, {}> {
     }
   }
 
-  public componentWillUnmount() {
+  public componentWillUnmount(): void {
     this._setWorkbench(undefined);
   }
 
-  public render() {
+  public render(): JSX.Element {
     const { badge, disabled, icon, label } = this.props;
     const classes = ["wb-module"];
 
@@ -228,6 +228,8 @@ export class Module extends React.Component<IModuleProps, {}> {
     if (this._workbench !== undefined) {
       this._workbench.on("layoutChanged", this._onWorkbenchLayoutChanged);
     }
+
+    this._updateDragSourceForProps(false);
   }
 
   private _updateDragSourceForProps = (

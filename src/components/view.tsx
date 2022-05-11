@@ -11,7 +11,7 @@ export interface IWorkbenchViewProps {
 /**
  * React component that shows a prepared and configured Workbench object.
  */
-export class WorkbenchView extends React.Component<IWorkbenchViewProps, {}> {
+export class WorkbenchView extends React.Component<IWorkbenchViewProps> {
 
   /**
    * State variable storing the DOM node of the internal div that the workbench
@@ -51,23 +51,23 @@ export class WorkbenchView extends React.Component<IWorkbenchViewProps, {}> {
     this._workbench = undefined;
   }
 
-  public componentDidMount() {
+  public componentDidMount(): void {
     this._isMounted = true;
     this._setWorkbench(this.props.workbench);
     this._renderOrDetachWorkbenchIfNeeded();
   }
 
-  public componentDidUpdate() {
+  public componentDidUpdate(): void {
     this._setWorkbench(this.props.workbench);
   }
 
-  public componentWillUnmount() {
+  public componentWillUnmount(): void {
     this._isMounted = false;
     this._setWorkbench(undefined);
     this._renderOrDetachWorkbenchIfNeeded();
   }
 
-  public render() {
+  public render(): JSX.Element {
     const effectiveStyle: React.CSSProperties = {
       ...this.props.style,
       flexGrow: 1,
