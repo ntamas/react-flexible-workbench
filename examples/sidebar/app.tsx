@@ -2,7 +2,7 @@
 
 import * as React from "react";
 import Badge from "react-badger";
-import * as ReactDOM from "react-dom";
+import { createRoot } from "react-dom/client";
 import Shapeshifter from "react-shapeshifter";
 
 import * as icons from "./icons";
@@ -215,7 +215,8 @@ class App extends React.Component<{}, IAppState> {
 
 }
 
-ReactDOM.render(
+const container = document.getElementById("app-container")!;
+const root = createRoot(container);
+root.render(
   <React.StrictMode><App /></React.StrictMode>,
-  document.getElementById("app-container")
 );

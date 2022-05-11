@@ -2,7 +2,7 @@ import { Container } from "golden-layout";
 import noop from "lodash-es/noop";
 import uniqueId from "lodash-es/uniqueId";
 import * as React from "react";
-import { render, unmountComponentAtNode } from "react-dom";
+import { createRoot, Root } from "react-dom/client";
 
 import { ComponentFactory } from "./types";
 import { getComponentGracefully } from "./utils";
@@ -29,6 +29,8 @@ export class ReactComponentHandler {
   private _originalComponentDidUpdate: ((...args: any[]) => void) | undefined;
   private _reactComponentFactory: ComponentFactory;
   private _reactComponent: React.Component<any, any> | undefined;
+  private _reactRootElement: any;
+  private _reactRoot: Root | undefined;
   private _temporaryClassNameForContainer: string | undefined;
   private _waitingForContainerAddition: HTMLElement | undefined;
 
@@ -39,6 +41,9 @@ export class ReactComponentHandler {
    *        will contain the React component
    */
   constructor(container: Container) {
+    this._reactRoot = undefined;
+    this._reactRootElement = undefined;
+
     this._isOpen = false;
     this._setReactComponent(null);
     this._temporaryClassNameForContainer = undefined;
@@ -189,10 +194,13 @@ export class ReactComponentHandler {
    * Does nothing if the container is not in the DOM tree.
    */
   private _render(): void {
-    const firstElement = this._container.getElement()[0];
-    if (document.body.contains(firstElement)) {
-      render(
-        this._createReactComponent(this._setReactComponent), firstElement
+    if (!this._reactRoot) {
+      this._reactRootElement = this._container.getElement()[0];
+      this._reactRoot = createRoot(this._reactRootElement as HTMLElement);
+    }
+    if (document.body.contains(this._reactRootElement as Node)) {
+      this._reactRoot.render(
+        this._createReactComponent(this._setReactComponent)
       );
     }
   }
@@ -273,8 +281,11 @@ export class ReactComponentHandler {
    */
   private _unmount(): void {
     // Unmount the component from the container
-    const firstElement = this._container.getElement()[0];
-    unmountComponentAtNode(firstElement);
+    if (this._reactRoot) {
+      this._reactRoot.unmount();
+      this._reactRoot = undefined;
+      this._reactRootElement = undefined;
+    }
 
     // Don't wait for the mounting of any DOM node any more
     this._waitForContainerAddition(undefined);

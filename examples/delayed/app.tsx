@@ -1,7 +1,7 @@
 // tslint:disable:no-shadowed-variable
 
 import * as React from "react";
-import * as ReactDOM from "react-dom";
+import { createRoot } from "react-dom/client";
 import { BarLoader } from "react-spinners";
 
 import * as iterators from "../../src/iterators";
@@ -128,9 +128,10 @@ const App = () => (
   </div>
 );
 
-ReactDOM.render(
+const container = document.getElementById("app-container")!;
+const root = createRoot(container);
+root.render(
   <React.StrictMode><App /></React.StrictMode>,
-  document.getElementById("app-container")
 );
 
 (window as any).workbench = workbench;
