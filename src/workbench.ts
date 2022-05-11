@@ -35,6 +35,7 @@ export class Workbench extends EventEmitter {
   private _blockedEvents: { [key: string]: number };
   private _config: GoldenLayout.Config | undefined;
   private _configDefaults: Partial<GoldenLayout.Config>;
+  private _dragSources: DragSource[];
   private _domNode: Element | undefined;
   private _layout: GoldenLayout | undefined;
   private _nextUnblockId: number;
@@ -71,6 +72,8 @@ export class Workbench extends EventEmitter {
     this._blockedEvents = {};
     this._nextUnblockId = 1;
     this._stateGuard = identity;
+
+    this._dragSources = [];
 
     this._registry = new ComponentRegistry();
     this._configDefaults = {
@@ -203,7 +206,9 @@ export class Workbench extends EventEmitter {
    */
   public createDragSource(element: HTMLElement | JQuery,
                           itemConfiguration: GoldenLayout.ItemConfigType): DragSource {
-    return this._getLayout().createDragSource(element, itemConfiguration);
+    const dragSource = this._getLayout().createDragSource(element, itemConfiguration);
+    this._dragSources.push(dragSource);
+    return dragSource;
   }
 
   /**
@@ -411,6 +416,12 @@ export class Workbench extends EventEmitter {
    * drag new items into the workbench any more.
    */
   public removeDragSource(dragSource: DragSource): void {
+    if (!this.isRendered) {
+      // workbench already detached and the drag sources were removed in
+      // detach()
+      return;
+    }
+
     const layout = this._getLayout();
     if (typeof (layout as any).removeDragSource === "function") {
       // This feature is not yet released in golden-layout but we have a
@@ -640,6 +651,11 @@ export class Workbench extends EventEmitter {
     }
 
     if (this._layout !== undefined) {
+      for (const dragSource of this._dragSources) {
+        this.removeDragSource(dragSource);
+      }
+      this._dragSources.length = 0;
+
       // The order is important here: first we destroy, then we unregister
       // ourselves from all events. This is because the layout will fire
       // itemDestroyed events during destruction, which others might be
