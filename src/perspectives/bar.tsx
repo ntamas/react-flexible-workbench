@@ -1,8 +1,22 @@
 import * as React from "react";
 import { Badge } from "react-badger";
+
+/*
+ * react-beautiful-dnd does not support React 18 and it is not being developed
+ * any more.
+ *
+ * @react-forked/dnd will be a replacement, but it does not support React 18
+ * yet. Follow this issue for updates:
+ *
+ * https://github.com/react-forked/dnd/issues/293
+ *
+ * Until then, drag-and-drop support in the perspective bar is disabled.
+ */
+/*
 import {
   DragDropContext, Draggable, DraggableProvided, Droppable, DropResult
 } from "react-beautiful-dnd";
+*/
 
 import { areWorkbenchStatesEqualIgnoringSelection } from "./compare";
 import { IPerspective } from "./perspective";
@@ -108,7 +122,7 @@ export interface IPerspectiveBarState {
  * Private counter to generate unique droppable IDs for perspective
  * bars so you cannot drag a button from one perspective bar into another.
  */
-let nextDroppableIndex: number = 0;
+let nextDroppableIndex = 0;
 
 export class PerspectiveBar extends React.Component<IPerspectiveBarProps, IPerspectiveBarState> {
 
@@ -181,7 +195,7 @@ export class PerspectiveBar extends React.Component<IPerspectiveBarProps, IPersp
     const { editable, errorMessage, fallback, storage } = this.props;
     const { error, perspectives, promise, selectedPerspectiveId } = this.state;
 
-    const perspectiveButtonFactories: any[] = [];
+    const perspectiveButtonFactories: Array<() => JSX.Element> = [];
     const keys: string[] = [];
     const extraButtons: React.ReactNode[] = [];
     let loadingIndicator: React.ReactNode = null;
@@ -204,13 +218,15 @@ export class PerspectiveBar extends React.Component<IPerspectiveBarProps, IPersp
         const [id, perspective] = pair;
         const modified = storage ? storage.isModified(id) : false;
         const selected = selectedPerspectiveId === id;
-        const perspectiveButtonFactory = (provided: DraggableProvided) => (
+        const perspectiveButtonFactory = (/* provided: DraggableProvided */) => (
           <LoadPerspectiveButton key={id} label={perspective.label}
             modified={modified} selected={selected}
-            onClick={this._onPerspectiveButtonClicked.bind(this, id)}
+            onClick={() => void this._onPerspectiveButtonClicked(id)}
+			/*
             ref={provided.innerRef}
             {...provided.draggableProps}
             {...provided.dragHandleProps}
+			*/
           />
         );
         perspectiveButtonFactories.push(perspectiveButtonFactory);
@@ -218,8 +234,8 @@ export class PerspectiveBar extends React.Component<IPerspectiveBarProps, IPersp
       });
 
       if (isEditable) {
-        extraButtons.push(<NewPerspectiveButton key="__new" onClick={this._createNewPerspective} />);
-        extraButtons.push(<SavePerspectiveButton key="__save" onClick={this._persistModificationsOfCurrentPerspective}
+        extraButtons.push(<NewPerspectiveButton key="__new" onClick={() => void this._createNewPerspective()} />);
+        extraButtons.push(<SavePerspectiveButton key="__save" onClick={() => void this._persistModificationsOfCurrentPerspective()}
                                             disabled={storage ? !storage.isModified(selectedPerspectiveId) : true} />);
       }
     } else if (error) {
@@ -234,6 +250,7 @@ export class PerspectiveBar extends React.Component<IPerspectiveBarProps, IPersp
       loadingIndicator = (fallback || <span>Loading...</span>);
     }
 
+	/*
     return (
       <DragDropContext onDragEnd={this._onPerspectiveButtonDragged}>
         <Droppable droppableId={this._droppableId} direction="horizontal">
@@ -253,6 +270,14 @@ export class PerspectiveBar extends React.Component<IPerspectiveBarProps, IPersp
           )}
         </Droppable>
       </DragDropContext>
+    );
+	*/
+    return (
+      <div className="wb-perspective-bar">
+        {loadingIndicator}
+        {perspectiveButtonFactories.map((factory) => factory())}
+        {extraButtons}
+      </div>
     );
   }
 
@@ -348,21 +373,22 @@ export class PerspectiveBar extends React.Component<IPerspectiveBarProps, IPersp
     }
   }
 
-  private _onPerspectiveButtonClicked = (id: string): void => {
+  private _onPerspectiveButtonClicked = async (id: string): Promise<void> => {
     const { selectedPerspectiveId } = this.state;
     if (selectedPerspectiveId === id) {
       // Reverting modification of current perspective
-      this._revertModificationsOfCurrentPerspective();
+      await this._revertModificationsOfCurrentPerspective();
     } else {
       // Call the onChange handler if any, and then load the perspective if
       // the user did not prevent the default behaviour
       const { onChange } = this.props;
       if (!onChange || !onChange(id)) {
-        this._loadPerspectiveById(id);
+        await this._loadPerspectiveById(id);
       }
     }
   }
 
+  /*
   private _onPerspectiveButtonDragged = async (result: DropResult): Promise<void> => {
     const { storage, workbench } = this.props;
     if (storage !== undefined) {
@@ -371,10 +397,10 @@ export class PerspectiveBar extends React.Component<IPerspectiveBarProps, IPersp
         if (source.droppableId === destination.droppableId) {
           return storage.move(draggableId, { at: destination.index });
         } else {
-          /* drag from another component; ignore it */
+          // drag from another component; ignore it
         }
       } else {
-        /* dragged off the bar; we should remove the perspective here */
+        // dragged off the bar; we should remove the perspective here
         const perspective = await storage.get(draggableId);
         if (perspective) {
           const { environment } = workbench;
@@ -390,6 +416,7 @@ export class PerspectiveBar extends React.Component<IPerspectiveBarProps, IPersp
       console.warn("No perspective storage while dragging a perspective button; this is probably a bug.");
     }
   }
+  */
 
   private _onStorageChanged = (): void => {
     this._forceReload();
@@ -402,7 +429,7 @@ export class PerspectiveBar extends React.Component<IPerspectiveBarProps, IPersp
       const { workbench } = this.props;
       const newState = workbench.getState();
       if (this._currentPerspectiveNeedsSavingAfterChange(newState)) {
-        this._updateCurrentPerspectiveWith(newState);
+        void this._updateCurrentPerspectiveWith(newState);
       }
     }
   }
@@ -526,13 +553,13 @@ export class PerspectiveBar extends React.Component<IPerspectiveBarProps, IPersp
     }
   }
 
-  private _updateCurrentPerspective = async (persist: boolean = false): Promise<void> => {
+  private _updateCurrentPerspective = async (persist = false): Promise<void> => {
     const { workbench } = this.props;
     return this._updateCurrentPerspectiveWith(workbench.getState(), persist);
   }
 
   private _updateCurrentPerspectiveWith = async (
-    newState: IWorkbenchState, persist: boolean = false
+    newState: IWorkbenchState, persist = false
   ): Promise<void> => {
     const { storage } = this.props;
     const { selectedPerspectiveId } = this.state;
@@ -620,8 +647,7 @@ export interface INewPerspectiveButtonProps {
 const NewPerspectiveButton = ({ onClick }: INewPerspectiveButtonProps) => {
   return (
     <div className="wb-perspective-bar-item">
-      <button className="wb-perspective-bar-new-button"
-              onClick={onClick}>+ New</button>
+      <button className="wb-perspective-bar-new-button" onClick={onClick}>+ New</button>
     </div>
   );
 };
