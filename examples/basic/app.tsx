@@ -11,7 +11,7 @@ import {
   Workbench, WorkbenchBuilder, WorkbenchView
 } from "../../src/index";
 
-import { Header, MyComponent, MyStatefulComponent } from "../common";
+import { Header, MyComponent, MyStatefulClassComponent, MyStatefulComponent } from "../common";
 
 require("../../themes/blue.css");
 
@@ -66,7 +66,7 @@ const workbench = new WorkbenchBuilder()
           title: "Panel C",
         }, "panel-c")
       .finish()
-      .add(MyStatefulComponent, {
+      .add(MyStatefulClassComponent, {
         props: { label: "D" },
         title: "Panel D",
       }, "panel-d")

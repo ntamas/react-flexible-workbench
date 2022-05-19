@@ -27,7 +27,20 @@ export const MyComponent = ({ button, label, message }: IMyComponentProps) => (
 );
 (MyComponent as any).displayName = "MyComponent";
 
-export class MyStatefulComponent extends React.Component<IMyComponentProps, IMyComponentState> {
+export const MyStatefulComponent = ({ label }: IMyComponentProps) => {
+  const [counter, setCounter] = React.useState(0);
+  const onClick = React.useCallback(() => {
+    setCounter((counter + 1) % 10);
+  }, [setCounter, counter]);
+
+    return (
+      <div className="panel" onClick={onClick} style={{ cursor: "pointer" }}>
+        <div className="big-letter">{ label }{ counter }</div>
+      </div>
+    );
+  };
+
+export class MyStatefulClassComponent extends React.Component<IMyComponentProps, IMyComponentState> {
   constructor(props: IMyComponentProps) {
     super(props);
     this.state = {
