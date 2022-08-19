@@ -125,7 +125,12 @@ export class ReactComponentHandler {
       // a "tab" event
       this._container.on("tab", () => {
         this._container.off("tab");
-        this._render();
+
+        // When this event is handled, the DOM node for the component might not
+        // be in the DOM tree yet, so we cannot call _render() immediately.
+        // We defer the call by 50 msec, which should be enough to make sure
+        // it is called in the next frame when the DOM has already been updated.
+        setTimeout(() => { this._render(); }, 50);
       });
     }
 
