@@ -555,6 +555,13 @@ export class PerspectiveBar extends React.Component<IPerspectiveBarProps, IPersp
  */
 export interface ILoadPerspectiveButtonProps {
   /**
+   * Props of the badge to show on the button when the perspective is modified.
+   */
+  badgeProps?: {
+    color?: string;
+  };
+
+  /**
    * Label of the button to show.
    */
   label?: React.ReactNode;
@@ -585,7 +592,7 @@ const badgeOffset = [-3, -3];
  */
 const LoadPerspectiveButton = React.forwardRef(
   (props: ILoadPerspectiveButtonProps, ref: React.Ref<HTMLDivElement>) => {
-    const { label, modified, onClick, selected, ...rest } = props;
+    const { badgeProps, label, modified, onClick, selected, ...rest } = props;
     const classes = ["wb-perspective-bar-item"];
     if (selected) {
       classes.push("wb-perspective-selected");
@@ -596,7 +603,7 @@ const LoadPerspectiveButton = React.forwardRef(
     return (
       <div className={classes.join(" ")} ref={ref} {...rest}>
         <button className="wb-perspective-bar-load-button" onClick={onClick}>{label}</button>
-        <Badge className="wb-badge" visible={modified} offset={badgeOffset} />
+        <Badge {...badgeProps} className="wb-badge" visible={modified} offset={badgeOffset} />
       </div>
     );
   }
