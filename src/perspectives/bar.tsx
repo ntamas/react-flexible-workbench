@@ -1,5 +1,5 @@
 import * as React from "react";
-import { Badge } from "react-badger";
+import { Badge, IBadgeProps } from "react-badger";
 import {
   DragDropContext, Draggable, DraggableProvided, Droppable, DropResult
 } from "react-beautiful-dnd";
@@ -20,6 +20,12 @@ export interface IPerspectiveBarProps {
    * by dragging and dropping.
    */
   allowReordering?: boolean;
+
+  /**
+   * Props of the badge to show on buttons corresponding to perspectives when
+   * the perspective is modified.
+   */
+  badgeProps?: Partial<IBadgeProps>;
 
   /**
    * Whether the perspective bar is editable. Editable bars show buttons for
@@ -178,7 +184,7 @@ export class PerspectiveBar extends React.Component<IPerspectiveBarProps, IPersp
   }
 
   public render() {
-    const { editable, errorMessage, fallback, storage } = this.props;
+    const { badgeProps, editable, errorMessage, fallback, storage } = this.props;
     const { error, perspectives, promise, selectedPerspectiveId } = this.state;
 
     const perspectiveButtonFactories: any[] = [];
@@ -206,6 +212,7 @@ export class PerspectiveBar extends React.Component<IPerspectiveBarProps, IPersp
         const selected = selectedPerspectiveId === id;
         const perspectiveButtonFactory = (provided: DraggableProvided) => (
           <LoadPerspectiveButton key={id} label={perspective.label}
+            badgeProps={badgeProps}
             modified={modified} selected={selected}
             onClick={this._onPerspectiveButtonClicked.bind(this, id)}
             ref={provided.innerRef}
@@ -557,9 +564,7 @@ export interface ILoadPerspectiveButtonProps {
   /**
    * Props of the badge to show on the button when the perspective is modified.
    */
-  badgeProps?: {
-    color?: string;
-  };
+  badgeProps?: Partial<IBadgeProps>;
 
   /**
    * Label of the button to show.

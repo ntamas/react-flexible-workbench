@@ -64,7 +64,7 @@ export const Header = ({ fallback, perspectives, title, workbench }: IHeaderProp
   <div id="header" style={{ display: "flex", alignItems: "center" }}>
     <div className="title">{title || "Workbench demo"}</div>
     { (perspectives && workbench) ? (
-      <PerspectiveBar allowReordering storage={perspectives} workbench={workbench} fallback={fallback} />
+      <PerspectiveBar allowReordering storage={perspectives} workbench={workbench} fallback={fallback} badgeProps={{ color: "green" }} />
     ) : null}
   </div>
 );
