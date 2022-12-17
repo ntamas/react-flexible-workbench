@@ -94,7 +94,7 @@ export type ItemVisitor = (item: GoldenLayout.ContentItem) =>
  */
 export interface IWorkbenchState {
   content: GoldenLayout.ItemConfigType[];
-  settings: GoldenLayout.Settings;
+  settings?: GoldenLayout.Settings;
 }
 
 /**
