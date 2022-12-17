@@ -627,7 +627,7 @@ export interface INewPerspectiveButtonProps {
 
 /**
  * Stateless component that renders a button that can be clicked by the user
- * to load a perspective.
+ * to create a new perspective.
  */
 const NewPerspectiveButton = ({ onClick }: INewPerspectiveButtonProps) => {
   return (
@@ -687,7 +687,7 @@ export interface ISavePerspectiveButtonProps {
 
 /**
  * Stateless component that renders a button that can be clicked by the user
- * to load a perspective.
+ * to save a perspective.
  */
 const SavePerspectiveButton = ({ disabled, onClick }: ISavePerspectiveButtonProps) => (
   <div className="wb-perspective-bar-item">
