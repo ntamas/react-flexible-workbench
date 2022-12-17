@@ -608,7 +608,7 @@ const LoadPerspectiveButton = React.forwardRef(
     return (
       <div className={classes.join(" ")} ref={ref} {...rest}>
         <button className="wb-perspective-bar-load-button" onClick={onClick}>{label}</button>
-        <Badge {...badgeProps} className="wb-badge" visible={modified} offset={badgeOffset} />
+        <Badge offset={badgeOffset} {...badgeProps} className="wb-badge" visible={modified} />
       </div>
     );
   }
