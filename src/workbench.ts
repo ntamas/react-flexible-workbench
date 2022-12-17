@@ -400,7 +400,7 @@ export class Workbench extends EventEmitter {
    */
   public getState(): IWorkbenchState {
     return pick(
-      this._getLayout().toConfig(), ["content"]
+      this._getLayout().toConfig(), ["content", "settings"]
     );
   }
 
