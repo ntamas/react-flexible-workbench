@@ -582,7 +582,8 @@ export class Workbench extends EventEmitter {
     // state guard
     if (effectiveConfig.content) {
       effectiveConfig.content = this._stateGuard({
-        content: effectiveConfig.content
+        content: effectiveConfig.content,
+        settings: effectiveConfig.settings
       }).content;
     }
 
