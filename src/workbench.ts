@@ -1,4 +1,4 @@
-import { EventEmitter, ListenerFn } from "eventemitter3";
+import { EventEmitter } from "eventemitter3";
 import * as GoldenLayout from "golden-layout";
 import * as JQuery from "jquery";
 import identity from "lodash-es/identity";
@@ -94,7 +94,7 @@ export class Workbench extends EventEmitter {
    * this method will map all-lowercase event names to their correctly capitalized
    * versions for all events that are officially supported by `golden-layout`
    */
-  public addEventListener(eventName: string | symbol, listener: ListenerFn): void {
+  public addEventListener(eventName: string | symbol, listener: EventEmitter.ListenerFn): void {
     this.addListener(capitalizeEventName(eventName), listener);
   }
 
@@ -445,7 +445,7 @@ export class Workbench extends EventEmitter {
    * used with `react-event-listener` or other classes that expect a DOM-like
    * API.
    */
-  public removeEventListener(eventName: string | symbol, listener?: ListenerFn): void {
+  public removeEventListener(eventName: string | symbol, listener?: EventEmitter.ListenerFn): void {
     this.removeListener(capitalizeEventName(eventName), listener);
   }
 

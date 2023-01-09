@@ -313,7 +313,7 @@ export function wrapInComponent<T>(func: (props: T) => JSX.Element): React.Compo
       public static wrappedComponent = func;
 
       public render() {
-        return React.createElement(func, this.props);
+        return React.createElement(func as any, this.props);
       }
     };
   result.displayName = `wrapInComponent(${getDisplayName(func) || ""})`;
