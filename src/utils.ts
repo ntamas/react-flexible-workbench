@@ -307,7 +307,7 @@ export interface IWrappedComponent<T> {
  * @param  {React.SFC<T>} func  the stateless functional component to wrap
  * @return {WrappedSFC<T>} the wrapped React component
  */
-export function wrapInComponent<T>(func: (props: T) => JSX.Element): React.ComponentClass<T> & IWrappedComponent<T> {
+export function wrapInComponent<T>(func: (props: T) => React.ReactElement): React.ComponentClass<T> & IWrappedComponent<T> {
   const result: React.ComponentClass<T> & IWrappedComponent<T> =
     class extends React.Component<T> {
       public static wrappedComponent = func;

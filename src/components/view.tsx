@@ -67,7 +67,7 @@ export class WorkbenchView extends React.Component<IWorkbenchViewProps> {
     this._renderOrDetachWorkbenchIfNeeded();
   }
 
-  public render(): JSX.Element {
+  public render(): React.ReactElement {
     const effectiveStyle: React.CSSProperties = {
       ...this.props.style,
       flexGrow: 1,

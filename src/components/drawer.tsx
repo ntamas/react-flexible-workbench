@@ -95,7 +95,7 @@ export interface IModuleDrawerProps {
  */
 export class ModuleDrawer extends React.Component<IModuleDrawerProps> {
 
-  public render(): JSX.Element {
+  public render(): React.ReactElement {
     const { badge, children, closeAfterDragging, icon, isModuleEnabled, label,
             onClick, onClose, onOpen, open, workbench } = this.props;
     const classes = ["wb-module-drawer"];

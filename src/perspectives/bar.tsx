@@ -201,7 +201,7 @@ export class PerspectiveBar extends React.Component<IPerspectiveBarProps, IPersp
     const { badgeProps, editable, errorMessage, fallback, storage } = this.props;
     const { error, perspectives, promise, selectedPerspectiveId } = this.state;
 
-    const perspectiveButtonFactories: Array<() => JSX.Element> = [];
+    const perspectiveButtonFactories: Array<() => React.ReactElement> = [];
     const keys: string[] = [];
     const extraButtons: React.ReactNode[] = [];
     let loadingIndicator: React.ReactNode = null;
