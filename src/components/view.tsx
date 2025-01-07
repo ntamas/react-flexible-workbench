@@ -17,7 +17,7 @@ export class WorkbenchView extends React.Component<IWorkbenchViewProps> {
    * State variable storing the DOM node of the internal div that the workbench
    * should be rendered into.
    */
-  private _divRef: React.RefObject<HTMLDivElement>;
+  private _divRef: React.RefObject<HTMLDivElement | null>;
 
   /**
    * Flag to store whether the workbench *is* currently attached to

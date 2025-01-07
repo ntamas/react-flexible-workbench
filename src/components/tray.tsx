@@ -56,7 +56,7 @@ export class ModuleTray extends React.Component<IModuleTrayProps, IModuleTraySta
 
     this.state = {
       openDrawers: (React.Children.map(this.props.children || [],
-        (child: React.ReactChild, index: number) => {
+        (child, index: number) => {
           if (isElementClassEqualTo(ModuleDrawer, child) && child.props.open) {
             return idOfModuleDrawer(child, index);
           } else {
@@ -86,7 +86,7 @@ export class ModuleTray extends React.Component<IModuleTrayProps, IModuleTraySta
     const isModuleEnabled = this._isModuleNotVisible;
 
     const drawers = React.Children.map(this.props.children,
-      (child: React.ReactChild, index: number) => {
+      (child, index: number) => {
         if (isElementClassEqualTo(ModuleDrawer, child)) {
           const id = idOfModuleDrawer(child, index);
           const newProps: Partial<IModuleDrawerProps> = {

@@ -170,7 +170,7 @@ export class Module extends React.Component<IModuleProps> {
     this._setWorkbench(undefined);
   }
 
-  public render(): JSX.Element {
+  public render(): React.ReactElement {
     const { badge, disabled, icon, label } = this.props;
     const classes = ["wb-module"];
 
