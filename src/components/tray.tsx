@@ -256,6 +256,7 @@ export class ModuleTray extends React.Component<IModuleTrayProps, IModuleTraySta
 
     if (this._workbench !== undefined) {
       this._workbench.forEach(item => {
+        // eslint-disable-next-line prefer-spread
         this._visibleIds.push.apply(this._visibleIds,
           extractIdsFromContentItem(item));
       });

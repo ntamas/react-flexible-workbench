@@ -1,3 +1,5 @@
+/* eslint-disable prefer-rest-params */
+/* eslint-disable prefer-spread */
 import * as GoldenLayout from "golden-layout";
 
 import {

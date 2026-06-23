@@ -5,7 +5,7 @@ import type { Workbench } from "./workbench";
 
 export type ComponentConstructor<TState> = (
   ((node: GoldenLayout.Container, state: TState) => void) |
-  (new (node: GoldenLayout.Container, state: TState) => {})
+  (new (node: GoldenLayout.Container, state: TState) => unknown)
 );
 
 export type Container = GoldenLayout.Container;

@@ -136,15 +136,17 @@ const perspectives = PerspectiveStorage.fromArray([
 
 // =============================================================================
 
+type IAppProps = unknown;
+
 interface IAppState {
   openDrawers: string[];
   selectedPerspectiveId: string | undefined;
   sidebarOpen: boolean;
 }
 
-class App extends React.Component<{}, IAppState> {
+class App extends React.Component<IAppProps, IAppState> {
 
-  constructor(props: {}) {
+  constructor(props: IAppProps) {
     super(props);
     this.state = {
       openDrawers: [],
